@@ -12,6 +12,7 @@ import theme3 from 'assets/scss/_theme3.module.scss';
 import theme4 from 'assets/scss/_theme4.module.scss';
 import theme5 from 'assets/scss/_theme5.module.scss';
 import theme6 from 'assets/scss/_theme6.module.scss';
+import cp0x from 'assets/scss/_theme-cp0x.module.scss';
 
 // types
 import { ColorProps } from 'types';
@@ -39,6 +40,9 @@ export default function Palette(mode: ThemeMode, presetColor: PresetColor) {
       break;
     case 'theme6':
       colors = theme6;
+      break;
+    case 'cp0x':
+      colors = cp0x;
       break;
     case 'default':
     default:

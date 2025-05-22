@@ -68,7 +68,7 @@ export default function AppBar({ ...others }) {
         <Container>
           <Toolbar sx={{ py: 2.5, px: `0 !important` }}>
             <Typography component={RouterLink} to="/" sx={{ flexGrow: 1, textAlign: 'left' }}>
-              <Logo />
+              {/*<Logo />*/}
             </Typography>
             <Stack direction="row" sx={{ display: { xs: 'none', sm: 'block' } }} spacing={{ xs: 1.5, md: 2.5 }}>
               <Button color="inherit" component={Link} href="#">

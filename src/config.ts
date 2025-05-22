@@ -41,7 +41,7 @@ const config: ConfigProps = {
   borderRadius: 8,
   outlinedFilled: true,
   mode: ThemeMode.DARK,
-  presetColor: 'default',
+  presetColor: 'cp0x',
   i18n: 'en',
   themeDirection: ThemeDirection.LTR,
   container: true

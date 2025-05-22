@@ -43,7 +43,7 @@ export default function MainLayout() {
   const isHorizontal = menuOrientation === MenuOrientation.HORIZONTAL && !downMD;
 
   // horizontal menu-list bar : drawer
-  const menu = useMemo(() => (isHorizontal ? <HorizontalBar /> : <Sidebar />), [isHorizontal]);
+  // const menu = useMemo(() => (isHorizontal ? <HorizontalBar /> : <Sidebar />), [isHorizontal]);
 
   if (menuMasterLoading) return <Loader />;
 
@@ -56,11 +56,8 @@ export default function MainLayout() {
         </Toolbar>
       </AppBar>
 
-      {/* menu / drawer */}
-      {menu}
-
       {/* main content */}
-      <MainContentStyled {...{ borderRadius, menuOrientation, open: drawerOpen }}>
+      <MainContentStyled {...{ borderRadius, menuOrientation, open: drawerOpen, marginTop: 80 }}>
         <Container
           maxWidth={container ? 'lg' : false}
           sx={{ ...(!container && { px: { xs: 0 } }), minHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column' }}

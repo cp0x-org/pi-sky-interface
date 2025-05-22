@@ -9,6 +9,10 @@ import { store } from 'store';
 import * as serviceWorker from 'serviceWorker';
 import reportWebVitals from 'reportWebVitals';
 import { ConfigProvider } from 'contexts/ConfigContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { WagmiProvider } from 'wagmi';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { Buffer } from 'buffer';
 
 // style + assets
 import 'assets/scss/style.scss';
@@ -31,6 +35,11 @@ import '@fontsource/poppins/400.css';
 import '@fontsource/poppins/500.css';
 import '@fontsource/poppins/600.css';
 import '@fontsource/poppins/700.css';
+import { config } from './wagmi-config';
+
+globalThis.Buffer = Buffer;
+
+const queryClient = new QueryClient();
 
 // ==============================|| REACT DOM RENDER ||============================== //
 
@@ -39,7 +48,13 @@ const root = createRoot(container!);
 root.render(
   <Provider store={store}>
     <ConfigProvider>
-      <App />
+      <WagmiProvider reconnectOnMount={false} config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider modalSize="compact">
+            <App />
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
     </ConfigProvider>
   </Provider>
 );
