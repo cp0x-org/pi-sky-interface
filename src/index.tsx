@@ -11,8 +11,8 @@ import reportWebVitals from 'reportWebVitals';
 import { ConfigProvider } from 'contexts/ConfigContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { Buffer } from 'buffer';
+import RainbowKitThemeProvider from 'components/RainbowKitThemeProvider';
 
 // style + assets
 import 'assets/scss/style.scss';
@@ -50,9 +50,9 @@ root.render(
     <ConfigProvider>
       <WagmiProvider reconnectOnMount={false} config={config}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider modalSize="compact">
+          <RainbowKitThemeProvider>
             <App />
-          </RainbowKitProvider>
+          </RainbowKitThemeProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ConfigProvider>

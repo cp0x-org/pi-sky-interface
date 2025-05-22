@@ -16,7 +16,6 @@
     "@reduxjs/toolkit": "2.7.0",
     "@supabase/supabase-js": "2.49.4",
     "@tabler/icons-react": "3.31.0",
-    "@vitejs/plugin-react": "4.4.1",
     "amazon-cognito-identity-js": "6.3.15",
     "axios": "1.9.0",
     "chance": "1.1.12",
@@ -46,7 +45,6 @@
     "swr": "2.3.3",
     "viem": "^2.29.3",
     "vite": "6.3.3",
-    "vite-tsconfig-paths": "5.1.4",
     "wagmi": "^2.15.3",
     "web-vitals": "4.2.4",
     "yarn": "^1.22.22",
@@ -94,6 +92,7 @@
     "@types/react-slick": "0.23.13",
     "@typescript-eslint/eslint-plugin": "8.31.0",
     "@typescript-eslint/parser": "8.31.0",
+    "@vitejs/plugin-react": "^4.4.1",
     "env-cmd": "10.1.0",
     "eslint": "9.25.1",
     "eslint-config-prettier": "10.1.2",
@@ -102,7 +101,9 @@
     "knip": "5.50.5",
     "prettier": "3.5.3",
     "sass": "1.87.0",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "vite-plugin-svgr": "^4.3.0",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "packageManager": "yarn@4.9.1"
 }

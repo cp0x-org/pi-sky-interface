@@ -3,17 +3,11 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Box from '@mui/material/Box';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 // project imports
 import LogoSection from '../LogoSection';
-// import SearchSection from './SearchSection';
 import MobileSection from './MobileSection';
-import ProfileSection from './ProfileSection';
-// import LocalizationSection from './LocalizationSection';
-import MegaMenuSection from './MegaMenuSection';
-// import FullScreenSection from './FullScreenSection';
-import NotificationSection from './NotificationSection';
-import '@rainbow-me/rainbowkit/styles.css';
+import ConnectButtonCustom from 'components/ConnectButtonCustom';
+
 // ==============================|| MAIN NAVBAR / HEADER ||============================== //
 
 export default function Header() {
@@ -34,16 +28,14 @@ export default function Header() {
       <Box sx={{ flexGrow: 1 }} />
 
       {/* mega-menu */}
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        {/*<MegaMenuSection />*/}
-      </Box>
+      <Box sx={{ display: { xs: 'none', md: 'block' } }}>{/*<MegaMenuSection />*/}</Box>
 
       {/* notification */}
       {/*<NotificationSection />*/}
 
       {/* connect wallet */}
       <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
-        <ConnectButton />
+        <ConnectButtonCustom chainStatus="icon" showBalance={false} />
       </Box>
 
       {/* profile */}

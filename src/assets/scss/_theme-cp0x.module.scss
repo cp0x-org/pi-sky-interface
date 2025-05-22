@@ -2,24 +2,24 @@
 $paper: #ffffff;
 
 // primary
-$primaryLight: #e8eaf6;
-$primaryMain: #3f51b5;
-$primaryDark: #3949ab;
-$primary200: #9fa8da;
-$primary800: #283593;
+$primaryLight: #2cffff26;
+$primaryMain: #28e5e5;
+$primaryDark: #19b4b4;
+$primary200: #2cffff80;
+$primary800: #19b4b4cc;
 
 // secondary
-$secondaryLight: #e8eaf6;
-$secondaryMain: #3f51b5;
-$secondaryDark: #3949ab;
-$secondary200: #9fa8da;
-$secondary800: #283593;
+$secondaryLight: #2cffff26;
+$secondaryMain: #28e5e5;
+$secondaryDark: #19b4b4;
+$secondary200: #2cffff80;
+$secondary800: #19b4b4cc;
 
 // success Colors
-$successLight: #b9f6ca;
-$success200: #69f0ae;
-$successMain: #00e676;
-$successDark: #00c853;
+$successLight: #23d92b26;
+$success200: #23d92b80;
+$successMain: #23d92b;
+$successDark: #19b423;
 
 // error
 $errorLight: #ef9a9a;
@@ -37,43 +37,43 @@ $warningMain: #ffe57f;
 $warningDark: #ffc107;
 
 // grey
-$grey50: #f8fafc;
-$grey100: #eef2f6;
-$grey200: #e3e8ef;
-$grey300: #cdd5df;
-$grey500: #697586;
-$grey600: #4b5565;
-$grey700: #364152;
-$grey900: #121926;
+$grey50: #eeeeee;
+$grey100: #dddddd;
+$grey200: #c8c8c8;
+$grey300: #969696;
+$grey500: #646464;
+$grey600: #525f66;
+$grey700: #39454b;
+$grey900: #16161f;
 
 // ==============================|| DARK THEME VARIANTS ||============================== //
 
 // paper & background
-$darkBackground: #16161FFF; // level 3
-$darkPaper: #1E1E26FF; // level 4
+$darkBackground: #16161f; // level 3
+$darkPaper: #1e1e26; // level 4
 
 // dark 800 & 900
-$darkLevel1: #29314f; // level 1
-$darkLevel2: #212946; // level 2
+$darkLevel1: #39454b3d; // level 1
+$darkLevel2: #39454b; // level 2
 
 // primary dark
-$darkPrimaryLight: #eeedfd;
-$darkPrimaryMain: #7267ef;
-$darkPrimaryDark: #6a5fed;
-$darkPrimary200: #b9b3f7;
-$darkPrimary800: #554ae8;
+$darkPrimaryLight: #2cffff26;
+$darkPrimaryMain: #28e5e5;
+$darkPrimaryDark: #19b4b4;
+$darkPrimary200: #2cffff80;
+$darkPrimary800: #19b4b4cc;
 
 // secondary dark
-$darkSecondaryLight: #eeedfd;
-$darkSecondaryMain: #7267ef;
-$darkSecondaryDark: #6a5fed;
-$darkSecondary200: #b9b3f7;
-$darkSecondary800: #554ae8;
+$darkSecondaryLight: #2cffff26;
+$darkSecondaryMain: #28e5e5;
+$darkSecondaryDark: #19b4b4;
+$darkSecondary200: #2cffff80;
+$darkSecondary800: #19b4b4cc;
 
 // text variants
-$darkTextTitle: #d7dcec;
-$darkTextPrimary: #bdc8f0;
-$darkTextSecondary: #8492c4;
+$darkTextTitle: #eeeeee;
+$darkTextPrimary: #dddddd;
+$darkTextSecondary: #969696;
 
 // ==============================|| JAVASCRIPT ||============================== //
 
@@ -154,4 +154,32 @@ $darkTextSecondary: #8492c4;
     darkSecondaryDark: $darkSecondaryDark;
     darkSecondary200: $darkSecondary200;
     darkSecondary800: $darkSecondary800;
-}
+    
+    // CP0X specific colors
+    colorCp0x: $primaryMain;
+    colorCp0xDark: $primaryDark;
+    colorCp0xHover: #2cffff;
+    colorFontDark: $grey900;
+    colorFontWhite: $grey50;
+    colorFontWhite2: $grey100;
+    
+    // CP0X backgrounds
+    backgroundDark: $darkBackground;
+    backgroundColor: $darkPaper;
+    backgroundColorHover: $darkLevel1;
+    borderColor: $darkLevel2;
+    borderColorHover: $grey600;
+    borderColorLight: $darkLevel1;
+    
+    backgroundMainTop: $darkPaper;
+    backgroundDealCode: $darkPaper;
+    
+    backgroundSnackbar: $darkLevel2;
+    borderSnackbarClose: $grey600;
+    backgroundInput: $darkLevel2;
+    
+    tableFontHeaderColor: $grey600;
+    
+    colorCompeledBorder: $successMain;
+    colorCompeledBackground: #23d92b0d;
+    }
