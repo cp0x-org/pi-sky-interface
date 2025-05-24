@@ -1,0 +1,62 @@
+<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="12" fill="url(#paint0_radial_5923_153535)"/>
+<path d="M7.60342 14.9993H5.99414C6.12551 17.5068 8.22742 19.6865 11.955 19.6865C15.6662 19.6865 18.0309 17.6543 18.0309 15.032C18.0309 10.0498 10.4935 10.3284 10.4935 7.444C10.4935 6.64095 11.1011 5.69039 12.5133 5.69039C14.0898 5.69039 15.9454 6.91956 16.0767 8.49289H17.6696C17.5054 5.95261 15.0258 4.18262 11.8729 4.18262C8.60511 4.18262 6.14193 6.08373 6.14193 8.7715C6.14193 13.9012 13.6793 13.2293 13.6793 16.3923C13.6793 17.3757 13.0717 18.1951 11.5445 18.1951C9.63964 18.1951 7.71836 16.8676 7.60342 14.9993ZM8.94995 7.82095C8.94995 11.7215 16.4216 10.9512 16.4216 15.114C16.4216 16.3595 15.6005 17.4576 14.6153 17.7362C14.9601 17.4084 15.2228 16.6873 15.2228 15.999C15.2228 12.1476 7.73479 12.6721 7.73479 8.72233C7.73479 7.39484 8.58869 6.32956 9.65606 6.00178C9.24553 6.49345 8.94995 7.13261 8.94995 7.82095Z" fill="white"/>
+<rect x="13" y="12" width="12" height="12" rx="3.3" fill="#F2F4F7"/>
+<path d="M16.375 18.0805L19.1864 19.7122V16.8242L16.375 18.0805Z" fill="white" fill-opacity="0.602"/>
+<g opacity="0.6">
+<mask id="mask0_5923_153535" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="16" y="16" width="7" height="4">
+<g opacity="0.6">
+<path d="M16 16.6982H22.138V19.9078H16V16.6982Z" fill="white"/>
+</g>
+</mask>
+<g mask="url(#mask0_5923_153535)">
+<path d="M19.0696 16.6982L16 18.0943L19.0696 19.9078L22.138 18.0943L19.0696 16.6982Z" fill="#010101"/>
+</g>
+</g>
+<g opacity="0.45">
+<mask id="mask1_5923_153535" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="16" y="13" width="4" height="7">
+<g opacity="0.45">
+<path d="M16 13H19.0696V19.9065H16V13Z" fill="white"/>
+</g>
+</mask>
+<g mask="url(#mask1_5923_153535)">
+<path d="M16 18.0931L19.0696 19.9065V13L16 18.0931Z" fill="#010101"/>
+</g>
+</g>
+<g opacity="0.8">
+<mask id="mask2_5923_153535" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="19" y="13" width="4" height="7">
+<g opacity="0.8">
+<path d="M19.0723 13H22.1418V19.9065H19.0723V13Z" fill="white"/>
+</g>
+</mask>
+<g mask="url(#mask2_5923_153535)">
+<path d="M19.0723 13V19.9065L22.1406 18.0931L19.0723 13Z" fill="#010101"/>
+</g>
+</g>
+<g opacity="0.45">
+<mask id="mask3_5923_153535" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="16" y="18" width="4" height="5">
+<g opacity="0.45">
+<path d="M16 18.6758H19.0696V23.0002H16V18.6758Z" fill="white"/>
+</g>
+</mask>
+<g mask="url(#mask3_5923_153535)">
+<path d="M16 18.6758L19.0696 23.0002V20.4893L16 18.6758Z" fill="#010101"/>
+</g>
+</g>
+<g opacity="0.8">
+<mask id="mask4_5923_153535" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="19" y="18" width="4" height="5">
+<g opacity="0.8">
+<path d="M19.0723 18.6758H22.143V23.0002H19.0723V18.6758Z" fill="white"/>
+</g>
+</mask>
+<g mask="url(#mask4_5923_153535)">
+<path d="M19.0723 20.4893V23.0002L22.143 18.6758L19.0723 20.4893Z" fill="#010101"/>
+</g>
+</g>
+<defs>
+<radialGradient id="paint0_radial_5923_153535" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12 29) rotate(-90) scale(39 46.8)">
+<stop stop-color="#FFD232"/>
+<stop offset="1" stop-color="#FF6D6D"/>
+</radialGradient>
+</defs>
+</svg>

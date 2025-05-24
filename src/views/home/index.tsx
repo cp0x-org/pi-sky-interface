@@ -32,8 +32,8 @@ export default function SamplePage() {
         <Tabs value={mainTab} onChange={handleMainTabChange} centered>
           <Tab label="Rewards" iconPosition="top" icon={<RewardSvg width="24" height="24" />} />
           <Tab label="Savings" iconPosition="top" icon={<SavingsSvg width="24" height="24" />} />
-          <Tab label="Savings" iconPosition="top" icon={<UpgradeSvg width="24" height="24" />} />
-          <Tab label="Savings" iconPosition="top" icon={<StakeSvg width="24" height="24" />} />
+          <Tab label="Upgrade" iconPosition="top" icon={<UpgradeSvg width="24" height="24" />} />
+          <Tab label="Stake" iconPosition="top" icon={<StakeSvg width="24" height="24" />} />
         </Tabs>
         <TabPanel value={mainTab} index={0}>
           <RewardTab />

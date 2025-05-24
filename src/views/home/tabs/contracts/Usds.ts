@@ -13,7 +13,7 @@ export const usdsContractConfig = {
       name: 'totalSupply',
       stateMutability: 'view',
       inputs: [],
-      outputs: [{ name: 'supply', type: 'uint256' }],
+      outputs: [{ name: 'supply', type: 'uint256' }]
     }
   ]
-} as const
+} as const;
