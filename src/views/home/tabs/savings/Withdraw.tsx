@@ -2,7 +2,7 @@ import { Box, Typography, TextField, Button, styled } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-import { usdsContractConfig } from '../contracts/Usds';
+// import { usdsContractConfig } from '../contracts/Usds';
 import { savingsUsdsContractConfig } from '../contracts/SavingsUsds';
 import { parseEther } from 'viem';
 
@@ -33,11 +33,10 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Supply = () => {
+const Withdraw = () => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
-  const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [isDeposited, setIsDeposited] = useState<boolean>(false);
+  const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
 
@@ -50,68 +49,46 @@ const Supply = () => {
   // const { writeContract: writeSupply } = useWriteContract();
 
   const {
-    writeContract: writeApprove,
-    isSuccess: isApproveSuccess,
-    error: approveError,
-    isError: isApproveError
-    // data: approveData,
-    // status: approveStatus
-  } = useWriteContract();
-
-  const {
-    writeContract: writeDeposit,
-    error: depositError,
-    isError: isDepositError,
-    isSuccess: isDepositSuccess
+    writeContract: writeWithdraw,
+    error: withdrawError,
+    isError: isWithdrawError,
+    isSuccess: isWithdrawSuccess
     // data: supplyData,
     // status: supplyStatus
   } = useWriteContract();
 
   useEffect(() => {
-    if (isApproveSuccess) {
-      setIsApproved(true);
-      setButtonText('Supply USDS');
-    }
-    if (isApproveError) {
-      console.error('Approval failed:', approveError);
-      setButtonText('Enter Amount');
-    }
-    if (isDepositSuccess) {
-      setIsDeposited(true);
+    if (isWithdrawSuccess) {
+      setIsWithdrawed(true);
       setButtonText('Success!');
     }
-    if (isDepositError) {
-      console.error('Deposit failed:', depositError);
+    if (isWithdrawError) {
+      console.error('Withdraw failed:', withdrawError);
       setButtonText('ERROR');
     }
-  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
+  }, [isWithdrawSuccess, isWithdrawError, withdrawError]);
 
   const handleMainButtonClick = async () => {
     if (!amount) {
-      console.log('Supply amount is empty');
+      console.log('Withdraw amount is empty');
       return;
+    } else {
+      console.log('Withdraw amount is not empty');
     }
 
     const amountInWei = parseEther(amount);
 
     try {
-      if (!isApproved) {
-        writeApprove({
-          ...usdsContractConfig,
-          functionName: 'approve',
-          args: [usdsContractConfig.address, BigInt(amountInWei)]
-        });
-      } else if (!isDeposited) {
-        writeDeposit({
+      if (!isWithdrawed) {
+        writeWithdraw({
           ...savingsUsdsContractConfig,
-          functionName: 'deposit',
-          args: [BigInt(amountInWei), address as `0x${string}`, 1]
+          functionName: 'withdraw',
+          args: [BigInt(amountInWei), address as `0x${string}`, address as `0x${string}`]
         });
       }
     } catch (error) {
       console.error('Transaction failed:', error);
-      setIsApproved(false);
-      setIsDeposited(false);
+      setIsWithdrawed(false);
       setButtonText('Enter Amount');
     }
   };
@@ -120,7 +97,7 @@ const Supply = () => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to supply?
+          How much USDS would you like to withdraw?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2 }}>
           <TextField
@@ -130,7 +107,7 @@ const Supply = () => {
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
-              setButtonText(e.target.value ? `Approve supply amount` : 'Enter Amount');
+              setButtonText(e.target.value ? `Withdraw` : 'Enter Amount');
             }}
             sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
@@ -145,6 +122,16 @@ const Supply = () => {
             <UsdsLogo width="24" height="24" />
             <Typography>USDS</Typography>
           </Box>
+
+          {/*<Chip label="USDS" variant="outlined" avatar={<UsdsLogo width="24" height="24" />} sx={{ border: 'none' }} />*/}
+
+          {/*<Button*/}
+          {/*  disabled*/}
+          {/*  sx={{ maxWidth: 104 }}*/}
+          {/*  startIcon={<UsdsLogo width="24" height="24" />}*/}
+          {/*>*/}
+          {/*  USDS*/}
+          {/*</Button>*/}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -168,4 +155,4 @@ const Supply = () => {
   );
 };
 
-export default Supply;
+export default Withdraw;

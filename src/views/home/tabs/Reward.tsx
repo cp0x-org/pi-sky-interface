@@ -1,41 +1,32 @@
-import { useState } from 'react';
 import Box from '@mui/material/Box';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import TabPanel from 'ui-component/TabPanel';
+import Grid from '@mui/material/Grid';
+import { styled } from '@mui/material/styles';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 
 export default function RewardTab() {
-  const [operationType, setOperationType] = useState(0);
-
-  const handleOperationChange = (event: React.SyntheticEvent, newValue: number) => {
-    setOperationType(newValue);
-  };
-
+  const RewardCard = styled(Paper)(({ theme }) => ({
+    ...theme.typography.body2,
+    padding: theme.spacing(1),
+    color: theme.palette.text.primary,
+    ...theme.applyStyles('dark', {
+      backgroundColor: theme.palette.secondary.light
+    })
+  }));
   return (
     <Box sx={{ width: '100%' }}>
-      <Tabs value={operationType} onChange={handleOperationChange}>
-        <Tab label="Supply" />
-        <Tab label="Withdraw" />
-      </Tabs>
-      <TabPanel value={operationType} index={0}>
-        <TextField fullWidth label="Amount to Supply" type="number" margin="normal" />
-        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-          Deposit
-        </Button>
-      </TabPanel>
-      <TabPanel value={operationType} index={1}>
-        <TextField
-          fullWidth
-          label="Amount to Withdraw"
-          type="number"
-          margin="normal"
-        />
-        <Button variant="contained" color="secondary" fullWidth sx={{ mt: 2 }}>
-          Withdraw
-        </Button>
-      </TabPanel>
+      <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+          <RewardCard>
+            <Typography>With: USDS Get: SKY</Typography>
+          </RewardCard>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 12, md: 6 }}>
+          <RewardCard>
+            <Typography>Chronicle Points</Typography>
+          </RewardCard>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

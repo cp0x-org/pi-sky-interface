@@ -19,7 +19,7 @@ import SavingsTab from './tabs/Savings';
 import UpgradeTab from './tabs/Upgrade';
 import StakeTab from './tabs/Stake';
 
-export default function SamplePage() {
+export default function HomePage() {
   const [mainTab, setMainTab] = useState(0);
 
   const handleMainTabChange = (event: React.SyntheticEvent, newValue: number) => {

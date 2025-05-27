@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -12,8 +12,8 @@ import Box from '@mui/material/Box';
 // project imports
 import Footer from './Footer';
 import Header from './Header';
-import Sidebar from './Sidebar';
-import HorizontalBar from './HorizontalBar';
+// import Sidebar from './Sidebar';
+// import HorizontalBar from './HorizontalBar';
 import MainContentStyled from './MainContentStyled';
 import Loader from 'ui-component/Loader';
 import Breadcrumbs from 'ui-component/extended/Breadcrumbs';
@@ -21,6 +21,13 @@ import Breadcrumbs from 'ui-component/extended/Breadcrumbs';
 import { MenuOrientation } from 'config';
 import useConfig from 'hooks/useConfig';
 import { handlerDrawerOpen, useGetMenuMaster } from 'api/menu';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import { ReactComponent as RewardSvg } from 'assets/images/sky/rewardlogo.svg';
+import { ReactComponent as SavingsSvg } from 'assets/images/sky/savings.svg';
+import { ReactComponent as UpgradeSvg } from 'assets/images/sky/upgrade.svg';
+import { ReactComponent as StakeSvg } from 'assets/images/sky/stake.svg';
+import MainCard from '../../ui-component/cards/MainCard';
 
 // ==============================|| MAIN LAYOUT ||============================== //
 
@@ -31,6 +38,25 @@ export default function MainLayout() {
   const { borderRadius, container, miniDrawer, menuOrientation } = useConfig();
   const { menuMaster, menuMasterLoading } = useGetMenuMaster();
   const drawerOpen = menuMaster?.isDashboardDrawerOpened;
+
+  const tabs = [
+    { label: 'Rewards', path: 'rewards', iconPosition: 'top', icon: <RewardSvg width="24" height="24" /> },
+    { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" /> },
+    { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" /> },
+    { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" /> }
+  ];
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentTabIndex = tabs.findIndex((tab) => location.pathname.endsWith(tab.path));
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    navigate(`/${tabs[newValue].path}`);
+  };
+
+  // const handleMainTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  //   setMainTab(newValue);
+  // };
 
   useEffect(() => {
     handlerDrawerOpen(!miniDrawer);
@@ -64,7 +90,33 @@ export default function MainLayout() {
         >
           {/* breadcrumb */}
           <Breadcrumbs />
-          <Outlet />
+          {/*<Outlet />*/}
+
+          <MainCard>
+            <Box sx={{ width: '100%' }}>
+              <Tabs value={currentTabIndex} onChange={handleChange} centered>
+                {tabs.map((tab) => (
+                  <Tab key={tab.path} label={tab.label} icon={tab.icon} />
+                ))}
+              </Tabs>
+              <Box sx={{ p: 3 }}>
+                <Outlet />
+              </Box>
+              {/*<TabPanel value={mainTab} index={0}>*/}
+              {/*  <RewardTab />*/}
+              {/*</TabPanel>*/}
+              {/*<TabPanel value={mainTab} index={1}>*/}
+              {/*  <SavingsTab />*/}
+              {/*</TabPanel>*/}
+              {/*<TabPanel value={mainTab} index={2}>*/}
+              {/*  <UpgradeTab />*/}
+              {/*</TabPanel>*/}
+              {/*<TabPanel value={mainTab} index={3}>*/}
+              {/*  <StakeTab />*/}
+              {/*</TabPanel>*/}
+            </Box>
+          </MainCard>
+
           <Footer />
         </Container>
       </MainContentStyled>

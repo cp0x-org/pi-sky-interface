@@ -9,10 +9,11 @@ $primary200: #2cffff80;
 $primary800: #19b4b4cc;
 
 // secondary
+$secondary100: #2C8A8A26;
 $secondaryLight: #2cffff26;
 $secondaryMain: #28e5e5;
 $secondaryDark: #19b4b4;
-$secondary200: #2cffff80;
+//$secondary200: #2cffff80;
 $secondary800: #19b4b4cc;
 
 // success Colors
@@ -90,7 +91,8 @@ $darkTextSecondary: #969696;
 
     // secondary
     secondaryLight: $secondaryLight;
-    secondary200: $secondary200;
+    secondary100: $secondary100;
+    //secondary200: $secondary200;
     secondaryMain: $secondaryMain;
     secondaryDark: $secondaryDark;
     secondary800: $secondary800;
