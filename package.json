@@ -104,6 +104,5 @@
     "typescript": "5.8.3",
     "vite-plugin-svgr": "^4.3.0",
     "vite-tsconfig-paths": "^5.1.4"
-  },
-  "packageManager": "yarn@4.9.1"
+  }
 }

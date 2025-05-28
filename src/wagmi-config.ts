@@ -53,32 +53,13 @@ const mainAnvil: Chain = {
       url: ''
     }
   },
-  testnet: false // или true, если это тестовая сеть
+  testnet: false
 };
 
 export const config = getDefaultConfig({
-  appName: 'My RainbowKit App',
+  appName: 'Sky Interface',
   projectId: '4b1f5d2b6f0a3368aba6cf7556fb00e2',
   // chains: [mainnet, sepolia, mainTest],
-  chains: [mainnet, mainTest, mainAnvil],
+  chains: [mainnet],
   ssr: false
 });
-
-// export const config = createConfig({
-//   chains: [mainnet, sepolia],
-//   connectors: [
-//     injected(),
-//     coinbaseWallet(),
-//     walletConnect({ projectId: import.meta.env.VITE_WC_PROJECT_ID }),
-//   ],
-//   transports: {
-//     [mainnet.id]: http(),
-//     [sepolia.id]: http(),
-//   },
-// })
-//
-// declare module 'wagmi' {
-//   interface Register {
-//     config: typeof config
-//   }
-// }
