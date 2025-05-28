@@ -2,28 +2,31 @@ import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
 import TabPanel from '../../../ui-component/TabPanel';
-import { usdsContractConfig } from './contracts/Usds';
+import { usdsContractConfig } from 'config/abi/Usds';
+import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { formatEther } from 'viem';
-import { useReadContract, useAccount } from 'wagmi';
+import { useReadContract, useAccount, useChainId } from 'wagmi';
 import Info from './savings/Info';
-import Supply from './savings/Supply';
+import Deposit from './savings/Deposit';
 import Withdraw from './savings/Withdraw';
-// const USDS = '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
-// import companyLightLogo from 'assets/images/maintenance/img-ct-light-logo.png';
+import { skyConfig } from 'config/index';
+import Typography from '@mui/material/Typography';
+import { formatUSDS } from 'utils/sky';
+
 export default function SavingsTab() {
   const [operationType, setOperationType] = useState(0);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
+  // const chainId = useChainId();
 
   const handleOperationChange = (event: React.SyntheticEvent, newValue: number) => {
     setOperationType(newValue);
   };
 
-  const { data: balance } = useReadContract({
+  const { data: userBalance } = useReadContract({
     ...usdsContractConfig,
+    address: skyConfig.Mainnet.contracts.USDS,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -31,33 +34,42 @@ export default function SavingsTab() {
     }
   });
 
+  const { data: savingBalance } = useReadContract({
+    ...savingsUsdsContractConfig,
+    address: skyConfig.Mainnet.contracts.SavingsUSDS,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address
+    }
+  });
+
+  const { data: totalSupply } = useReadContract({
+    ...savingsUsdsContractConfig,
+    address: skyConfig.Mainnet.contracts.SavingsUSDS,
+    functionName: 'totalSupply'
+  });
+
   return (
     <Box sx={{ width: '100%' }}>
-      <div>Balance: {balance ? formatEther(balance).toString() : '0'}</div>
+      <Typography variant="h2" gutterBottom>
+        Sky Savings Rate
+      </Typography>
+      <Info
+        contractAddress={skyConfig.Mainnet.contracts.SavingsUSDS}
+        balance={savingBalance ? Number(formatEther(savingBalance)).toFixed(2) : '0'}
+        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}
+      />
       <Tabs value={operationType} onChange={handleOperationChange}>
         <Tab label="Supply" />
         <Tab label="Withdraw" />
       </Tabs>
+
       <TabPanel value={operationType} index={0}>
-        <Info />
-        <Supply />
-        {/*<TextField fullWidth label="Amount to Supply" type="number" margin="normal" />*/}
-        {/*<Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>*/}
-        {/*  Deposit*/}
-        {/*</Button>*/}
+        <Deposit userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
       </TabPanel>
       <TabPanel value={operationType} index={1}>
-        <Info />
-        <Withdraw />
-        {/*<TextField*/}
-        {/*  fullWidth*/}
-        {/*  label="Amount to Withdraw"*/}
-        {/*  type="number"*/}
-        {/*  margin="normal"*/}
-        {/*/>*/}
-        {/*<Button variant="contained" color="secondary" fullWidth sx={{ mt: 2 }}>*/}
-        {/*  Withdraw*/}
-        {/*</Button>*/}
+        <Withdraw savingsBalance={savingBalance ? Number(formatEther(savingBalance)).toFixed(4) : '0'} />
       </TabPanel>
     </Box>
   );

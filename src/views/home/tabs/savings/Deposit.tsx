@@ -2,13 +2,13 @@ import { Box, Typography, TextField, Button, styled } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-
+import { usdsContractConfig } from 'config/abi/Usds';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
-import { parseEther } from 'viem';
 import { skyConfig } from 'config/index';
+import { parseEther } from 'viem';
 
 interface Props {
-  savingsBalance?: string;
+  userBalance?: string;
 }
 
 const StyledCard = styled(Box)(({ theme }) => ({
@@ -34,10 +34,11 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
+const Deposit: FC<Props> = ({ userBalance = '...' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
-  const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
+  const [isApproved, setIsApproved] = useState<boolean>(false);
+  const [isDeposited, setIsDeposited] = useState<boolean>(false);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
 
@@ -50,52 +51,70 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
   // const { writeContract: writeSupply } = useWriteContract();
 
   const {
-    writeContract: writeWithdraw,
-    error: withdrawError,
-    isError: isWithdrawError,
-    isSuccess: isWithdrawSuccess
+    writeContract: writeApprove,
+    isSuccess: isApproveSuccess,
+    error: approveError,
+    isError: isApproveError
+    // data: approveData,
+    // status: approveStatus
+  } = useWriteContract();
+
+  const {
+    writeContract: writeDeposit,
+    error: depositError,
+    isError: isDepositError,
+    isSuccess: isDepositSuccess
     // data: supplyData,
     // status: supplyStatus
   } = useWriteContract();
 
   useEffect(() => {
-    if (isWithdrawSuccess) {
-      setIsWithdrawed(true);
+    if (isApproveSuccess) {
+      setIsApproved(true);
+      setButtonText('Supply USDS');
+    }
+    if (isApproveError) {
+      console.error('Approval failed:', approveError);
+      setButtonText('Enter Amount');
+    }
+    if (isDepositSuccess) {
+      setIsDeposited(true);
       setButtonText('Success!');
     }
-    if (isWithdrawError) {
-      console.error('Withdraw failed:', withdrawError);
+    if (isDepositError) {
+      console.error('Deposit failed:', depositError);
       setButtonText('ERROR');
     }
-  }, [isWithdrawSuccess, isWithdrawError, withdrawError]);
+  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
 
   const handleMainButtonClick = async () => {
     if (!amount) {
-      console.log('Withdraw amount is empty');
+      console.log('Supply amount is empty');
       return;
-    } else {
-      console.log('Withdraw amount is not empty');
     }
 
     const amountInWei = parseEther(amount);
-    console.log(amountInWei.toString());
-    console.log(BigInt(amountInWei).toString());
-
-    const hexAmount = `0x${amountInWei.toString(16)}`;
-    console.log(hexAmount);
 
     try {
-      if (!isWithdrawed) {
-        writeWithdraw({
+      if (!isApproved) {
+        writeApprove({
+          ...usdsContractConfig,
+          address: skyConfig.Mainnet.contracts.USDS,
+          functionName: 'approve',
+          args: [skyConfig.Mainnet.contracts.SavingsUSDS, BigInt(amountInWei)]
+        });
+      } else if (!isDeposited) {
+        writeDeposit({
           ...savingsUsdsContractConfig,
           address: skyConfig.Mainnet.contracts.SavingsUSDS,
-          functionName: 'withdraw',
-          args: [BigInt(hexAmount), address as `0x${string}`, address as `0x${string}`]
+          functionName: 'deposit',
+          args: [BigInt(amountInWei), address as `0x${string}`, 1]
         });
       }
     } catch (error) {
       console.error('Transaction failed:', error);
-      setIsWithdrawed(false);
+      setIsApproved(false);
+      setIsDeposited(false);
       setButtonText('Enter Amount');
     }
   };
@@ -104,7 +123,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to withdraw?
+          How much USDS would you like to supply?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <TextField
@@ -114,7 +133,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
-              setButtonText(e.target.value ? `Withdraw` : 'Enter Amount');
+              setButtonText(e.target.value ? `Approve supply amount` : 'Enter Amount');
             }}
             sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
@@ -129,21 +148,11 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
             <UsdsLogo width="24" height="24" />
             <Typography>USDS</Typography>
           </Box>
-
-          {/*<Chip label="USDS" variant="outlined" avatar={<UsdsLogo width="24" height="24" />} sx={{ border: 'none' }} />*/}
-
-          {/*<Button*/}
-          {/*  disabled*/}
-          {/*  sx={{ maxWidth: 104 }}*/}
-          {/*  startIcon={<UsdsLogo width="24" height="24" />}*/}
-          {/*>*/}
-          {/*  USDS*/}
-          {/*</Button>*/}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {savingsBalance} USDS
+              {userBalance} USDS
             </Typography>
           </Box>
           {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
@@ -162,4 +171,4 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
   );
 };
 
-export default Withdraw;
+export default Deposit;

@@ -1,5 +1,4 @@
 export const savingsUsdsContractConfig = {
-  address: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
   abi: [
     {
       inputs: [

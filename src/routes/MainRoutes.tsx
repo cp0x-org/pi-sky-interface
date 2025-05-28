@@ -8,6 +8,8 @@ import RewardTab from '../views/home/tabs/Reward';
 import SavingsTab from '../views/home/tabs/Savings';
 import UpgradeTab from '../views/home/tabs/Upgrade';
 import StakeTab from '../views/home/tabs/Stake';
+import USDSSkyTab from '../views/home/tabs/rewards/USDSSky';
+import ChronicleTab from '../views/home/tabs/rewards/Chronicle';
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -23,14 +25,14 @@ const MainRoutes = {
       path: '/rewards',
       element: <RewardTab />
     },
-    // {
-    //   path: '/rewards/usdsgetsky',
-    //   element: <HomePage />
-    // },
-    // {
-    //   path: '/rewards/chronicle',
-    //   element: <HomePage />
-    // },
+    {
+      path: '/rewards/usdsgetsky',
+      element: <USDSSkyTab />
+    },
+    {
+      path: '/rewards/chronicle',
+      element: <ChronicleTab />
+    },
     {
       path: '/savings',
       element: <SavingsTab />

@@ -1,5 +1,4 @@
 export const usdsContractConfig = {
-  address: '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
   abi: [
     {
       inputs: [],

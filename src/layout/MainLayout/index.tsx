@@ -48,7 +48,7 @@ export default function MainLayout() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const currentTabIndex = tabs.findIndex((tab) => location.pathname.endsWith(tab.path));
+  const currentTabIndex = tabs.findIndex((tab) => location.pathname.includes(tab.path));
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     navigate(`/${tabs[newValue].path}`);

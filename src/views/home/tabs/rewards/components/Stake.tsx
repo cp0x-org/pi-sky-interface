@@ -1,14 +1,16 @@
+import { FC } from 'react';
 import { Box, Typography, TextField, Button, styled } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-import { usdsContractConfig } from '../contracts/Usds';
-import { savingsUsdsContractConfig } from '../contracts/SavingsUsds';
+import { usdsContractConfig } from 'config/abi/Usds';
 import { parseEther } from 'viem';
+import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
+import { skyConfig } from 'config/index';
 
-// import Chip from '@mui/material/Chip';
-// import Paper from '@mui/material/Paper';
-// import Stack from '@mui/material/Stack';
+interface Props {
+  userBalance?: string;
+}
 
 const StyledCard = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -33,13 +35,13 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Supply = () => {
+const Stake: FC<Props> = ({ userBalance = '...' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isApproved, setIsApproved] = useState<boolean>(false);
   const [isDeposited, setIsDeposited] = useState<boolean>(false);
-  const account = useAccount();
-  const address = account.address as `0x${string}` | undefined;
+  // const account = useAccount();
+  // const address = account.address as `0x${string}` | undefined;
 
   const handlePercentClick = (percent: number) => {
     // TODO: Implement percentage calculation based on available balance
@@ -98,14 +100,16 @@ const Supply = () => {
       if (!isApproved) {
         writeApprove({
           ...usdsContractConfig,
+          address: skyConfig.Mainnet.contracts.USDS,
           functionName: 'approve',
-          args: [usdsContractConfig.address, BigInt(amountInWei)]
+          args: [skyConfig.Mainnet.contracts.StakingRewards, BigInt(amountInWei)]
         });
       } else if (!isDeposited) {
         writeDeposit({
-          ...savingsUsdsContractConfig,
-          functionName: 'deposit',
-          args: [BigInt(amountInWei), address as `0x${string}`, 1]
+          ...stakingRewardContractConfig,
+          address: skyConfig.Mainnet.contracts.StakingRewards,
+          functionName: 'stake',
+          args: [BigInt(amountInWei), 1]
         });
       }
     } catch (error) {
@@ -122,7 +126,7 @@ const Supply = () => {
         <Typography variant="body2" sx={{ mb: 2 }}>
           How much USDS would you like to supply?
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <TextField
             fullWidth
             type="number"
@@ -148,15 +152,15 @@ const Supply = () => {
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="textSecondary">
-              13.27 USDS
+            <Typography variant="body2" color="textPrimary">
+              {userBalance} USDS
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
-          </Box>
+          {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
+          {/*  <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>*/}
+          {/*  <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>*/}
+          {/*  <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>*/}
+          {/*</Box>*/}
         </Box>
       </Box>
       <Box>
@@ -168,4 +172,4 @@ const Supply = () => {
   );
 };
 
-export default Supply;
+export default Stake;

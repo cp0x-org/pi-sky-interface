@@ -1,7 +1,7 @@
 // types
 import { ConfigProps } from 'types/config';
 
-export const DASHBOARD_PATH = '/sample-page';
+export const DASHBOARD_PATH = '/';
 export const HORIZONTAL_MAX_ITEM = 7;
 
 export enum MenuOrientation {

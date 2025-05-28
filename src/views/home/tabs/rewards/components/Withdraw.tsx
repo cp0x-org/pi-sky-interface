@@ -2,13 +2,14 @@ import { Box, Typography, TextField, Button, styled } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-
-import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
+// import { usdsContractConfig } from '../contracts/Usds';
+// import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { parseEther } from 'viem';
+import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
 import { skyConfig } from 'config/index';
 
 interface Props {
-  savingsBalance?: string;
+  stakedBalance?: string;
 }
 
 const StyledCard = styled(Box)(({ theme }) => ({
@@ -34,12 +35,12 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
+const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
-  const account = useAccount();
-  const address = account.address as `0x${string}` | undefined;
+  // const account = useAccount();
+  // const address = account.address as `0x${string}` | undefined;
 
   const handlePercentClick = (percent: number) => {
     // TODO: Implement percentage calculation based on available balance
@@ -78,19 +79,14 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
     }
 
     const amountInWei = parseEther(amount);
-    console.log(amountInWei.toString());
-    console.log(BigInt(amountInWei).toString());
-
-    const hexAmount = `0x${amountInWei.toString(16)}`;
-    console.log(hexAmount);
 
     try {
       if (!isWithdrawed) {
         writeWithdraw({
-          ...savingsUsdsContractConfig,
-          address: skyConfig.Mainnet.contracts.SavingsUSDS,
+          ...stakingRewardContractConfig,
+          address: skyConfig.Mainnet.contracts.StakingRewards,
           functionName: 'withdraw',
-          args: [BigInt(hexAmount), address as `0x${string}`, address as `0x${string}`]
+          args: [BigInt(amountInWei)]
         });
       }
     } catch (error) {
@@ -143,7 +139,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {savingsBalance} USDS
+              {stakedBalance} USDS
             </Typography>
           </Box>
           {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
