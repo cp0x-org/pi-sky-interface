@@ -11,11 +11,11 @@ import { encodeFunctionData, parseEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useAccount, useReadContract, useWriteContract, useSimulateContract } from 'wagmi';
 import { readContract } from '@wagmi/core';
-
+import { formatEther } from 'viem';
 import { useConfigChainId } from '../../../hooks/useConfigChainId';
 import { usdsContractConfig } from '../../../config/abi/Usds';
 import { config } from '../../../wagmi-config';
-import { SkyContracts, SkyIcons } from '../../../config';
+import { SkyContracts, SkyIcons } from 'config/index';
 
 const steps = ['Stake and Borrow', 'Select reward', 'Select a delegate', 'Confirm'];
 
@@ -257,6 +257,9 @@ export default function StakeTab() {
       if (address && value) {
         refetchAllowance();
       }
+
+      // Note: We accept values that exceed balance, but StakeAndBorrow will show an error
+      // The Next button will still be enabled, but we'll guide users with validation UI
     }
 
     if ((field === 'rewardAddress' || field === 'delegatorAddress') && value) {
@@ -295,6 +298,23 @@ export default function StakeTab() {
     if (!address || !stakeData.amount) {
       console.log('Missing address or stake amount');
       return;
+    }
+
+    // Check if amount exceeds balance
+    if (userBalance) {
+      try {
+        const amountBigInt = parseEther(stakeData.amount);
+        if (amountBigInt > userBalance) {
+          console.error('Amount exceeds balance', {
+            amount: stakeData.amount,
+            balance: formatEther(userBalance)
+          });
+          // We still allow the transaction to go through, as the blockchain will reject it
+          // This is just to log the issue
+        }
+      } catch (error) {
+        console.error('Error checking balance:', error);
+      }
     }
 
     try {
@@ -406,7 +426,7 @@ export default function StakeTab() {
       case 2:
         return <Delegate delegatorAddress={stakeData.delegatorAddress} onChange={(v) => handleChange('delegatorAddress', v)} />;
       case 3:
-        return <Confirm stakeData={stakeData} isApproved={isApproved} isStaked={isStaked} />;
+        return <Confirm stakeData={stakeData} isApproved={isApproved} isStaked={isStaked} allowance={allowanceData} />;
       default:
         return null;
     }
@@ -435,12 +455,12 @@ export default function StakeTab() {
             </Alert>
           )}
 
-          {activeStep === steps.length - 1 && allowanceData && stakeData.amount && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              Current allowance:{' '}
-              {allowanceData >= parseEther(stakeData.amount) ? 'Sufficient for this transaction' : 'Needs approval for this transaction'}
-            </Alert>
-          )}
+          {/*{activeStep === steps.length - 1 && allowanceData && stakeData.amount && (*/}
+          {/*  <Alert severity="info" sx={{ mt: 2 }}>*/}
+          {/*    Current allowance:{' '}*/}
+          {/*    {allowanceData >= parseEther(stakeData.amount) ? 'Sufficient for this transaction' : 'Needs approval for this transaction'}*/}
+          {/*  </Alert>*/}
+          {/*)}*/}
 
           {activeStep === steps.length - 1 && isSimulateApproveError && !isApproved && (
             <Alert severity="warning" sx={{ mt: 2 }}>

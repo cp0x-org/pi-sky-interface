@@ -48,7 +48,8 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
       .then((data: DelegatesResponse) => {
         // const aligned = data.filter((d) => d.status === 'aligned');
         console.log(data);
-        setDelegates(data.delegates);
+
+        setDelegates(data.delegates.sort((a, b) => parseFloat(b.skyDelegated) - parseFloat(a.skyDelegated)));
         setLoading(false);
       })
       .catch((err) => {

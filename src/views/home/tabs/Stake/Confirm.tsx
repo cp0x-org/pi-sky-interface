@@ -16,9 +16,10 @@ interface ConfirmProps {
   };
   isApproved: boolean;
   isStaked: boolean;
+  allowanceData: bigint;
 }
 
-const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked }) => {
+const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceData }) => {
   const { config: skyConfig } = useConfigChainId();
   const contractAddress = skyConfig.contracts.LockStakeEngine;
 

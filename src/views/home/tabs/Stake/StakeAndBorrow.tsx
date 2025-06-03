@@ -1,5 +1,5 @@
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
+import { Box, Typography, TextField, Button, styled, Alert } from '@mui/material';
+import { FC, useState, useEffect } from 'react';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { useAccount, useChainId, useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
@@ -37,10 +37,38 @@ const PercentButton = styled(Button)(({ theme }) => ({
 }));
 
 const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, amount, onChange }) => {
+  const [error, setError] = useState<string | null>(null);
+  const maxAmount = userBalance ? formatEther(userBalance) : '0';
+
+  // Helper function to safely compare amounts
+  const isAmountTooLarge = (amount: string, maxAmount: string): boolean => {
+    try {
+      const amountNum = parseFloat(amount);
+      const maxAmountNum = parseFloat(maxAmount);
+      return amountNum > maxAmountNum;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Validate amount whenever it changes
+  useEffect(() => {
+    if (amount && isAmountTooLarge(amount, maxAmount)) {
+      setError(`Amount exceeds your balance. Maximum: ${parseFloat(maxAmount).toFixed(4)} SKY`);
+    } else {
+      setError(null);
+    }
+  }, [amount, maxAmount]);
+
   const handlePercentClick = (percent: number) => {
     if (!userBalance) return;
     const percentAmount = (userBalance * BigInt(percent)) / 100n;
     onChange(formatEther(percentAmount));
+  };
+
+  const handleAmountChange = (value: string) => {
+    // Accept the input even if it exceeds balance, but show an error
+    onChange(value);
   };
 
   return (
@@ -49,14 +77,24 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, amount, onChange }) => {
         <Typography variant="body2" sx={{ mb: 2 }}>
           How much SKY would you like to stake?
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: error ? 'error.main' : 'divider', py: 2, gap: 2 }}>
           <TextField
             fullWidth
             type="number"
             placeholder="Enter amount"
             value={amount}
-            onChange={(e) => onChange(e.target.value)}
-            sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
+            onChange={(e) => handleAmountChange(e.target.value)}
+            error={!!error}
+            sx={{
+              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                '-webkit-appearance': 'none',
+                margin: 0
+              },
+              '& input[type=number]': {
+                '-moz-appearance': 'textfield'
+              }
+            }}
           />
 
           <Box
@@ -70,10 +108,17 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, amount, onChange }) => {
             <Typography>SKY</Typography>
           </Box>
         </Box>
+
+        {error && (
+          <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+            {error}
+          </Typography>
+        )}
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {userBalance ? Number(formatEther(userBalance)).toFixed(2) : '0'} SKY
+              {userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} SKY
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
