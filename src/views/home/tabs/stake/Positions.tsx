@@ -6,11 +6,12 @@ import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { Chip, Divider, Alert, Grid, CircularProgress, Paper, Skeleton } from '@mui/material';
-import { useAccount } from 'wagmi';
+import { Chip, Divider, Alert, Grid, CircularProgress, Paper, Button, Tooltip, Snackbar } from '@mui/material';
+import { useAccount, useWriteContract, useSimulateContract } from 'wagmi';
 import { useDelegationData } from '../../../../hooks/useDelegationData';
-import { formatEther } from 'viem';
+import { encodeFunctionData, formatEther, parseEther } from 'viem';
 import { useStakingData } from '../../../../hooks/useStakingData';
+import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 
 interface PositionsProps {
   stakeData?: {
@@ -36,8 +37,17 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
   const { delegatedTo, totalDelegated, isLoading, error } = useDelegationData();
   const { stakingLocks, stakingFrees } = useStakingData();
 
+  // State for tracking withdraw operations
+  const [withdrawing, setWithdrawing] = useState<Record<string, boolean>>({});
+  const [withdrawSuccess, setWithdrawSuccess] = useState<Record<string, boolean>>({});
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   // Create a set of freed position indexes for quick lookup
   const [freedPositionIndexes, setFreedPositionIndexes] = useState<Set<string>>(new Set());
+
+  // Contract interaction
+  const { writeContract, isPending, isSuccess, isError, error: withdrawError } = useWriteContract();
 
   useEffect(() => {
     if (stakingFrees && stakingFrees.length > 0) {
@@ -47,10 +57,63 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     }
   }, [stakingFrees]);
 
+  // Effect to handle withdraw success/failure notifications
+  useEffect(() => {
+    if (isSuccess) {
+      setSnackbarMessage('Withdraw successful!');
+      setSnackbarOpen(true);
+    } else if (isError && withdrawError) {
+      setSnackbarMessage(`Error: ${withdrawError.message}`);
+      setSnackbarOpen(true);
+    }
+  }, [isSuccess, isError, withdrawError]);
+
   // Format delegated address for display
   const shortenAddress = (address: string): string => {
     if (!address) return '';
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
+  const handleWithdraw = (item: any) => {
+    if (!address || !item.positionIndex || !item.lockAmount) {
+      console.error('Missing required data for withdrawal');
+      setSnackbarMessage('Missing required data for withdrawal');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      // Mark this position as withdrawing
+      setWithdrawing((prev) => ({ ...prev, [item.positionIndex]: true }));
+      console.log('item.positionIndex');
+      console.log(item.positionIndex);
+      // Create the function call data for the free operation
+      const callData = encodeFunctionData({
+        abi: lockStakeContractConfig.abi,
+        functionName: 'free',
+        args: [address, BigInt(item.positionIndex), address, parseEther(formatAmount(item.lockAmount))]
+      });
+
+      // Execute the contract call
+      writeContract({
+        address: skyConfig.contracts.LockStakeEngine,
+        abi: lockStakeContractConfig.abi,
+        functionName: 'multicall',
+        args: [[callData]]
+      });
+
+      console.log('Withdraw initiated for position', item.positionIndex);
+    } catch (error) {
+      console.error('Error preparing withdraw transaction:', error);
+      setWithdrawing((prev) => ({ ...prev, [item.positionIndex]: false }));
+      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setSnackbarOpen(true);
+    }
+  };
+
+  // Handle snackbar close
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   if (isLoading) {
@@ -74,16 +137,13 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
 
   if (delegatedTo.length === 0 || !address) {
     return (
-      <Typography variant="body2" sx={{ mt: 2 }}>
-        You don't have any active delegation positions.
+      <Typography variant="h2" gutterBottom>
+        Your Delegation Summary
       </Typography>
     );
   }
 
-  console.log('DELEGRATED TO');
-  console.log(delegatedTo);
-
-  // Filter out positions that have been freed
+  // Show all positions
   const activePositions = delegatedTo;
 
   return (
@@ -208,12 +268,33 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                       </Box>
                     </Box>
                   )}
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <Box sx={{ mt: 2 }}>
+                    <Tooltip title={!item.positionIndex ? 'Position index not available. Try refreshing.' : ''}>
+                      <span style={{ width: '100%' }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          fullWidth
+                          onClick={() => handleWithdraw(item, index)}
+                          disabled={!item.positionIndex || withdrawing[item.positionIndex] || isPending}
+                        >
+                          {withdrawing[item.positionIndex] ? 'Withdrawing...' : 'Withdraw Position'}
+                        </Button>
+                      </span>
+                    </Tooltip>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
           ))
         )}
       </Grid>
+
+      {/* Snackbar for notifications */}
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbarMessage} />
     </Box>
   );
 };
