@@ -1,19 +1,29 @@
-import { FC } from 'react';
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, Typography, TextField, Button, styled, Select } from '@mui/material';
+import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { parseEther } from 'viem';
-import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
-import { skyConfig } from 'config/index';
-import Alert from '@mui/material/Alert';
-import { openSnackbar } from '../../../../../store/slices/snackbar';
-import { useDispatch } from 'store';
-import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
+import InputLabel from 'ui-component/extended/Form/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import daiLogo from 'assets/images/sky/ethereum/dai.svg?url';
+import mkrLogo from 'assets/images/sky/ethereum/mkr.svg?url';
+import { daiUsdsConverterConfig } from 'config/abi/DaiUsdsConverter';
+import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
+import Avatar from 'ui-component/extended/Avatar';
 interface Props {
   userBalance?: string;
 }
+
+const TOKEN_DAI = 'dai';
+const TOKEN_MKR = 'mkr';
+
+const tokenOptions = [
+  { label: 'DAI', value: TOKEN_DAI, img: daiLogo },
+  { label: 'MKR', value: TOKEN_MKR, img: mkrLogo }
+];
 
 const StyledCard = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -38,18 +48,23 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Stake: FC<Props> = ({ userBalance = '...' }) => {
+const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
+
   const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [isDeposited, setIsDeposited] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(true);
-  const dispatch = useDispatch();
+  const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
+
+  const account = useAccount();
+  const address = account.address as `0x${string}` | undefined;
+  const { config: skyConfig } = useConfigChainId();
+  const [tokenValue, setTokenValue] = useState(tokenOptions[0].value);
+
   const handlePercentClick = (percent: number) => {
     // TODO: Implement percentage calculation based on available balance
     console.log(`Clicked ${percent}%`);
   };
-  const { config: skyConfig } = useConfigChainId();
+
   // const { writeContract: writeApprove } = useWriteContract();
   // const { writeContract: writeSupply } = useWriteContract();
 
@@ -63,10 +78,10 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
   } = useWriteContract();
 
   const {
-    writeContract: writeDeposit,
-    error: depositError,
-    isError: isDepositError,
-    isSuccess: isDepositSuccess
+    writeContract: writeConfirm,
+    error: confirmError,
+    isError: isConfirmError,
+    isSuccess: isConfirmSuccess
     // data: supplyData,
     // status: supplyStatus
   } = useWriteContract();
@@ -80,37 +95,17 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
       console.error('Approval failed:', approveError);
       setButtonText('Enter Amount');
     }
-    if (isDepositSuccess) {
-      setIsDeposited(true);
+    if (isConfirmSuccess) {
+      setIsConfirmed(true);
       setButtonText('Success!');
-      setShowAlert(true);
     }
-    if (isDepositError) {
-      console.error('Deposit failed:', depositError);
+    if (isConfirmError) {
+      console.error('Deposit failed:', confirmError);
       setButtonText('ERROR');
     }
-    if (showAlert) {
-      openSnackbar({
-        open: true,
-        anchorOrigin: { vertical: 'top', horizontal: 'center' }
-      });
-      setTimeout(function () {
-        setShowAlert(false);
-      }, 3000);
-    }
-  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
+  }, [isApproveSuccess, isApproveError, approveError, isConfirmSuccess, isConfirmError, confirmError]);
 
   const handleMainButtonClick = async () => {
-    dispatch(
-      openSnackbar({
-        open: true,
-        anchorOrigin: { vertical: 'top', horizontal: 'center' },
-        message: 'This is default message',
-        variant: 'alert',
-        alert: { color: 'success' },
-        severity: 'success'
-      })
-    );
     if (!amount) {
       console.log('Supply amount is empty');
       return;
@@ -124,20 +119,29 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
           ...usdsContractConfig,
           address: skyConfig.contracts.USDS,
           functionName: 'approve',
-          args: [skyConfig.contracts.StakingRewards, BigInt(amountInWei)]
+          args: [skyConfig.contracts.SavingsUSDS, BigInt(amountInWei)]
         });
-      } else if (!isDeposited) {
-        writeDeposit({
-          ...stakingRewardContractConfig,
-          address: skyConfig.contracts.StakingRewards,
-          functionName: 'stake',
-          args: [BigInt(amountInWei), 1]
-        });
+      } else if (!isConfirmed) {
+        if (tokenValue == TOKEN_DAI) {
+          writeConfirm({
+            ...daiUsdsConverterConfig,
+            address: skyConfig.contracts.DAIUSDSConverter,
+            functionName: 'daiToUsds',
+            args: [address as `0x${string}`, BigInt(amountInWei)]
+          });
+        } else if (tokenValue == TOKEN_DAI) {
+          writeConfirm({
+            ...mkrSkyConverterConfig,
+            address: skyConfig.contracts.MKRSKYConverter,
+            functionName: 'mkrToSky',
+            args: [address as `0x${string}`, BigInt(amountInWei)]
+          });
+        }
       }
     } catch (error) {
       console.error('Transaction failed:', error);
       setIsApproved(false);
-      setIsDeposited(false);
+      setIsConfirmed(false);
       setButtonText('Enter Amount');
     }
   };
@@ -146,11 +150,11 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to supply?
+          Choose a token to upgrade, and enter an amount
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <TextField
-            variant="standard"
+            fullWidth
             type="number"
             placeholder="Enter amount"
             value={amount}
@@ -158,15 +162,7 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
               setAmount(e.target.value);
               setButtonText(e.target.value ? `Approve supply amount` : 'Enter Amount');
             }}
-            sx={{
-              '& input::-webkit-outer-spin-button': {
-                display: 'none'
-              },
-              '& input::-webkit-inner-spin-button': { display: 'none' },
-              '& input[type=number]': {
-                MozAppearance: 'textfield'
-              }
-            }}
+            sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
 
           <Box
@@ -176,8 +172,35 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
               alignItems: 'center'
             }}
           >
-            <UsdsLogo width="24" height="24" />
-            <Typography>USDS</Typography>
+            {/*<UsdsLogo width="24" height="24" />*/}
+            {/*<Typography>USDS</Typography>*/}
+
+            <FormControl fullWidth>
+              <InputLabel id="select-with-image-label">Select Option</InputLabel>
+              <Select
+                value={tokenValue}
+                label="Token"
+                onChange={(e) => setTokenValue(e.target.value)}
+                renderValue={(selected) => {
+                  const item = tokenOptions.find((o) => o.value === selected);
+                  return (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar src={item?.img} sx={{ width: 24, height: 24 }} />
+                      {item?.label}
+                    </Box>
+                  );
+                }}
+              >
+                {tokenOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar src={option.img} sx={{ width: 24, height: 24 }} />
+                      {option.label}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
@@ -198,15 +221,8 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
           {buttonText}
         </Button>
       </Box>
-      <Box>
-        {showAlert && (
-          <Alert variant="filled" severity="success">
-            This is an error alert — check it out!
-          </Alert>
-        )}
-      </Box>
     </StyledCard>
   );
 };
 
-export default Stake;
+export default UpgradeAssets;

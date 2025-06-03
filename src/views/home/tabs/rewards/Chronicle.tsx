@@ -17,12 +17,14 @@ import { skyConfig } from 'config/index';
 import { stakingRewardContractConfig } from '../../../../config/abi/StakingReward';
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
+import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 
 export default function ChronicleTab() {
   const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const [operationType, setOperationType] = useState(0);
+  const { config: skyConfig } = useConfigChainId();
 
   const ChronicleCard = styled(Paper)(({ theme }) => ({
     ...theme.typography.body2,
@@ -39,7 +41,7 @@ export default function ChronicleTab() {
 
   const { data: userBalance } = useReadContract({
     ...usdsContractConfig,
-    address: skyConfig.Mainnet.contracts.USDS,
+    address: skyConfig.contracts.USDS,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -49,7 +51,7 @@ export default function ChronicleTab() {
 
   const { data: stakedBalance } = useReadContract({
     ...stakingRewardContractConfig,
-    address: skyConfig.Mainnet.contracts.ChroniclePoints,
+    address: skyConfig.contracts.ChroniclePoints,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -59,7 +61,7 @@ export default function ChronicleTab() {
 
   const { data: totalSupply } = useReadContract({
     ...stakingRewardContractConfig,
-    address: skyConfig.Mainnet.contracts.ChroniclePoints,
+    address: skyConfig.contracts.ChroniclePoints,
     functionName: 'totalSupply'
   });
 
@@ -76,22 +78,20 @@ export default function ChronicleTab() {
         Chronicle Points
       </Typography>
       <Info
-        contractAddress={skyConfig.Mainnet.contracts.ChroniclePoints}
+        contractAddress={skyConfig.contracts.ChroniclePoints}
         balance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(2) : '0'}
         tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}
       />
-      <ChronicleCard sx={{ width: '100%' }}>
-        <Tabs value={operationType} onChange={handleOperationChange}>
-          <Tab label="Supply" />
-          <Tab label="Withdraw" />
-        </Tabs>
-        <TabPanel value={operationType} index={0}>
-          <Stake userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
-        </TabPanel>
-        <TabPanel value={operationType} index={1}>
-          <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
-        </TabPanel>
-      </ChronicleCard>
+      <Tabs value={operationType} onChange={handleOperationChange}>
+        <Tab label="Supply" />
+        <Tab label="Withdraw" />
+      </Tabs>
+      <TabPanel value={operationType} index={0}>
+        <Stake userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
+      </TabPanel>
+      <TabPanel value={operationType} index={1}>
+        <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
+      </TabPanel>
     </Box>
   );
 }

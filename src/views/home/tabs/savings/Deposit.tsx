@@ -1,11 +1,11 @@
 import { Box, Typography, TextField, Button, styled } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useAccount, useChainId, useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
-import { skyConfig } from 'config/index';
 import { parseEther } from 'viem';
+import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 
 interface Props {
   userBalance?: string;
@@ -41,6 +41,8 @@ const Deposit: FC<Props> = ({ userBalance = '...' }) => {
   const [isDeposited, setIsDeposited] = useState<boolean>(false);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
+
+  const { config: skyConfig } = useConfigChainId();
 
   const handlePercentClick = (percent: number) => {
     // TODO: Implement percentage calculation based on available balance
@@ -99,14 +101,14 @@ const Deposit: FC<Props> = ({ userBalance = '...' }) => {
       if (!isApproved) {
         writeApprove({
           ...usdsContractConfig,
-          address: skyConfig.Mainnet.contracts.USDS,
+          address: skyConfig.contracts.USDS,
           functionName: 'approve',
-          args: [skyConfig.Mainnet.contracts.SavingsUSDS, BigInt(amountInWei)]
+          args: [skyConfig.contracts.SavingsUSDS, BigInt(amountInWei)]
         });
       } else if (!isDeposited) {
         writeDeposit({
           ...savingsUsdsContractConfig,
-          address: skyConfig.Mainnet.contracts.SavingsUSDS,
+          address: skyConfig.contracts.SavingsUSDS,
           functionName: 'deposit',
           args: [BigInt(amountInWei), address as `0x${string}`, 1]
         });

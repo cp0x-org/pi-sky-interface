@@ -6,6 +6,7 @@ import { useAccount, useWriteContract } from 'wagmi';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { parseEther } from 'viem';
 import { skyConfig } from 'config/index';
+import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 
 interface Props {
   savingsBalance?: string;
@@ -40,6 +41,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
   const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
+  const { config: skyConfig } = useConfigChainId();
 
   const handlePercentClick = (percent: number) => {
     // TODO: Implement percentage calculation based on available balance
@@ -88,7 +90,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
       if (!isWithdrawed) {
         writeWithdraw({
           ...savingsUsdsContractConfig,
-          address: skyConfig.Mainnet.contracts.SavingsUSDS,
+          address: skyConfig.contracts.SavingsUSDS,
           functionName: 'withdraw',
           args: [BigInt(hexAmount), address as `0x${string}`, address as `0x${string}`]
         });

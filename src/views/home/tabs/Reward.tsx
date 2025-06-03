@@ -32,7 +32,7 @@ export default function RewardTab() {
   };
 
   return (
-    <Box sx={{ width: '70%' }} alignContent={'center'} margin={'auto'}>
+    <Box sx={{ width: '100%' }} alignContent={'center'} margin={'auto'}>
       <Typography variant="h2" gutterBottom>
         Sky Token Rewards
       </Typography>

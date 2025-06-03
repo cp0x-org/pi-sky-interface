@@ -7,6 +7,7 @@ import { useAccount, useWriteContract } from 'wagmi';
 import { parseEther } from 'viem';
 import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
 import { skyConfig } from 'config/index';
+import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
 
 interface Props {
   stakedBalance?: string;
@@ -41,6 +42,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
   const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
   // const account = useAccount();
   // const address = account.address as `0x${string}` | undefined;
+  const { config: skyConfig } = useConfigChainId();
 
   const handlePercentClick = (percent: number) => {
     // TODO: Implement percentage calculation based on available balance
@@ -84,7 +86,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
       if (!isWithdrawed) {
         writeWithdraw({
           ...stakingRewardContractConfig,
-          address: skyConfig.Mainnet.contracts.StakingRewards,
+          address: skyConfig.contracts.StakingRewards,
           functionName: 'withdraw',
           args: [BigInt(amountInWei)]
         });

@@ -60,6 +60,7 @@ export const config = getDefaultConfig({
   appName: 'Sky Interface',
   projectId: '4b1f5d2b6f0a3368aba6cf7556fb00e2',
   // chains: [mainnet, sepolia, mainTest],
-  chains: [mainnet],
+  // chains: [mainnet],
+  chains: [mainnet, mainAnvil, mainTest],
   ssr: false
 });

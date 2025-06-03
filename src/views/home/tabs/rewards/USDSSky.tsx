@@ -18,12 +18,15 @@ import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
+import Alert from '@mui/material/Alert';
+import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 
 export default function USDSSkyTab() {
   const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const [operationType, setOperationType] = useState(0);
+  const { config: skyConfig } = useConfigChainId();
 
   const USDSSkyCard = styled(Paper)(({ theme }) => ({
     ...theme.typography.body2,
@@ -40,7 +43,7 @@ export default function USDSSkyTab() {
 
   const { data: userBalance } = useReadContract({
     ...usdsContractConfig,
-    address: skyConfig.Mainnet.contracts.USDS,
+    address: skyConfig.contracts.USDS,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -50,7 +53,7 @@ export default function USDSSkyTab() {
 
   const { data: stakedBalance } = useReadContract({
     ...stakingRewardContractConfig,
-    address: skyConfig.Mainnet.contracts.StakingRewards,
+    address: skyConfig.contracts.StakingRewards,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -60,7 +63,7 @@ export default function USDSSkyTab() {
 
   const { data: totalSupply } = useReadContract({
     ...stakingRewardContractConfig,
-    address: skyConfig.Mainnet.contracts.StakingRewards,
+    address: skyConfig.contracts.StakingRewards,
     functionName: 'totalSupply'
   });
 
@@ -77,22 +80,20 @@ export default function USDSSkyTab() {
         With: USDS Get: SKY
       </Typography>
       <Info
-        contractAddress={skyConfig.Mainnet.contracts.StakingRewards}
+        contractAddress={skyConfig.contracts.StakingRewards}
         balance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(2) : '0'}
         tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}
       />
-      <USDSSkyCard>
-        <Tabs value={operationType} onChange={handleOperationChange}>
-          <Tab label="Supply" />
-          <Tab label="Withdraw" />
-        </Tabs>
-        <TabPanel value={operationType} index={0}>
-          <Stake userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
-        </TabPanel>
-        <TabPanel value={operationType} index={1}>
-          <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
-        </TabPanel>
-      </USDSSkyCard>
+      <Tabs value={operationType} onChange={handleOperationChange}>
+        <Tab label="Supply" />
+        <Tab label="Withdraw" />
+      </Tabs>
+      <TabPanel value={operationType} index={0}>
+        <Stake userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
+      </TabPanel>
+      <TabPanel value={operationType} index={1}>
+        <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
+      </TabPanel>
     </Box>
   );
 }
