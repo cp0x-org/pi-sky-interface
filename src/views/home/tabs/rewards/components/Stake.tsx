@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { parseEther } from 'viem';
+import { parseEther, formatEther } from 'viem';
 import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
 import { skyConfig } from 'config/index';
 import Alert from '@mui/material/Alert';
@@ -12,7 +12,7 @@ import { openSnackbar } from '../../../../../store/slices/snackbar';
 import { useDispatch } from 'store';
 import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
 interface Props {
-  userBalance?: string;
+  userBalance?: bigint;
 }
 
 const StyledCard = styled(Box)(({ theme }) => ({
@@ -38,7 +38,7 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Stake: FC<Props> = ({ userBalance = '...' }) => {
+const Stake: FC<Props> = ({ userBalance = 0n }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isApproved, setIsApproved] = useState<boolean>(false);
@@ -46,8 +46,10 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
   const [showAlert, setShowAlert] = useState<boolean>(true);
   const dispatch = useDispatch();
   const handlePercentClick = (percent: number) => {
-    // TODO: Implement percentage calculation based on available balance
-    console.log(`Clicked ${percent}%`);
+    if (!userBalance) return;
+    const value = (Number(formatEther(BigInt(userBalance))) * percent) / 100;
+    setAmount(value.toString());
+    setButtonText('Approve supply amount');
   };
   const { config: skyConfig } = useConfigChainId();
   // const { writeContract: writeApprove } = useWriteContract();
@@ -155,8 +157,11 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
             placeholder="Enter amount"
             value={amount}
             onChange={(e) => {
-              setAmount(e.target.value);
-              setButtonText(e.target.value ? `Approve supply amount` : 'Enter Amount');
+              const value = e.target.value;
+              if (value === '' || Number(value) >= 0) {
+                setAmount(value);
+                setButtonText(value ? `Approve supply amount` : 'Enter Amount');
+              }
             }}
             sx={{
               '& input::-webkit-outer-spin-button': {
@@ -183,14 +188,15 @@ const Stake: FC<Props> = ({ userBalance = '...' }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {userBalance} USDS
+              {userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} USDS
             </Typography>
           </Box>
-          {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>*/}
-          {/*</Box>*/}
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+          </Box>
         </Box>
       </Box>
       <Box>
