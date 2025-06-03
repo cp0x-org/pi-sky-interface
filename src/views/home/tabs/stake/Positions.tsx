@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -10,6 +10,7 @@ import { Chip, Divider, Alert, Grid, CircularProgress, Paper, Skeleton } from '@
 import { useAccount } from 'wagmi';
 import { useDelegationData } from '../../../../hooks/useDelegationData';
 import { formatEther } from 'viem';
+import { useStakingData } from '../../../../hooks/useStakingData';
 
 interface PositionsProps {
   stakeData?: {
@@ -33,20 +34,24 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { delegatedTo, totalDelegated, isLoading, error } = useDelegationData();
+  const { stakingLocks, stakingFrees } = useStakingData();
+
+  // Create a set of freed position indexes for quick lookup
+  const [freedPositionIndexes, setFreedPositionIndexes] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (stakingFrees && stakingFrees.length > 0) {
+      const freedIndexes = new Set(stakingFrees.map((free) => free.index));
+      setFreedPositionIndexes(freedIndexes);
+      console.log('Freed position indexes:', Array.from(freedIndexes));
+    }
+  }, [stakingFrees]);
 
   // Format delegated address for display
   const shortenAddress = (address: string): string => {
     if (!address) return '';
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
-
-  if (!address) {
-    return (
-      <Alert severity="info" sx={{ mt: 2 }}>
-        Please connect your wallet to view your delegation positions.
-      </Alert>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -67,13 +72,19 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     );
   }
 
-  if (delegatedTo.length === 0) {
+  if (delegatedTo.length === 0 || !address) {
     return (
-      <Alert severity="info" sx={{ mt: 2 }}>
+      <Typography variant="body2" sx={{ mt: 2 }}>
         You don't have any active delegation positions.
-      </Alert>
+      </Typography>
     );
   }
+
+  console.log('DELEGRATED TO');
+  console.log(delegatedTo);
+
+  // Filter out positions that have been freed
+  const activePositions = delegatedTo;
 
   return (
     <Box sx={{ width: '100%', mt: 4 }}>
@@ -91,7 +102,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Number of Delegates:</Typography>
           <Typography variant="h6" color="primary">
-            {delegatedTo.length}
+            {activePositions.length}
           </Typography>
         </Box>
       </Paper>
@@ -101,19 +112,21 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
       </Typography>
 
       <Grid container spacing={3}>
-        {delegatedTo.length === 0 ? (
+        {activePositions.length === 0 ? (
           <Grid item xs={12}>
             <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
               No Positions
             </Typography>
           </Grid>
         ) : (
-          delegatedTo.map((item, index) => (
+          activePositions.map((item, index) => (
             <Grid item xs={12} md={6} key={index}>
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6">Delegate Position #{index + 1}</Typography>
+                    <Typography variant="h6">
+                      {item.positionIndex !== undefined ? `Position #${item.positionIndex}` : `Delegate Position #${index + 1}`}
+                    </Typography>
                     <Chip label="Active" color="success" size="small" />
                   </Box>
 
@@ -158,11 +171,43 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                   </Box>
 
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography color="text.secondary">Position Index:</Typography>
+                    <Typography>
+                      {item.positionIndex !== undefined
+                        ? `#${item.positionIndex}`
+                        : item.events && item.events[0] && item.events[0].hash
+                          ? 'Processing...'
+                          : 'Unknown'}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography color="text.secondary">Last Updated:</Typography>
                     <Typography variant="body2">
                       {item.events && item.events.length > 0 ? new Date(item.events[0].blockTimestamp).toLocaleDateString() : 'Unknown'}
                     </Typography>
                   </Box>
+
+                  {item.events && item.events.length > 0 && item.events[0].hash && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Transaction:</Typography>
+                      <Box
+                        component="a"
+                        href={`https://etherscan.io/tx/${item.events[0].hash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: 'primary.main',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        {shortenAddress(item.events[0].hash)}
+                        <IconExternalLink size={14} style={{ marginLeft: '4px' }} />
+                      </Box>
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
