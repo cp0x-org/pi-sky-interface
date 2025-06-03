@@ -5,7 +5,8 @@ export const AnvilTest = 1222;
 export const TenderlyTest = 1999999;
 
 export const apiConfig = {
-  delegatesInfoMainnet: 'https://vote.sky.money/api/delegates/info?network=mainnet'
+  // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL' // TODO pagination to add shadow delegators
+  delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet'
 } as const;
 
 export const skyConfig = {

@@ -2,12 +2,28 @@ import { FC, useEffect, useState } from 'react';
 import { Card, CardActionArea, Typography, Box, CircularProgress, Alert } from '@mui/material';
 import { apiConfig } from 'config/index';
 
+type DelegatesResponse = {
+  delegates: Delegate[];
+  paginationInfo: {
+    hasNextPage: boolean;
+    numPages: number | null;
+    page: number;
+  };
+  stats: {
+    aligned: number;
+    shadow: number;
+    total: number;
+    totalDelegators: number;
+    totalSkyDelegated: string;
+  };
+};
+
 type Delegate = {
   name: string;
-  picture: string;
   address: string;
   voteDelegateAddress: string;
   status: string;
+  skyDelegated: string;
 };
 
 interface Props {
@@ -29,14 +45,15 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
         }
         return res.json();
       })
-      .then((data: Delegate[]) => {
+      .then((data: DelegatesResponse) => {
         // const aligned = data.filter((d) => d.status === 'aligned');
-        setDelegates(data);
+        console.log(data);
+        setDelegates(data.delegates);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
-        setError('Не удалось загрузить делегатов');
+        setError('Cannot load delegators');
         setLoading(false);
       });
   }, []);
@@ -79,14 +96,18 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
           onClick={() => handleSelect(delegate.voteDelegateAddress)}
         >
           <CardActionArea sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-            {delegate.picture && (
-              <Box component="img" src={delegate.picture} alt={delegate.name} sx={{ width: 40, height: 40, borderRadius: '50%' }} />
-            )}
             <Box>
-              <Typography variant="h6">{delegate.name}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {delegate.voteDelegateAddress}
-              </Typography>
+              {delegate.name ? (
+                <>
+                  <Typography variant="h6">{delegate.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {delegate.voteDelegateAddress}
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="h6">{delegate.voteDelegateAddress}</Typography>
+              )}
+              <Typography variant="h6">Total SKY delegated: {delegate.skyDelegated}</Typography>
             </Box>
           </CardActionArea>
         </Card>
