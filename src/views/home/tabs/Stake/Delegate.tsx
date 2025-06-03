@@ -41,9 +41,22 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
       });
   }, []);
 
+  // Sync the selected state with the delegatorAddress prop
+  useEffect(() => {
+    if (delegatorAddress) {
+      const delegate = delegates.find((d) => d.voteDelegateAddress === delegatorAddress);
+      if (delegate) {
+        setSelected(delegate.voteDelegateAddress);
+      }
+    } else {
+      setSelected(null);
+    }
+  }, [delegatorAddress, delegates]);
+
   const handleSelect = (address: string) => {
-    setSelected(address);
-    onChange(address);
+    const newSelected = address === selected ? null : address;
+    setSelected(newSelected);
+    onChange(newSelected || '');
   };
 
   if (loading) return <CircularProgress />;

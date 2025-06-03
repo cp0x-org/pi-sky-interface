@@ -30,6 +30,8 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
       if (token) {
         setSelected(token.label);
       }
+    } else {
+      setSelected(null);
     }
   }, [rewardAddress, tokens]);
   const handleSelect = (token: Token) => {
