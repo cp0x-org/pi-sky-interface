@@ -37,17 +37,18 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
   const { delegatedTo, totalDelegated, isLoading, error } = useDelegationData();
   const { stakingLocks, stakingFrees } = useStakingData();
 
-  // State for tracking withdraw operations
+  // State for tracking operations
   const [withdrawing, setWithdrawing] = useState<Record<string, boolean>>({});
-  const [withdrawSuccess, setWithdrawSuccess] = useState<Record<string, boolean>>({});
+  const [claiming, setClaiming] = useState<Record<string, boolean>>({});
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [operationType, setOperationType] = useState<'withdraw' | 'claim' | null>(null);
 
   // Create a set of freed position indexes for quick lookup
   const [freedPositionIndexes, setFreedPositionIndexes] = useState<Set<string>>(new Set());
 
   // Contract interaction
-  const { writeContract, isPending, isSuccess, isError, error: withdrawError } = useWriteContract();
+  const { writeContract, isPending, isSuccess, isError, error: contractError } = useWriteContract();
 
   useEffect(() => {
     if (stakingFrees && stakingFrees.length > 0) {
@@ -57,16 +58,33 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     }
   }, [stakingFrees]);
 
-  // Effect to handle withdraw success/failure notifications
+  // Effect to handle operation success/failure notifications
   useEffect(() => {
     if (isSuccess) {
-      setSnackbarMessage('Withdraw successful!');
+      const message = operationType === 'claim' ? 'Reward claim successful!' : 'Withdraw successful!';
+      setSnackbarMessage(message);
       setSnackbarOpen(true);
-    } else if (isError && withdrawError) {
-      setSnackbarMessage(`Error: ${withdrawError.message}`);
+
+      // Reset operation states
+      if (operationType === 'claim') {
+        setClaiming({});
+      } else if (operationType === 'withdraw') {
+        setWithdrawing({});
+      }
+      setOperationType(null);
+    } else if (isError && contractError) {
+      const operationName = operationType === 'claim' ? 'Claim' : 'Withdraw';
+      setSnackbarMessage(`${operationName} error: ${contractError.message}`);
       setSnackbarOpen(true);
+
+      // Reset operation states
+      if (operationType === 'claim') {
+        setClaiming({});
+      } else if (operationType === 'withdraw') {
+        setWithdrawing({});
+      }
     }
-  }, [isSuccess, isError, withdrawError]);
+  }, [isSuccess, isError, contractError, operationType]);
 
   // Format delegated address for display
   const shortenAddress = (address: string): string => {
@@ -83,10 +101,12 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     }
 
     try {
+      // Set operation type
+      setOperationType('withdraw');
+
       // Mark this position as withdrawing
       setWithdrawing((prev) => ({ ...prev, [item.positionIndex]: true }));
-      console.log('item.positionIndex');
-      console.log(item.positionIndex);
+
       // Create the function call data for the free operation
       const callData = encodeFunctionData({
         abi: lockStakeContractConfig.abi,
@@ -108,6 +128,40 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
       setWithdrawing((prev) => ({ ...prev, [item.positionIndex]: false }));
       setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setSnackbarOpen(true);
+      setOperationType(null);
+    }
+  };
+
+  const handleClaim = (item: any) => {
+    if (!address || !item.positionIndex) {
+      console.error('Missing required data for claiming rewards');
+      setSnackbarMessage('Missing required data for claiming rewards');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      // Set operation type
+      setOperationType('claim');
+
+      // Mark this position as claiming
+      setClaiming((prev) => ({ ...prev, [item.positionIndex]: true }));
+
+      // Execute the contract call for claiming rewards
+      writeContract({
+        address: skyConfig.contracts.LockStakeEngine,
+        abi: lockStakeContractConfig.abi,
+        functionName: 'getReward',
+        args: [address, BigInt(item.positionIndex), skyConfig.contracts.USDSStakingRewards, address]
+      });
+
+      console.log('Claim initiated for position', item.positionIndex);
+    } catch (error) {
+      console.error('Error preparing claim transaction:', error);
+      setClaiming((prev) => ({ ...prev, [item.positionIndex]: false }));
+      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setSnackbarOpen(true);
+      setOperationType(null);
     }
   };
 
@@ -271,15 +325,29 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
 
                   <Divider sx={{ my: 2 }} />
 
-                  <Box sx={{ mt: 2 }}>
+                  <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Tooltip title={!item.positionIndex ? 'Position index not available. Try refreshing.' : ''}>
+                      <span style={{ width: '100%' }}>
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          fullWidth
+                          onClick={() => handleClaim(item)}
+                          disabled={!item.positionIndex || withdrawing[item.positionIndex] || claiming[item.positionIndex] || isPending}
+                        >
+                          {claiming[item.positionIndex] ? 'Claiming...' : 'Claim Rewards'}
+                        </Button>
+                      </span>
+                    </Tooltip>
+
                     <Tooltip title={!item.positionIndex ? 'Position index not available. Try refreshing.' : ''}>
                       <span style={{ width: '100%' }}>
                         <Button
                           variant="contained"
                           color="primary"
                           fullWidth
-                          onClick={() => handleWithdraw(item, index)}
-                          disabled={!item.positionIndex || withdrawing[item.positionIndex] || isPending}
+                          onClick={() => handleWithdraw(item)}
+                          disabled={!item.positionIndex || withdrawing[item.positionIndex] || claiming[item.positionIndex] || isPending}
                         >
                           {withdrawing[item.positionIndex] ? 'Withdrawing...' : 'Withdraw Position'}
                         </Button>
