@@ -45,12 +45,19 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
   const { config: skyConfig } = useConfigChainId();
 
   const handlePercentClick = (percent: number) => {
-    // TODO: Implement percentage calculation based on available balance
-    console.log(`Clicked ${percent}%`);
-  };
+    if (stakedBalance === '...') return;
 
-  // const { writeContract: writeApprove } = useWriteContract();
-  // const { writeContract: writeSupply } = useWriteContract();
+    // Convert stakedBalance from string to number
+    const balance = parseFloat(stakedBalance);
+    if (isNaN(balance)) return;
+
+    // Calculate the amount based on the percentage
+    const value = (balance * percent) / 100;
+
+    // Set the amount and update button text
+    setAmount(value.toString());
+    setButtonText('Withdraw');
+  };
 
   const {
     writeContract: writeWithdraw,
@@ -127,16 +134,6 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
             <UsdsLogo width="24" height="24" />
             <Typography>USDS</Typography>
           </Box>
-
-          {/*<Chip label="USDS" variant="outlined" avatar={<UsdsLogo width="24" height="24" />} sx={{ border: 'none' }} />*/}
-
-          {/*<Button*/}
-          {/*  disabled*/}
-          {/*  sx={{ maxWidth: 104 }}*/}
-          {/*  startIcon={<UsdsLogo width="24" height="24" />}*/}
-          {/*>*/}
-          {/*  USDS*/}
-          {/*</Button>*/}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -144,11 +141,11 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
               {stakedBalance} USDS
             </Typography>
           </Box>
-          {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>*/}
-          {/*</Box>*/}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+          </Box>
         </Box>
       </Box>
       <Box>

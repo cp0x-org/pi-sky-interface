@@ -103,16 +103,16 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
   }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
 
   const handleMainButtonClick = async () => {
-    dispatch(
-      openSnackbar({
-        open: true,
-        anchorOrigin: { vertical: 'top', horizontal: 'center' },
-        message: 'This is default message',
-        variant: 'alert',
-        alert: { color: 'success' },
-        severity: 'success'
-      })
-    );
+    // dispatch(
+    //   openSnackbar({
+    //     open: true,
+    //     anchorOrigin: { vertical: 'top', horizontal: 'center' },
+    //     message: 'This is default message',
+    //     variant: 'alert',
+    //     alert: { color: 'success' },
+    //     severity: 'success'
+    //   })
+    // );
     if (!amount) {
       console.log('Supply amount is empty');
       return;
@@ -152,7 +152,7 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <TextField
-            variant="standard"
+            fullWidth
             type="number"
             placeholder="Enter amount"
             value={amount}
@@ -163,15 +163,15 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
                 setButtonText(value ? `Approve supply amount` : 'Enter Amount');
               }
             }}
-            sx={{
-              '& input::-webkit-outer-spin-button': {
-                display: 'none'
-              },
-              '& input::-webkit-inner-spin-button': { display: 'none' },
-              '& input[type=number]': {
-                MozAppearance: 'textfield'
-              }
-            }}
+            // sx={{
+            //   '& input::-webkit-outer-spin-button': {
+            //     display: 'none'
+            //   },
+            //   '& input::-webkit-inner-spin-button': { display: 'none' },
+            //   '& input[type=number]': {
+            //     MozAppearance: 'textfield'
+            //   }
+            // }}
           />
 
           <Box
@@ -204,13 +204,13 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
           {buttonText}
         </Button>
       </Box>
-      <Box>
-        {showAlert && (
-          <Alert variant="filled" severity="success">
-            This is an error alert — check it out!
-          </Alert>
-        )}
-      </Box>
+      {/*<Box>*/}
+      {/*  {showAlert && (*/}
+      {/*    <Alert variant="filled" severity="success">*/}
+      {/*      This is an error alert — check it out!*/}
+      {/*    </Alert>*/}
+      {/*  )}*/}
+      {/*</Box>*/}
     </StyledCard>
   );
 };
