@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { USDSStakingReward } from 'config/abi/USDSStakingReward';
 import { useConfigChainId } from './useConfigChainId';
+import { apiConfig } from '../config/index';
 
 const SECONDS_IN_YEAR = 31_536_000n;
 
@@ -38,7 +39,7 @@ export function useStakingApr() {
     if (totalSupply === 0n) return 0;
 
     // Set current SKY price in USDS manually or from an oracle
-    const stakingTokenPriceInUSDS = 0.0764;
+    const stakingTokenPriceInUSDS = apiConfig.SKY_PRICE;
 
     // Step 1: Calculate annual reward in USDS (from rewardRate in wei)
     const annualRewardUSDS = rewardRate * SECONDS_IN_YEAR; // still in wei

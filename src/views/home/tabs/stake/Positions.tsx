@@ -16,6 +16,9 @@ import { useStakingPositions } from '../../../../hooks/useStakingPositions';
 import { ethers } from 'ethers';
 import { useStabilityRate } from '../../../../hooks/useStabilityRate';
 import { useStakingApr } from '../../../../hooks/useStakingApr';
+import useStakingTvl from '../../../../hooks/useStakingTvl';
+import { formatUSDS } from '../../../../utils/sky';
+import { useDelegatorsSum } from '../../../../hooks/useDelegatorsSum';
 
 interface PositionsProps {
   stakeData?: {
@@ -42,6 +45,9 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { rate, isLoading: isStabilityLoading, error: stabilityError } = useStabilityRate();
   const { apr, isLoading: isLoadingApr, error: errorApr } = useStakingApr();
+  const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useDelegatorsSum();
+
+  const { tvl } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
   const isLoading = positionsLoading || delegatesLoading;
   const error = positionsError || delegatesError;
@@ -206,14 +212,6 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     );
   }
 
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        Error loading staking position data: {error}
-      </Alert>
-    );
-  }
-
   // Always show the summary, even if no positions
   if (!positions || positions.length === 0) {
     return (
@@ -250,6 +248,24 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
             <Typography variant="body1">Current APR:</Typography>
             <Typography variant="h6" color="primary">
               ~{apr.toFixed(2)}%
+            </Typography>
+          </Box>
+        )}
+
+        {totalDelegators !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+            <Typography variant="body1">Suppliers:</Typography>
+            <Typography variant="h6" color="primary">
+              {totalDelegators}
+            </Typography>
+          </Box>
+        )}
+
+        {tvl !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+            <Typography variant="body1">TVL:</Typography>
+            <Typography variant="h6" color="primary">
+              {formatUSDS(tvl)}
             </Typography>
           </Box>
         )}
