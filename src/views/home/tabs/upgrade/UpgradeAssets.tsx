@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import InputLabel from 'ui-component/extended/Form/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -12,9 +12,13 @@ import daiLogo from 'assets/images/sky/ethereum/dai.svg?url';
 import mkrLogo from 'assets/images/sky/ethereum/mkr.svg?url';
 import { daiUsdsConverterConfig } from 'config/abi/DaiUsdsConverter';
 import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
+import { daiContractConfig } from 'config/abi/Dai';
+import { mkrContractConfig } from 'config/abi/Mkr';
+
 import Avatar from 'ui-component/extended/Avatar';
 interface Props {
-  userBalance?: string;
+  daiUserBalance?: bigint;
+  mkrUserBalance?: bigint;
 }
 
 const TOKEN_DAI = 'dai';
@@ -48,7 +52,7 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
+const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
 
@@ -61,8 +65,34 @@ const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
   const [tokenValue, setTokenValue] = useState(tokenOptions[0].value);
 
   const handlePercentClick = (percent: number) => {
-    // TODO: Implement percentage calculation based on available balance
-    console.log(`Clicked ${percent}%`);
+    let currentBalance: bigint | undefined;
+
+    if (tokenValue === TOKEN_DAI) {
+      currentBalance = daiUserBalance;
+    } else if (tokenValue === TOKEN_MKR) {
+      currentBalance = mkrUserBalance;
+    }
+
+    if (!currentBalance) return;
+
+    // Calculate the amount based on the percentage
+    const value = (Number(formatEther(currentBalance)) * percent) / 100;
+
+    // Set the amount and update button text
+    setAmount(value.toString());
+    setButtonText(`Approve ${tokenValue.toUpperCase()}`);
+    setIsApproved(false);
+    setIsConfirmed(false);
+  };
+
+  // Get the current token balance based on selected token
+  const getCurrentBalance = () => {
+    if (tokenValue === TOKEN_DAI) {
+      return daiUserBalance ? Number(formatEther(daiUserBalance)).toFixed(4) : '0';
+    } else if (tokenValue === TOKEN_MKR) {
+      return mkrUserBalance ? Number(formatEther(mkrUserBalance)).toFixed(4) : '0';
+    }
+    return '0';
   };
 
   // const { writeContract: writeApprove } = useWriteContract();
@@ -89,7 +119,7 @@ const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
   useEffect(() => {
     if (isApproveSuccess) {
       setIsApproved(true);
-      setButtonText('Supply USDS');
+      setButtonText('Upgrade tokens');
     }
     if (isApproveError) {
       console.error('Approval failed:', approveError);
@@ -115,21 +145,31 @@ const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
 
     try {
       if (!isApproved) {
-        writeApprove({
-          ...usdsContractConfig,
-          address: skyConfig.contracts.USDS,
-          functionName: 'approve',
-          args: [skyConfig.contracts.SavingsUSDS, BigInt(amountInWei)]
-        });
+        // Approve appropriate token based on user selection
+        if (tokenValue === TOKEN_DAI) {
+          writeApprove({
+            ...daiContractConfig,
+            address: skyConfig.contracts.DAI,
+            functionName: 'approve',
+            args: [skyConfig.contracts.DAIUSDSConverter, BigInt(amountInWei)]
+          });
+        } else if (tokenValue === TOKEN_MKR) {
+          writeApprove({
+            ...mkrContractConfig,
+            address: skyConfig.contracts.MKR,
+            functionName: 'approve',
+            args: [skyConfig.contracts.MKRSKYConverter, BigInt(amountInWei)]
+          });
+        }
       } else if (!isConfirmed) {
-        if (tokenValue == TOKEN_DAI) {
+        if (tokenValue === TOKEN_DAI) {
           writeConfirm({
             ...daiUsdsConverterConfig,
             address: skyConfig.contracts.DAIUSDSConverter,
             functionName: 'daiToUsds',
             args: [address as `0x${string}`, BigInt(amountInWei)]
           });
-        } else if (tokenValue == TOKEN_DAI) {
+        } else if (tokenValue === TOKEN_MKR) {
           writeConfirm({
             ...mkrSkyConverterConfig,
             address: skyConfig.contracts.MKRSKYConverter,
@@ -160,7 +200,9 @@ const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
-              setButtonText(e.target.value ? `Approve supply amount` : 'Enter Amount');
+              setButtonText(e.target.value ? `Approve ${tokenValue.toUpperCase()}` : 'Enter Amount');
+              setIsApproved(false);
+              setIsConfirmed(false);
             }}
             sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
@@ -172,15 +214,19 @@ const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
               alignItems: 'center'
             }}
           >
-            {/*<UsdsLogo width="24" height="24" />*/}
-            {/*<Typography>USDS</Typography>*/}
-
             <FormControl fullWidth>
               <InputLabel id="select-with-image-label">Select Option</InputLabel>
               <Select
                 value={tokenValue}
                 label="Token"
-                onChange={(e) => setTokenValue(e.target.value)}
+                onChange={(e) => {
+                  setTokenValue(e.target.value);
+                  setIsApproved(false);
+                  setIsConfirmed(false);
+                  if (amount) {
+                    setButtonText(`Approve ${e.target.value.toUpperCase()}`);
+                  }
+                }}
                 renderValue={(selected) => {
                   const item = tokenOptions.find((o) => o.value === selected);
                   return (
@@ -206,14 +252,14 @@ const UpgradeAssets: FC<Props> = ({ userBalance = '...' }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {userBalance} USDS
+              {getCurrentBalance()} {tokenValue.toUpperCase()}
             </Typography>
           </Box>
-          {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>*/}
-          {/*</Box>*/}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+          </Box>
         </Box>
       </Box>
       <Box>

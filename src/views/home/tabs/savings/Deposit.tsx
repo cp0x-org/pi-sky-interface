@@ -34,7 +34,7 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Deposit: FC<Props> = ({ userBalance = '...' }) => {
+const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isApproved, setIsApproved] = useState<boolean>(false);

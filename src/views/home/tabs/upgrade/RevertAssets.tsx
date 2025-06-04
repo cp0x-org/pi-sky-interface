@@ -3,13 +3,14 @@ import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
 
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { daiUsdsConverterConfig } from '../../../../config/abi/DaiUsdsConverter';
 import { usdsContractConfig } from '../../../../config/abi/Usds';
+import { daiContractConfig } from '../../../../config/abi/Dai';
 
 interface Props {
-  savingsBalance?: string;
+  usdsUserBalance?: bigint;
 }
 
 const StyledCard = styled(Box)(({ theme }) => ({
@@ -35,7 +36,7 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
+const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
 
@@ -46,8 +47,16 @@ const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
   const handlePercentClick = (percent: number) => {
-    // TODO: Implement percentage calculation based on available balance
-    console.log(`Clicked ${percent}%`);
+    if (!usdsUserBalance) return;
+
+    // Calculate the amount based on the percentage
+    const value = (Number(formatEther(usdsUserBalance)) * percent) / 100;
+
+    // Set the amount and update button text
+    setAmount(value.toString());
+    setButtonText('Approve');
+    setIsApproved(false);
+    setIsConfirmed(false);
   };
 
   // const { writeContract: writeApprove } = useWriteContract();
@@ -74,7 +83,7 @@ const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
   useEffect(() => {
     if (isApproveSuccess) {
       setIsApproved(true);
-      setButtonText('Supply USDS');
+      setButtonText('Supply DAI');
     }
     if (isApproveError) {
       console.error('Approval failed:', approveError);
@@ -104,7 +113,7 @@ const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
           ...usdsContractConfig,
           address: skyConfig.contracts.USDS,
           functionName: 'approve',
-          args: [skyConfig.contracts.SavingsUSDS, BigInt(amountInWei)]
+          args: [skyConfig.contracts.DAIUSDSConverter, BigInt(amountInWei)]
         });
       } else if (!isConfirmed) {
         writeConfirm({
@@ -126,7 +135,7 @@ const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to withdraw?
+          How much USDS would you like to revert to DAI?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <TextField
@@ -136,7 +145,9 @@ const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value);
-              setButtonText(e.target.value ? `Withdraw` : 'Enter Amount');
+              setButtonText(e.target.value ? `Revert` : 'Enter Amount');
+              setIsApproved(false);
+              setIsConfirmed(false);
             }}
             sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
@@ -165,14 +176,14 @@ const RevertAssets: FC<Props> = ({ savingsBalance = '...' }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {savingsBalance} USDS
+              {usdsUserBalance ? Number(formatEther(usdsUserBalance)).toFixed(4) : '0'} USDS
             </Typography>
           </Box>
-          {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>*/}
-          {/*</Box>*/}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+          </Box>
         </Box>
       </Box>
       <Box>
