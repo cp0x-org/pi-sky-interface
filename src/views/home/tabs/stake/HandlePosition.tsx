@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import { Step, StepLabel, Stepper, Typography, Stack, Alert } from '@mui/material';
+import { Step, StepLabel, Stepper, Stack, Alert } from '@mui/material';
 import StakeAndBorrow from './StakeAndBorrow';
 import Reward from './Reward';
 import Delegate from './Delegate';
@@ -79,12 +79,7 @@ export default function HandlePosition() {
   });
 
   // Simulate approve transaction
-  const {
-    data: simulateApproveData,
-    isError: isSimulateApproveError,
-    error: simulateApproveError,
-    refetch: refetchApproveSimulation
-  } = useSimulateContract({
+  const { isError: isSimulateApproveError, error: simulateApproveError } = useSimulateContract({
     ...usdsContractConfig,
     address: skyConfig.contracts.SKY,
     functionName: 'approve',
@@ -136,7 +131,6 @@ export default function HandlePosition() {
 
   // Simulate confirm transaction
   const {
-    data: simulateConfirmData,
     isError: isSimulateConfirmError,
     error: simulateConfirmError,
     refetch: refetchConfirmSimulation
@@ -171,13 +165,7 @@ export default function HandlePosition() {
     }
   }, [address, stakeData.amount, allowanceData, refetchConfirmSimulation]);
 
-  const {
-    writeContract: writeConfirm,
-    isSuccess: isConfirmSuccess,
-    isPending: isConfirmPending,
-    error: confirmError,
-    data: confirmData
-  } = useWriteContract();
+  const { writeContract: writeConfirm, isSuccess: isConfirmSuccess, isPending: isConfirmPending, error: confirmError } = useWriteContract();
 
   const {
     writeContract: writeApprove,
@@ -426,7 +414,7 @@ export default function HandlePosition() {
       case 2:
         return <Delegate delegatorAddress={stakeData.delegatorAddress} onChange={(v) => handleChange('delegatorAddress', v)} />;
       case 3:
-        return <Confirm stakeData={stakeData} isApproved={isApproved} isStaked={isStaked} allowance={allowanceData} />;
+        return <Confirm stakeData={stakeData} isApproved={isApproved} isStaked={isStaked} allowanceData={allowanceData} />;
       default:
         return null;
     }
@@ -457,9 +445,9 @@ export default function HandlePosition() {
           </Alert>
         )}
 
-        {activeStep === steps.length - 1 && isConfirmSuccess && confirmData?.hash && (
+        {activeStep === steps.length - 1 && isConfirmSuccess && (
           <Alert severity="success" sx={{ mt: 2 }}>
-            Transaction sent: {confirmData.hash}
+            Transaction sent
           </Alert>
         )}
 

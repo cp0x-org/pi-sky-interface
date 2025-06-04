@@ -180,7 +180,7 @@ export default function ComingSoon1() {
           <CardMedia
             component="img"
             src={theme.palette.mode === ThemeMode.DARK ? logoDark : logo}
-            alt="Berry"
+            alt="cp0x"
             sx={{
               position: themeDirection === ThemeDirection.RTL ? 'relative' : 'initial',
               top: themeDirection === ThemeDirection.RTL ? 30 : 'initial',
@@ -230,11 +230,11 @@ export default function ComingSoon1() {
                 <Grid size={12}>
                   <Grid container spacing={2}>
                     <Grid size={12}>
-                      <Typography variant="h1">Berry - The React Admin Template</Typography>
+                      <Typography variant="h1">cp0x</Typography>
                     </Grid>
                     <Grid size={12}>
                       <Typography sx={{ fontSize: '1.125rem' }}>
-                        Presenting Material-UI based React Dashboard Template to build performance centric websites and applications.
+
                       </Typography>
                     </Grid>
                   </Grid>
@@ -374,7 +374,7 @@ export default function ComingSoon1() {
                               <CardMedia
                                 component="img"
                                 src={theme.palette.mode === ThemeMode.DARK ? companyDarkLogo : companyLightLogo}
-                                alt="Berry"
+                                alt="cp0x"
                                 sx={{ display: 'initial' }}
                               />
                             </Grid>

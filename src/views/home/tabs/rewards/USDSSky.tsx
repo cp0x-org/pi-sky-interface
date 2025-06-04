@@ -89,7 +89,7 @@ export default function USDSSkyTab() {
         <Tab label="Withdraw" />
       </Tabs>
       <TabPanel value={operationType} index={0}>
-        <Stake userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
+        <Stake userBalance={userBalance} />
       </TabPanel>
       <TabPanel value={operationType} index={1}>
         <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
