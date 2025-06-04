@@ -11,6 +11,12 @@ interface DelegatorsResponse {
   data: {
     delegates: SubgraphDelegate[];
   };
+  errors?: Array<{
+    message: string;
+    locations?: Array<{ line: number; column: number }>;
+    path?: string[];
+    extensions?: Record<string, any>;
+  }>;
 }
 
 interface UseDelegatorsSumResult {

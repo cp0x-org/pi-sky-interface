@@ -14,7 +14,7 @@ import { readContract } from '@wagmi/core';
 import { formatEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { config } from 'wagmi-config';
+import { wagmiConfig } from 'wagmi-config';
 import { SkyContracts, SkyIcons } from 'config/index';
 
 const steps = ['Stake', 'Select reward', 'Select a delegate', 'Confirm'];
@@ -28,7 +28,7 @@ type SkyConfig = {
 async function fetchUrnsCount(skyConfig: SkyConfig, address: `0x${string}` | undefined) {
   if (!address) return undefined;
 
-  const result = await readContract(config, {
+  const result = await readContract(wagmiConfig, {
     abi: lockStakeContractConfig.abi,
     address: skyConfig.contracts.LockStakeEngine, // <-- обязательно!
     functionName: 'ownerUrnsCount',

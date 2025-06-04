@@ -32,9 +32,9 @@ export function useStakingApr() {
   const apr = useMemo(() => {
     if (!data || data.some((d) => !d.result)) return null;
 
-    const rewardRate = BigInt(data[0].result as string); // USDS per second (in wei)
-    const rewardsDuration = BigInt(data[1].result as string); // not used in this case
-    const totalSupply = BigInt(data[2].result as string); // SKY total staked (in wei)
+    const rewardRate = data[0].result ? BigInt(data[0].result.toString()) : 0n; // USDS per second (in wei)
+    // const rewardsDuration = data[1].result ? BigInt(data[1].result.toString()) : 0n; // not used in this case
+    const totalSupply = data[2].result ? BigInt(data[2].result.toString()) : 0n; // SKY total staked (in wei)
 
     if (totalSupply === 0n) return 0;
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { lockStakeContractConfig } from '../config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
 import { simulateContract } from '@wagmi/core';
-import { config } from 'wagmi-config';
+import { wagmiConfig } from 'wagmi-config';
 
 export interface StakingPositionData {
   positions: Array<{
@@ -23,7 +23,7 @@ export interface StakingPositionData {
 }
 
 export const useStakingPositions = (): StakingPositionData => {
-  const { positions: originalPositions, isLoading: isLoadingPositions, error: positionsError } = useStakingData();
+  const { positions: originalPositions, error: positionsError } = useStakingData();
   const { address } = useAccount();
   const [positionsWithRewards, setPositionsWithRewards] = useState<StakingPositionData['positions']>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,19 +44,11 @@ export const useStakingPositions = (): StakingPositionData => {
         const updated = await Promise.all(
           originalPositions.map(async (position) => {
             try {
-              // const reward = await simulateGetReward({
-              //   address,
-              //   indexPosition: BigInt(position.indexPosition),
-              //   stakingRewardAddress: skyConfig.contracts.USDSStakingRewards,
-              //   contractAddress: skyConfig.contracts.LockStakeEngine,
-              //   abi: lockStakeContractConfig.abi
-              // });
-
-              const rewardResult = await simulateContract(config, {
+              const rewardResult = await simulateContract(wagmiConfig, {
                 abi: lockStakeContractConfig.abi,
                 address: skyConfig.contracts.LockStakeEngine,
                 functionName: 'getReward',
-                args: [address, position.indexPosition, skyConfig.contracts.USDSStakingRewards, address]
+                args: [address, BigInt(position.indexPosition), skyConfig.contracts.USDSStakingRewards, address]
               });
 
               const reward = BigInt(rewardResult.result);

@@ -2,22 +2,26 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY pnpm-lock.yaml package.json ./
+RUN pnpm install
 
 COPY . .
 
-RUN npm run build
+RUN pnpm run build
 
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-RUN npm install --omit=dev
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/pnpm-lock.yaml /app/package.json ./
+
+RUN pnpm install --prod
 
 EXPOSE 4173
 
-CMD ["npm", "run", "preview", "--", "--port", "4173", "--host"]
+CMD ["pnpm", "preview", "--", "--port", "4173", "--host"]

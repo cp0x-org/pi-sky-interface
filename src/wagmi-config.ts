@@ -4,6 +4,9 @@ import { mainnet, Chain } from 'wagmi/chains';
 // import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { createConfig, http } from '@wagmi/core';
+import { mainnet as mainnetCore } from '@wagmi/core/chains';
+
 // import { Chain } from 'wagmi'
 
 const mainTest: Chain = {
@@ -62,5 +65,13 @@ export const config = getDefaultConfig({
   // chains: [mainnet, sepolia, mainTest],
   chains: [mainnet],
   // chains: [mainnet, mainAnvil, mainTest],
+  ssr: false
+});
+
+export const wagmiConfig = createConfig({
+  chains: [mainnetCore],
+  transports: {
+    [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/1uU1IPVa-YqQZ9OPBMVXA')
+  },
   ssr: false
 });
