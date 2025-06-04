@@ -361,18 +361,6 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                     </Typography>
                   </Box>
 
-                  {/*<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>*/}
-                  {/*  <Typography color="text.secondary">Position Index:</Typography>*/}
-                  {/*  <Typography>#{position.indexPosition}</Typography>*/}
-                  {/*</Box>*/}
-
-                  {/*<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>*/}
-                  {/*  <Typography color="text.secondary">Last Updated:</Typography>*/}
-                  {/*  <Typography variant="body2">*/}
-                  {/*    {position.lockTimestamp ? new Date(position.lockTimestamp).toLocaleDateString() : 'Unknown'}*/}
-                  {/*  </Typography>*/}
-                  {/*</Box>*/}
-
                   {position.transactions && position.transactions.lockHash && (
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                       <Typography color="text.secondary">Transaction:</Typography>
@@ -409,7 +397,9 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                         ethers.getBigInt(position.wad) <= 0n
                       }
                     >
-                      {claiming[position.indexPosition] ? 'Claiming...' : 'Claim Rewards'}
+                      {claiming[position.indexPosition]
+                        ? 'Claiming...'
+                        : `Claim ${position?.reward ? Number(formatEther(position?.reward)).toFixed(5) : '0'} USDS`}
                     </Button>
 
                     <Button
