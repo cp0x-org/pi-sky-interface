@@ -19,6 +19,7 @@ import { useStakingApr } from '../../../../hooks/useStakingApr';
 import useStakingTvl from '../../../../hooks/useStakingTvl';
 import { formatUSDS } from '../../../../utils/sky';
 import { useDelegatorsSum } from '../../../../hooks/useDelegatorsSum';
+import { useSuppliersByUrns } from '../../../../hooks/useSuppliersByUrns';
 
 interface PositionsProps {
   stakeData?: {
@@ -45,7 +46,8 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { rate, isLoading: isStabilityLoading, error: stabilityError } = useStabilityRate();
   const { apr, isLoading: isLoadingApr, error: errorApr } = useStakingApr();
-  const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useDelegatorsSum();
+  // const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useDelegatorsSum();
+  const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useSuppliersByUrns();
 
   const { tvl } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
@@ -254,7 +256,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Suppliers:</Typography>
+            <Typography variant="body1">Staking Positions:</Typography>
             <Typography variant="h6" color="primary">
               {totalDelegators}
             </Typography>
