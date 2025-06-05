@@ -34,16 +34,8 @@ export default function Header() {
       {/*<NotificationSection />*/}
 
       {/* connect wallet */}
-      <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+      <Box sx={{ display: { lg: 'block' } }}>
         <ConnectButtonCustom chainStatus="icon" showBalance={false} />
-      </Box>
-
-      {/* profile */}
-      {/*<ProfileSection />*/}
-
-      {/* mobile header */}
-      <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-        <MobileSection />
       </Box>
     </>
   );
