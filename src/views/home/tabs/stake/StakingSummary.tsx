@@ -1,4 +1,3 @@
-import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
 import { useDelegateData } from '../../../../hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';

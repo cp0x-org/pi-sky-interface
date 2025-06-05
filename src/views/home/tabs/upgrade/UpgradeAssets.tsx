@@ -12,6 +12,7 @@ import { daiUsdsConverterConfig } from 'config/abi/DaiUsdsConverter';
 import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
 import { daiContractConfig } from 'config/abi/Dai';
 import { mkrContractConfig } from 'config/abi/Mkr';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 import Avatar from 'ui-component/extended/Avatar';
 import { formatUSDS } from '../../../../utils/sky';
@@ -261,16 +262,16 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
             }}
           >
             <FormControl fullWidth>
-              {/*<InputLabel id="select-with-image-label">Select Option</InputLabel>*/}
               <StyledSelect
                 value={tokenValue}
                 label="Token"
-                onChange={(e) => {
-                  setTokenValue(e.target.value);
+                onChange={(e: SelectChangeEvent<any>, _child) => {
+                  const value = e.target.value;
+                  setTokenValue(value);
                   setIsApproved(false);
                   setIsConfirmed(false);
                   if (amount) {
-                    setButtonText(`Approve ${e.target.value.toUpperCase()}`);
+                    setButtonText(`Approve ${value.toUpperCase()}`);
                   }
                 }}
                 renderValue={(selected) => {

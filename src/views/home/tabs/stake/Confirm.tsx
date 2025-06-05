@@ -7,6 +7,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { Chip, Divider, Alert } from '@mui/material';
+import { shortenAddress } from '../../../../utils/formatters';
 
 interface ConfirmProps {
   stakeData: {
@@ -63,10 +64,10 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceD
 
             <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
               <Typography color="text.secondary" variant="body2">
-                Lock Stake Engine
+                Stake Engine
               </Typography>
               <Typography variant="body2" sx={{ fontSize: '0.75rem', opacity: 0.6 }}>
-                {contractAddress}
+                {shortenAddress(contractAddress)}
               </Typography>
             </Box>
           </Box>
@@ -95,7 +96,7 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceD
                 textOverflow: 'ellipsis'
               }}
             >
-              {stakeData.rewardAddress}
+              {shortenAddress(stakeData.rewardAddress)}
             </Typography>
           </Box>
 
@@ -110,7 +111,7 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceD
                   textOverflow: 'ellipsis'
                 }}
               >
-                {stakeData.delegatorAddress}
+                {shortenAddress(stakeData.delegatorAddress)}
               </Typography>
             </Box>
           )}
@@ -120,17 +121,20 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceD
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography color="text.secondary">Transaction Status:</Typography>
             <Box>
-              {isApproved ? (
-                <Chip label="Tokens Approved" color="success" size="small" sx={{ mr: 1 }} />
-              ) : (
-                <Chip label="Approval Required" color="warning" size="small" sx={{ mr: 1 }} />
-              )}
-
-              {isStaked ? (
-                <Chip label="Staking Complete" color="success" size="small" />
-              ) : (
-                <Chip label="Pending Confirmation" color="default" size="small" />
-              )}
+              <Box sx={{ mb: 2 }}>
+                {isApproved ? (
+                  <Chip label="Tokens Approved" color="success" size="small" sx={{ mr: 1 }} />
+                ) : (
+                  <Chip label="Approval Required" color="warning" size="small" sx={{ mr: 1 }} />
+                )}
+              </Box>
+              <Box>
+                {isStaked ? (
+                  <Chip label="Staking Complete" color="success" size="small" />
+                ) : (
+                  <Chip label="Pending Confirmation" color="default" size="small" />
+                )}
+              </Box>
             </Box>
           </Box>
         </CardContent>

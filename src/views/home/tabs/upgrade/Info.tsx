@@ -1,4 +1,3 @@
-import { FC } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -80,7 +79,11 @@ export default function Info() {
               SKY Total Upgraded:
             </Typography>
             <Typography variant="h6">
-              {!isRateLoading && <>{formatTokenAmount(BigInt(mkrTotal) * BigInt(mkrToSkyRate), 2) || 'SKY'}</>}
+              {!isRateLoading && mkrTotal !== undefined && mkrToSkyRate !== undefined ? (
+                <>{formatTokenAmount((BigInt(mkrTotal) * BigInt(mkrToSkyRate)).toString(), 2)}</>
+              ) : (
+                'SKY'
+              )}
             </Typography>
           </Box>
           <Box
