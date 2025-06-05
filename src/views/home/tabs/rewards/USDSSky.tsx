@@ -1,44 +1,36 @@
+import { useState } from 'react';
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import { useNavigate } from 'react-router-dom';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import Grid from '@mui/material/Grid';
 import TabPanel from '../../../../ui-component/TabPanel';
 import Info from './components/Info';
 import Stake from './components/Stake';
 import Withdraw from './components/Withdraw';
 import { useAccount, useReadContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { useState } from 'react';
-import { skyConfig } from 'config/index';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import { useNavigate } from 'react-router-dom';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
-
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
-import Alert from '@mui/material/Alert';
 import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import CardHeader from '@mui/material/CardHeader';
 
 export default function USDSSkyTab() {
+  const [operationType, setOperationType] = useState(0);
   const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
-  const [operationType, setOperationType] = useState(0);
   const { config: skyConfig } = useConfigChainId();
-
-  const USDSSkyCard = styled(Paper)(({ theme }) => ({
-    ...theme.typography.body2,
-    padding: theme.spacing(3),
-    color: theme.palette.text.primary,
-    ...theme.applyStyles('dark', {
-      backgroundColor: theme.palette.secondary.light
-    })
-  }));
 
   const handleOperationChange = (event: React.SyntheticEvent, newValue: number) => {
     setOperationType(newValue);
+  };
+
+  const handleBack = () => {
+    navigate('/rewards');
   };
 
   const { data: userBalance } = useReadContract({
@@ -67,10 +59,6 @@ export default function USDSSkyTab() {
     functionName: 'totalSupply'
   });
 
-  const handleBack = () => {
-    navigate('/rewards');
-  };
-
   return (
     <Box sx={{ width: '100%' }}>
       <Button variant="outlined" onClick={handleBack} sx={{ mb: 2 }}>
@@ -79,21 +67,37 @@ export default function USDSSkyTab() {
       <Typography variant="h2" gutterBottom>
         With: USDS Get: SKY
       </Typography>
-      <Info
-        contractAddress={skyConfig.contracts.StakingRewards}
-        balance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
-        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
-      />
-      <Tabs value={operationType} onChange={handleOperationChange}>
-        <Tab label="Supply" />
-        <Tab label="Withdraw" />
-      </Tabs>
-      <TabPanel value={operationType} index={0}>
-        <Stake userBalance={userBalance} />
-      </TabPanel>
-      <TabPanel value={operationType} index={1}>
-        <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
-      </TabPanel>
+      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+        Stake your USDS tokens to earn SKY rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
+        rewards proportional to your contribution.
+      </Typography>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 7 }}>
+          <CardHeader title={'Use Staking'}></CardHeader>
+          <Box sx={{ width: '100%', borderRadius: '20px' }}>
+            <Tabs value={operationType} onChange={handleOperationChange}>
+              <Tab label="Supply" />
+              <Tab label="Withdraw" />
+            </Tabs>
+
+            <TabPanel value={operationType} index={0}>
+              <Stake userBalance={userBalance} />
+            </TabPanel>
+            <TabPanel value={operationType} index={1}>
+              <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
+            </TabPanel>
+          </Box>
+        </Grid>
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Box sx={{ width: '100%', display: 'flex' }}>
+            <Info
+              contractAddress={skyConfig.contracts.StakingRewards}
+              balance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
+              tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
+            />
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

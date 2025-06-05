@@ -196,13 +196,6 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
           {buttonText}
         </Button>
       </Box>
-      {/*<Box>*/}
-      {/*  {showAlert && (*/}
-      {/*    <Alert variant="filled" severity="success">*/}
-      {/*      This is an error alert — check it out!*/}
-      {/*    </Alert>*/}
-      {/*  )}*/}
-      {/*</Box>*/}
     </StyledCard>
   );
 };
