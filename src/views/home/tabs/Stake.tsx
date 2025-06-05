@@ -47,7 +47,7 @@ export default function StakeTab() {
       {!showNewPosition ? (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h4">Your Delegation Positions</Typography>
+            <Typography variant="h4"></Typography>
             <Button variant="contained" color="primary" onClick={handleOpenNewPosition} disabled={!address}>
               Open New Position
             </Button>

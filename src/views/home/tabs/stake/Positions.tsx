@@ -192,47 +192,6 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     );
   }
 
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        Error loading staking position data: {error}
-      </Alert>
-    );
-  }
-
-  if (!address) {
-    return (
-      <Typography variant="h2" gutterBottom>
-        Please connect your wallet to view staking positions
-      </Typography>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <Box sx={{ width: '100%', my: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Loading staking position data...
-        </Typography>
-      </Box>
-    );
-  }
-
-  // Always show the summary, even if no positions
-  if (!positions || positions.length === 0) {
-    return (
-      <>
-        <Typography variant="h2" gutterBottom>
-          Your Staking Summary
-        </Typography>
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No active staking positions found. This could be due to positions with zero balance being filtered out.
-        </Alert>
-      </>
-    );
-  }
-
   // Calculate total staked amount
   const totalStaked = positions.reduce((sum, position) => {
     try {
@@ -300,158 +259,181 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
         </Box>
       </Paper>
 
-      <Typography variant="h5" gutterBottom>
-        Staking Positions
-      </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Error loading staking position data: {String(error)}
+        </Alert>
+      )}
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-        {positions.length === 0 ? (
-          <Box sx={{ width: '100%' }}>
-            <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-              No Positions
-            </Typography>
-          </Box>
-        ) : (
-          positions.map((position, index) => (
-            <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-              <PositionCard>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
-                    <Chip
-                      // label={ethers.getBigInt(position.wad) > 0n ? 'Active' : 'Zero Balance'}
-                      // color={ethers.getBigInt(position.wad) > 0n ? 'success' : 'warning'}
-                      label="Active"
-                      color="success"
-                      size="small"
-                    />
-                  </Box>
+      {!address && (
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Please connect your wallet to view staking positions
+        </Typography>
+      )}
 
-                  <Divider sx={{ my: 2 }} />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography color="text.secondary">Locked Amount:</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
-                      <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
-                    </Box>
-                  </Box>
+      {isLoading && (
+        <Box sx={{ width: '100%', my: 4, textAlign: 'center' }}>
+          <CircularProgress />
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            Loading staking positions...
+          </Typography>
+        </Box>
+      )}
+      {!isLoading && address && !error && positions.length > 0 && (
+        <>
+          <Typography variant="h5" gutterBottom>
+            Your Staking Positions
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+            {positions.length === 0 ? (
+              <Box sx={{ width: '100%' }}>
+                <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                  No Positions
+                </Typography>
+              </Box>
+            ) : (
+              positions.map((position, index) => (
+                <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                  <PositionCard>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
+                        <Chip
+                          // label={ethers.getBigInt(position.wad) > 0n ? 'Active' : 'Zero Balance'}
+                          // color={ethers.getBigInt(position.wad) > 0n ? 'success' : 'warning'}
+                          label="Active"
+                          color="success"
+                          size="small"
+                        />
+                      </Box>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography color="text.secondary">Delegate:</Typography>
-
-                    <Typography>
-                      {position.delegateID
-                        ? delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
-                          `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
-                        : '-'}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography color="text.secondary">Delegate Address:</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          maxWidth: '150px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                      >
-                        {shortenAddress(position.delegateID)}
-                      </Typography>
-                      {position.delegateID && (
-                        <Box
-                          component="a"
-                          href={`https://etherscan.io/address/${position.delegateID}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            ml: 1,
-                            color: 'primary.main'
-                          }}
-                        >
-                          <IconExternalLink size={16} />
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-
-                  {position.transactions && position.transactions.lockHash && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Transaction:</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            maxWidth: '150px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}
-                        >
-                          {shortenAddress(position.transactions.lockHash)}
-                        </Typography>
-                        <Box
-                          component="a"
-                          href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            ml: 1,
-                            color: 'primary.main'
-                          }}
-                        >
-                          <IconExternalLink size={16} />
+                      <Divider sx={{ my: 2 }} />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Locked Amount:</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
+                          <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
                         </Box>
                       </Box>
-                    </Box>
-                  )}
 
-                  <Divider sx={{ my: 2 }} />
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Delegate:</Typography>
 
-                  <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      fullWidth
-                      onClick={() => handleClaim(position)}
-                      disabled={
-                        withdrawing[position.indexPosition] ||
-                        claiming[position.indexPosition] ||
-                        isPending ||
-                        ethers.getBigInt(position.wad) <= 0n
-                      }
-                    >
-                      {claiming[position.indexPosition]
-                        ? 'Claiming...'
-                        : `Claim ${position?.reward ? Number(formatEther(position?.reward)).toFixed(5) : '0'} USDS`}
-                    </Button>
+                        <Typography>
+                          {position.delegateID
+                            ? delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
+                              `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
+                            : '-'}
+                        </Typography>
+                      </Box>
 
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      fullWidth
-                      onClick={() => handleWithdraw(position)}
-                      disabled={
-                        withdrawing[position.indexPosition] ||
-                        claiming[position.indexPosition] ||
-                        isPending ||
-                        ethers.getBigInt(position.wad) <= 0n
-                      }
-                    >
-                      {withdrawing[position.indexPosition] ? 'Withdrawing...' : 'Withdraw Position'}
-                    </Button>
-                  </Box>
-                </CardContent>
-              </PositionCard>
-            </Box>
-          ))
-        )}
-      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Delegate Address:</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              maxWidth: '150px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}
+                          >
+                            {shortenAddress(position.delegateID)}
+                          </Typography>
+                          {position.delegateID && (
+                            <Box
+                              component="a"
+                              href={`https://etherscan.io/address/${position.delegateID}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                ml: 1,
+                                color: 'primary.main'
+                              }}
+                            >
+                              <IconExternalLink size={16} />
+                            </Box>
+                          )}
+                        </Box>
+                      </Box>
+
+                      {position.transactions && position.transactions.lockHash && (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                          <Typography color="text.secondary">Transaction:</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                maxWidth: '150px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                            >
+                              {shortenAddress(position.transactions.lockHash)}
+                            </Typography>
+                            <Box
+                              component="a"
+                              href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                ml: 1,
+                                color: 'primary.main'
+                              }}
+                            >
+                              <IconExternalLink size={16} />
+                            </Box>
+                          </Box>
+                        </Box>
+                      )}
+
+                      <Divider sx={{ my: 2 }} />
+
+                      <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          fullWidth
+                          onClick={() => handleClaim(position)}
+                          disabled={
+                            withdrawing[position.indexPosition] ||
+                            claiming[position.indexPosition] ||
+                            isPending ||
+                            ethers.getBigInt(position.wad) <= 0n
+                          }
+                        >
+                          {claiming[position.indexPosition]
+                            ? 'Claiming...'
+                            : `Claim ${position?.reward ? Number(formatEther(position?.reward)).toFixed(5) : '0'} USDS`}
+                        </Button>
+
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          fullWidth
+                          onClick={() => handleWithdraw(position)}
+                          disabled={
+                            withdrawing[position.indexPosition] ||
+                            claiming[position.indexPosition] ||
+                            isPending ||
+                            ethers.getBigInt(position.wad) <= 0n
+                          }
+                        >
+                          {withdrawing[position.indexPosition] ? 'Withdrawing...' : 'Withdraw Position'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </PositionCard>
+                </Box>
+              ))
+            )}
+          </Box>
+        </>
+      )}
 
       {/* Snackbar for notifications */}
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbarMessage} />
