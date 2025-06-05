@@ -1,6 +1,6 @@
 import { Box, Typography, TextField, Button, styled, Select } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import InputLabel from 'ui-component/extended/Form/InputLabel';
@@ -23,8 +23,6 @@ interface Props {
 
 const TOKEN_DAI = 'dai';
 const TOKEN_MKR = 'mkr';
-// Fixed conversion rate: 1 MKR = 24,000 SKY
-const MKR_TO_SKY_RATE = 24000;
 
 const tokenOptions = [
   { label: 'DAI', value: TOKEN_DAI, img: daiLogo },
@@ -67,6 +65,13 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   const { config: skyConfig } = useConfigChainId();
   const [tokenValue, setTokenValue] = useState(tokenOptions[0].value);
 
+  // Get the MKR to SKY conversion rate from the contract
+  const { data: mkrToSkyRate, isLoading: isRateLoading } = useReadContract({
+    ...mkrSkyConverterConfig,
+    address: skyConfig.contracts.MKRSKYConverter,
+    functionName: 'rate'
+  });
+
   // Calculate expected SKY output when amount or fee changes
   useEffect(() => {
     if (tokenValue === TOKEN_MKR && amount && amount !== '0') {
@@ -85,8 +90,14 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
         return;
       }
 
-      // Calculate gross SKY amount (MKR * 24,000)
-      const grossSky = mkrAmountFloat * MKR_TO_SKY_RATE;
+      if (!mkrToSkyRate) {
+        console.error('MKR to SKY rate not available');
+        return;
+      }
+
+      // Calculate gross SKY amount using the rate from the contract
+      const rate = Number(mkrToSkyRate);
+      const grossSky = mkrAmountFloat * rate;
 
       setExpectedOutput(formatUSDS(grossSky));
     } catch (error) {
@@ -220,7 +231,12 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
         <Typography variant="body2" sx={{ mb: 2 }}>
           {tokenValue === TOKEN_MKR ? 'Enter the amount of MKR to receive SKY:' : 'Enter the amount of DAI to receive USDS:'}
         </Typography>
-        {tokenValue === TOKEN_MKR && amount && amount !== '0' && (
+        {tokenValue === TOKEN_MKR && isRateLoading && (
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Loading conversion rate...
+          </Typography>
+        )}
+        {tokenValue === TOKEN_MKR && amount && amount !== '0' && !isRateLoading && (
           <Typography variant="body2" sx={{ mb: 2, color: 'success.main' }}>
             Expected output: {expectedOutput} SKY
           </Typography>
