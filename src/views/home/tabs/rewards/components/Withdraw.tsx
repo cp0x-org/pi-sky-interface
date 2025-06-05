@@ -8,20 +8,12 @@ import { parseEther } from 'viem';
 import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
 import { skyConfig } from 'config/index';
 import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
+import { StyledCard } from '../../../../../components/StyledCard';
+import { StyledTextField } from '../../../../../components/StyledTextField';
 
 interface Props {
   stakedBalance?: string;
 }
-
-const StyledCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: 64,
-  overflow: 'hidden',
-  borderRadius: 16,
-  width: '100%',
-  background: theme.palette.secondary.light,
-  backgroundBlendMode: 'overlay'
-}));
 
 const PercentButton = styled(Button)(({ theme }) => ({
   height: 24,
@@ -112,7 +104,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
           How much USDS would you like to withdraw?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
-          <TextField
+          <StyledTextField
             fullWidth
             type="number"
             placeholder="Enter amount"
@@ -121,7 +113,6 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
               setAmount(e.target.value);
               setButtonText(e.target.value ? `Withdraw` : 'Enter Amount');
             }}
-            sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
 
           <Box

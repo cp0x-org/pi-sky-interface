@@ -7,20 +7,13 @@ import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { parseEther } from 'viem';
 import { skyConfig } from 'config/index';
 import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { useTheme } from '@mui/material/styles';
+import { StyledCard } from '../../../../components/StyledCard';
+import { StyledTextField } from '../../../../components/StyledTextField';
 
 interface Props {
   savingsBalance?: string;
 }
-
-const StyledCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: 64,
-  overflow: 'hidden',
-  borderRadius: 16,
-  width: '100%',
-  background: theme.palette.secondary.light,
-  backgroundBlendMode: 'overlay'
-}));
 
 const PercentButton = styled(Button)(({ theme }) => ({
   height: 24,
@@ -42,10 +35,20 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
-
+  const theme = useTheme();
   const handlePercentClick = (percent: number) => {
-    // TODO: Implement percentage calculation based on available balance
-    console.log(`Clicked ${percent}%`);
+    if (savingsBalance === '...') return;
+
+    // Convert savingsBalance from string to number
+    const balance = parseFloat(savingsBalance);
+    if (isNaN(balance)) return;
+
+    // Calculate the amount based on the percentage
+    const value = (balance * percent) / 100;
+
+    // Set the amount and update button text
+    setAmount(value.toString());
+    setButtonText('Withdraw');
   };
 
   // const { writeContract: writeApprove } = useWriteContract();
@@ -108,8 +111,17 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
         <Typography variant="body2" sx={{ mb: 2 }}>
           How much USDS would you like to withdraw?
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
-          <TextField
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            borderBottom: 1,
+            borderColor: 'divider',
+            py: 2,
+            gap: 2
+          }}
+        >
+          <StyledTextField
             fullWidth
             type="number"
             placeholder="Enter amount"
@@ -118,7 +130,6 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
               setAmount(e.target.value);
               setButtonText(e.target.value ? `Withdraw` : 'Enter Amount');
             }}
-            sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
 
           <Box
@@ -148,11 +159,11 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
               {savingsBalance} USDS
             </Typography>
           </Box>
-          {/*<Box sx={{ display: 'flex', gap: 1 }}>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>*/}
-          {/*  <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>*/}
-          {/*</Box>*/}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+          </Box>
         </Box>
       </Box>
       <Box>

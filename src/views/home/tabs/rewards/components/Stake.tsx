@@ -12,19 +12,11 @@ import { openSnackbar } from '../../../../../store/slices/snackbar';
 import { useDispatch } from 'store';
 import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
 import { formatUSDS } from '../../../../../utils/sky';
+import { StyledCard } from '../../../../../components/StyledCard';
+import { StyledTextField } from '../../../../../components/StyledTextField';
 interface Props {
   userBalance?: bigint;
 }
-
-const StyledCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: 64,
-  overflow: 'hidden',
-  borderRadius: 16,
-  width: '100%',
-  background: theme.palette.secondary.light,
-  backgroundBlendMode: 'overlay'
-}));
 
 const PercentButton = styled(Button)(({ theme }) => ({
   height: 24,
@@ -152,7 +144,7 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
           How much USDS would you like to supply?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
-          <TextField
+          <StyledTextField
             fullWidth
             type="number"
             placeholder="Enter amount"
@@ -164,15 +156,6 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
                 setButtonText(value ? `Approve supply amount` : 'Enter Amount');
               }
             }}
-            // sx={{
-            //   '& input::-webkit-outer-spin-button': {
-            //     display: 'none'
-            //   },
-            //   '& input::-webkit-inner-spin-button': { display: 'none' },
-            //   '& input[type=number]': {
-            //     MozAppearance: 'textfield'
-            //   }
-            // }}
           />
 
           <Box

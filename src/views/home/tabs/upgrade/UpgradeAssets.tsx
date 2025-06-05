@@ -16,6 +16,8 @@ import { mkrContractConfig } from 'config/abi/Mkr';
 import Avatar from 'ui-component/extended/Avatar';
 import { formatUSDS } from '../../../../utils/sky';
 import { formatTokenAmount } from '../../../../utils/formatters';
+import { StyledCard } from '../../../../components/StyledCard';
+import { StyledTextField } from '../../../../components/StyledTextField';
 interface Props {
   daiUserBalance?: bigint;
   mkrUserBalance?: bigint;
@@ -28,16 +30,6 @@ const tokenOptions = [
   { label: 'DAI', value: TOKEN_DAI, img: daiLogo },
   { label: 'MKR', value: TOKEN_MKR, img: mkrLogo }
 ];
-
-const StyledCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: 64,
-  overflow: 'hidden',
-  borderRadius: 16,
-  width: '100%',
-  background: theme.palette.secondary.light,
-  backgroundBlendMode: 'overlay'
-}));
 
 const PercentButton = styled(Button)(({ theme }) => ({
   height: 24,
@@ -242,7 +234,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
           </Typography>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
-          <TextField
+          <StyledTextField
             fullWidth
             type="number"
             placeholder="Enter amount"

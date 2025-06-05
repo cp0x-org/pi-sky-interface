@@ -7,22 +7,14 @@ import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { formatUSDS } from '../../../../utils/sky';
+import { StyledCard } from '../../../../components/StyledCard';
+import { StyledTextField } from '../../../../components/StyledTextField';
 
 interface Props {
   userBalance?: bigint;
   stakedAmount: string;
   onChange: (v: string) => void;
 }
-
-const StyledCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: 64,
-  overflow: 'hidden',
-  borderRadius: 16,
-  width: '100%',
-  background: theme.palette.secondary.light,
-  backgroundBlendMode: 'overlay'
-}));
 
 const PercentButton = styled(Button)(({ theme }) => ({
   height: 24,
@@ -79,7 +71,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
           How much SKY would you like to stake?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: error ? 'error.main' : 'divider', py: 2, gap: 2 }}>
-          <TextField
+          <StyledTextField
             fullWidth
             type="number"
             placeholder="Enter amount"

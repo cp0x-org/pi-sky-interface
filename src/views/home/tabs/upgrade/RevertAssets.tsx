@@ -9,20 +9,12 @@ import { daiUsdsConverterConfig } from '../../../../config/abi/DaiUsdsConverter'
 import { usdsContractConfig } from '../../../../config/abi/Usds';
 import { daiContractConfig } from '../../../../config/abi/Dai';
 import { formatUSDS } from '../../../../utils/sky';
+import { StyledCard } from '../../../../components/StyledCard';
+import { StyledTextField } from '../../../../components/StyledTextField';
 
 interface Props {
   usdsUserBalance?: bigint;
 }
-
-const StyledCard = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(4),
-  minHeight: 64,
-  overflow: 'hidden',
-  borderRadius: 16,
-  width: '100%',
-  background: theme.palette.secondary.light,
-  backgroundBlendMode: 'overlay'
-}));
 
 const PercentButton = styled(Button)(({ theme }) => ({
   height: 24,
@@ -139,7 +131,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
           How much USDS would you like to revert to DAI?
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
-          <TextField
+          <StyledTextField
             fullWidth
             type="number"
             placeholder="Enter amount"
@@ -150,7 +142,6 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
               setIsApproved(false);
               setIsConfirmed(false);
             }}
-            sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />
 
           <Box
