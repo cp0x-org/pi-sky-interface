@@ -2,7 +2,8 @@ import { useMemo, useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import { Step, StepLabel, Stepper, Stack, Alert } from '@mui/material';
+import { Step, StepLabel, Stepper, Stack, Alert, Typography, Grid, CardContent, CardHeader } from '@mui/material';
+import { IconExternalLink } from '@tabler/icons-react';
 import StakeAndBorrow from './StakeAndBorrow';
 import Reward from './Reward';
 import Delegate from './Delegate';
@@ -12,10 +13,12 @@ import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useAccount, useReadContract, useWriteContract, useSimulateContract } from 'wagmi';
 import { Config, readContract } from '@wagmi/core';
 import { formatEther } from 'viem';
+import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { SkyContracts, SkyIcons } from 'config/index';
 import { useConfig } from 'wagmi';
+import StakingSummary from './StakingSummary';
 
 const steps = ['Stake', 'Select reward', 'Select a delegate', 'Confirm'];
 
@@ -426,67 +429,85 @@ export default function HandlePosition() {
   };
 
   return (
-    <Card sx={{ my: 2, p: 2 }}>
-      <Stepper activeStep={activeStep}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+    <Box sx={{ width: '100%' }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+        Stake your SKY tokens to earn rewards and participate in the Sky Protocol governance. Follow the steps below to complete your
+        staking process.
+      </Typography>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 7 }}>
+          <CardHeader title={'Staking Process'}></CardHeader>
+          <Card sx={{ borderRadius: '20px', mb: 3 }}>
+            <Box sx={{ p: 3 }}>
+              <Stepper activeStep={activeStep}>
+                {steps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel>{label}</StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
 
-      <Box sx={{ mt: 4 }}>{getStepComponent()}</Box>
+              <Box sx={{ mt: 4 }}>{getStepComponent()}</Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {activeStep === steps.length - 1 && isSimulateApproveError && !isApproved && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Approval simulation failed: {simulateApproveError?.message || 'Unknown error'}
-          </Alert>
-        )}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {activeStep === steps.length - 1 && isSimulateApproveError && !isApproved && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    Approval simulation failed: {simulateApproveError?.message || 'Unknown error'}
+                  </Alert>
+                )}
 
-        {activeStep === steps.length - 1 && isSimulateConfirmError && isApproved && !isStaked && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Confirmation simulation failed: {simulateConfirmError?.message || 'Unknown error'}
-          </Alert>
-        )}
+                {activeStep === steps.length - 1 && isSimulateConfirmError && isApproved && !isStaked && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    Confirmation simulation failed: {simulateConfirmError?.message || 'Unknown error'}
+                  </Alert>
+                )}
 
-        {activeStep === steps.length - 1 && isConfirmSuccess && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Transaction sent
-          </Alert>
-        )}
+                {activeStep === steps.length - 1 && isConfirmSuccess && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    Transaction sent
+                  </Alert>
+                )}
 
-        {activeStep === steps.length - 1 && confirmError && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            Error: {confirmError.message}
-          </Alert>
-        )}
+                {activeStep === steps.length - 1 && confirmError && (
+                  <Alert severity="error" sx={{ mt: 2 }}>
+                    Error: {confirmError.message}
+                  </Alert>
+                )}
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-          <Button disabled={activeStep === 0} onClick={handleBack}>
-            Back
-          </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                  <Button disabled={activeStep === 0} onClick={handleBack}>
+                    Back
+                  </Button>
 
-          {activeStep === 2 ? (
-            <Stack direction="row" spacing={2}>
-              <Button variant="outlined" onClick={handleSkip} disabled={!address}>
-                Skip
-              </Button>
-              <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
-                Next
-              </Button>
-            </Stack>
-          ) : (
-            <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
-              {activeStep === steps.length - 1
-                ? allowanceData && stakeData.amount && allowanceData >= parseEther(stakeData.amount)
-                  ? 'Confirm Staking'
-                  : confirmButtonText
-                : 'Next'}
-            </Button>
-          )}
-        </Box>
-      </Box>
-    </Card>
+                  {activeStep === 2 ? (
+                    <Stack direction="row" spacing={2}>
+                      <Button variant="outlined" onClick={handleSkip} disabled={!address}>
+                        Skip
+                      </Button>
+                      <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
+                        Next
+                      </Button>
+                    </Stack>
+                  ) : (
+                    <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
+                      {activeStep === steps.length - 1
+                        ? allowanceData && stakeData.amount && allowanceData >= parseEther(stakeData.amount)
+                          ? 'Confirm Staking'
+                          : confirmButtonText
+                        : 'Next'}
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Box sx={{ width: '100%', display: 'flex' }}>
+            <StakingSummary />
+          </Box>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }
