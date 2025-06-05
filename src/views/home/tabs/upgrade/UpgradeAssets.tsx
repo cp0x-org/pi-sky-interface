@@ -16,6 +16,7 @@ import { daiContractConfig } from 'config/abi/Dai';
 import { mkrContractConfig } from 'config/abi/Mkr';
 
 import Avatar from 'ui-component/extended/Avatar';
+import { formatUSDS } from '../../../../utils/sky';
 interface Props {
   daiUserBalance?: bigint;
   mkrUserBalance?: bigint;
@@ -88,9 +89,9 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   // Get the current token balance based on selected token
   const getCurrentBalance = () => {
     if (tokenValue === TOKEN_DAI) {
-      return daiUserBalance ? Number(formatEther(daiUserBalance)).toFixed(4) : '0';
+      return daiUserBalance ? formatUSDS(formatEther(daiUserBalance)) : '0';
     } else if (tokenValue === TOKEN_MKR) {
-      return mkrUserBalance ? Number(formatEther(mkrUserBalance)).toFixed(4) : '0';
+      return mkrUserBalance ? formatUSDS(formatEther(mkrUserBalance)) : '0';
     }
     return '0';
   };

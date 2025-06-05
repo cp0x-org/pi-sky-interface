@@ -3,11 +3,13 @@ import { useReadContracts } from 'wagmi';
 import { USDSStakingReward } from 'config/abi/USDSStakingReward';
 import { useConfigChainId } from './useConfigChainId';
 import { apiConfig } from '../config/index';
-
+import { useSkyPrice } from './useSkyPrice';
 const SECONDS_IN_YEAR = 31_536_000n;
 
 export function useStakingApr() {
   const { config: skyConfig } = useConfigChainId();
+
+  const { skyPrice } = useSkyPrice();
 
   const { data, isLoading, error } = useReadContracts({
     contracts: [
@@ -39,19 +41,23 @@ export function useStakingApr() {
     if (totalSupply === 0n) return 0;
 
     // Set current SKY price in USDS manually or from an oracle
-    const stakingTokenPriceInUSDS = apiConfig.SKY_PRICE;
+    const stakingTokenPriceInUSDS = skyPrice ? skyPrice : 0;
 
     // Step 1: Calculate annual reward in USDS (from rewardRate in wei)
     const annualRewardUSDS = rewardRate * SECONDS_IN_YEAR; // still in wei
 
     // Step 2: Total value of staked SKY in USDS
     const totalStakedValueUSDS = (Number(totalSupply) / 1e18) * stakingTokenPriceInUSDS;
-
-    // Step 3: Calculate APR
-    const aprPercent = (Number(annualRewardUSDS) / 1e18 / totalStakedValueUSDS) * 100;
+    let aprPercent;
+    if (totalStakedValueUSDS) {
+      // Step 3: Calculate APR
+      aprPercent = (Number(annualRewardUSDS) / 1e18 / totalStakedValueUSDS) * 100;
+    } else {
+      aprPercent = 0;
+    }
 
     return aprPercent;
-  }, [data]);
+  }, [data, skyPrice]);
 
   return {
     apr,

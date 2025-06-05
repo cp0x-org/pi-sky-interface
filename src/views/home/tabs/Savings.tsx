@@ -58,8 +58,8 @@ export default function SavingsTab() {
       </Typography>
       <Info
         contractAddress={skyConfig.contracts.SavingsUSDS}
-        balance={savingBalance ? Number(formatEther(savingBalance)).toFixed(2) : '0'}
-        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}
+        balance={savingBalance ? formatUSDS(formatEther(savingBalance)) : '0'}
+        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
       />
       <Tabs value={operationType} onChange={handleOperationChange}>
         <Tab label="Supply" />
@@ -67,10 +67,10 @@ export default function SavingsTab() {
       </Tabs>
 
       <TabPanel value={operationType} index={0}>
-        <Deposit userBalance={userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} />
+        <Deposit userBalance={userBalance ? formatUSDS(formatEther(userBalance)) : '0'} />
       </TabPanel>
       <TabPanel value={operationType} index={1}>
-        <Withdraw savingsBalance={savingBalance ? Number(formatEther(savingBalance)).toFixed(4) : '0'} />
+        <Withdraw savingsBalance={savingBalance ? formatUSDS(formatEther(savingBalance)) : '0'} />
       </TabPanel>
     </Box>
   );

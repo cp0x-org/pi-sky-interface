@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { lockStakeContractConfig } from '../config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
 import { simulateContract } from '@wagmi/core';
-import { wagmiConfig } from 'wagmi-config';
+import { useConfig } from 'wagmi';
 
 export interface StakingPositionData {
   positions: Array<{
@@ -29,6 +29,7 @@ export const useStakingPositions = (): StakingPositionData => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config: skyConfig } = useConfigChainId();
+  const config = useConfig();
 
   useEffect(() => {
     const fetchRewards = async () => {
@@ -44,12 +45,14 @@ export const useStakingPositions = (): StakingPositionData => {
         const updated = await Promise.all(
           originalPositions.map(async (position) => {
             try {
-              const rewardResult = await simulateContract(wagmiConfig, {
+              const rewardResult = await simulateContract(config, {
                 abi: lockStakeContractConfig.abi,
                 address: skyConfig.contracts.LockStakeEngine,
                 functionName: 'getReward',
                 args: [address, BigInt(position.indexPosition), skyConfig.contracts.USDSStakingRewards, address]
               });
+
+              console.log('getReward result:', rewardResult);
 
               const reward = BigInt(rewardResult.result);
 
@@ -67,7 +70,8 @@ export const useStakingPositions = (): StakingPositionData => {
           })
         );
 
-        setPositionsWithRewards(updated);
+        const sortedPositions = updated.sort((a, b) => Number(a.indexPosition) - Number(b.indexPosition));
+        setPositionsWithRewards(sortedPositions);
         setIsLoading(false);
       } catch (e) {
         console.error('Ошибка при получении наград:', e);

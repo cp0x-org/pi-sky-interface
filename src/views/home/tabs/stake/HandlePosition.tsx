@@ -10,12 +10,12 @@ import Confirm from './Confirm';
 import { encodeFunctionData, parseEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useAccount, useReadContract, useWriteContract, useSimulateContract } from 'wagmi';
-import { readContract } from '@wagmi/core';
+import { Config, readContract } from '@wagmi/core';
 import { formatEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { wagmiConfig } from 'wagmi-config';
 import { SkyContracts, SkyIcons } from 'config/index';
+import { useConfig } from 'wagmi';
 
 const steps = ['Stake', 'Select reward', 'Select a delegate', 'Confirm'];
 
@@ -25,10 +25,10 @@ type SkyConfig = {
   readonly icons: SkyIcons;
 };
 
-async function fetchUrnsCount(skyConfig: SkyConfig, address: `0x${string}` | undefined) {
+async function fetchUrnsCount(skyConfig: SkyConfig, config: Config, address: `0x${string}` | undefined) {
   if (!address) return undefined;
 
-  const result = await readContract(wagmiConfig, {
+  const result = await readContract(config, {
     abi: lockStakeContractConfig.abi,
     address: skyConfig.contracts.LockStakeEngine, // <-- обязательно!
     functionName: 'ownerUrnsCount',
@@ -41,7 +41,7 @@ async function fetchUrnsCount(skyConfig: SkyConfig, address: `0x${string}` | und
 export default function HandlePosition() {
   const { address } = useAccount();
   const { config: skyConfig } = useConfigChainId();
-
+  const config = useConfig();
   const [activeStep, setActiveStep] = useState(0);
   const [stakeData, setStakeData] = useState({
     amount: '',
@@ -93,7 +93,7 @@ export default function HandlePosition() {
     if (!address) return;
 
     const getUrnsCount = async () => {
-      const count = await fetchUrnsCount(skyConfig, address);
+      const count = await fetchUrnsCount(skyConfig, config, address);
       setNextUrnIdx(count ?? 0n);
     };
 
@@ -118,16 +118,21 @@ export default function HandlePosition() {
         abi: lockStakeContractConfig.abi,
         functionName: 'selectFarm',
         args: [address, nextUrnIdx, skyConfig.contracts.USDSStakingRewards, 1]
-      }),
-      encodeFunctionData({
-        abi: lockStakeContractConfig.abi,
-        functionName: 'selectVoteDelegate',
-        args: [address, nextUrnIdx, `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`]
       })
     ];
 
+    if (stakeData.delegatorAddress) {
+      dataArray.push(
+        encodeFunctionData({
+          abi: lockStakeContractConfig.abi,
+          functionName: 'selectVoteDelegate',
+          args: [address, nextUrnIdx, `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`]
+        })
+      );
+    }
+
     return dataArray;
-  }, [address, stakeData, skyConfig]);
+  }, [address, stakeData.amount, stakeData.rewardAddress, stakeData.delegatorAddress, nextUrnIdx, skyConfig.contracts.USDSStakingRewards]);
 
   // Simulate confirm transaction
   const {
@@ -408,7 +413,7 @@ export default function HandlePosition() {
   const getStepComponent = () => {
     switch (activeStep) {
       case 0:
-        return <StakeAndBorrow userBalance={userBalance} amount={stakeData.amount} onChange={(v) => handleChange('amount', v)} />;
+        return <StakeAndBorrow userBalance={userBalance} stakedAmount={stakeData.amount} onChange={(v) => handleChange('amount', v)} />;
       case 1:
         return <Reward rewardAddress={stakeData.rewardAddress} onChange={(v) => handleChange('rewardAddress', v)} />;
       case 2:

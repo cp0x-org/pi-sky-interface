@@ -11,6 +11,7 @@ import Alert from '@mui/material/Alert';
 import { openSnackbar } from '../../../../../store/slices/snackbar';
 import { useDispatch } from 'store';
 import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
+import { formatUSDS } from '../../../../../utils/sky';
 interface Props {
   userBalance?: bigint;
 }
@@ -188,7 +189,7 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {userBalance ? Number(formatEther(userBalance)).toFixed(4) : '0'} USDS
+              {userBalance ? formatUSDS(formatEther(userBalance)) : '0'} USDS
             </Typography>
           </Box>
 

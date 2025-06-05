@@ -1,7 +1,7 @@
 import { formatEther } from 'viem';
 import { useReadContract } from 'wagmi';
 import { USDSStakingReward } from 'config/abi/USDSStakingReward';
-import { apiConfig } from '../config/index';
+import { useSkyPrice } from './useSkyPrice';
 
 /**
  * Custom hook to fetch and process totalSupply from a staking contract
@@ -9,24 +9,34 @@ import { apiConfig } from '../config/index';
  * @returns Processed totalSupply value
  */
 export const useStakingTvl = (contractAddress: `0x${string}`) => {
-  const { data, isLoading, isError } = useReadContract({
+  const {
+    data,
+    isLoading,
+    isError
+  }: {
+    data?: bigint;
+    isLoading: boolean;
+    isError: boolean;
+  } = useReadContract({
     abi: USDSStakingReward.abi,
     address: contractAddress,
     functionName: 'totalSupply'
   });
 
+  const { skyPrice }: { skyPrice?: number } = useSkyPrice();
+
   const processedValue = (() => {
-    if (!data) return 0;
+    if (!data) return { tvl: 0, formattedValue: 0 };
 
-    // Convert from BigInt to string, removing 18 decimal places
-    const formattedValue = Number(formatEther(data));
+    const formattedValue = Number(formatEther(data)); // total SKY in staking
+    const tvl = formattedValue * (skyPrice ?? 0); // TVL in USDS
 
-    // Divide by 0.0764 as requested
-    return formattedValue * apiConfig.SKY_PRICE;
+    return { tvl, formattedValue };
   })();
 
   return {
-    tvl: processedValue,
+    tvl: processedValue.tvl,
+    totalSky: processedValue.formattedValue,
     isLoading,
     isError
   };

@@ -79,8 +79,8 @@ export default function ChronicleTab() {
       </Typography>
       <Info
         contractAddress={skyConfig.contracts.ChroniclePoints}
-        balance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(2) : '0'}
-        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}
+        balance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
+        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
       />
       <Tabs value={operationType} onChange={handleOperationChange}>
         <Tab label="Supply" />
@@ -90,7 +90,7 @@ export default function ChronicleTab() {
         <Stake userBalance={userBalance} />
       </TabPanel>
       <TabPanel value={operationType} index={1}>
-        <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
+        <Withdraw stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'} />
       </TabPanel>
     </Box>
   );

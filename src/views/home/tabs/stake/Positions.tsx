@@ -49,7 +49,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
   // const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useDelegatorsSum();
   const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useSuppliersByUrns();
 
-  const { tvl } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
+  const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
   const isLoading = positionsLoading || delegatesLoading;
   const error = positionsError || delegatesError;
@@ -117,7 +117,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
       const callData = encodeFunctionData({
         abi: lockStakeContractConfig.abi,
         functionName: 'free',
-        args: [address, BigInt(position.indexPosition), address, parseEther(formatAmount(position.wad))]
+        args: [address, BigInt(position.indexPosition), address, position.wad]
       });
 
       // Execute the contract call
@@ -263,11 +263,20 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
           </Box>
         )}
 
+        {totalSky !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+            <Typography variant="body1">Total SKY Staked:</Typography>
+            <Typography variant="h6" color="primary">
+              {formatUSDS(totalSky)}
+            </Typography>
+          </Box>
+        )}
+
         {tvl !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">TVL:</Typography>
             <Typography variant="h6" color="primary">
-              {formatUSDS(tvl)}
+              {formatUSDS(tvl)} USDS
             </Typography>
           </Box>
         )}
@@ -275,7 +284,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your Total Staked Amount:</Typography>
           <Typography variant="h6" color="primary">
-            {totalStaked.toFixed(4)} SKY
+            {formatUSDS(totalStaked)} SKY
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
@@ -303,7 +312,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
               <Card sx={{ borderRadius: 2, height: '100%' }}>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h6">Position #{position.indexPosition}</Typography>
+                    <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
                     <Chip
                       // label={ethers.getBigInt(position.wad) > 0n ? 'Active' : 'Zero Balance'}
                       // color={ethers.getBigInt(position.wad) > 0n ? 'success' : 'warning'}
@@ -349,15 +358,18 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                     <Typography color="text.secondary">Locked Amount:</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
-                      <Typography>{formatAmount(position.wad)} SKY</Typography>
+                      <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
                     </Box>
                   </Box>
+
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography color="text.secondary">Delegate:</Typography>
 
                     <Typography>
-                      {delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
-                        `${position.delegateID.substring(0, 6)}...${position.delegateID.substring(position.delegateID.length - 4)}`}
+                      {position.delegateID
+                        ? delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
+                          `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
+                        : '-'}
                     </Typography>
                   </Box>
 

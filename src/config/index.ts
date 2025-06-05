@@ -8,7 +8,7 @@ export const apiConfig = {
   // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL' // TODO pagination to add shadow delegators
   delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
   delegatedToMainnet: 'https://vote.sky.money/api/address/%s/delegated-to?address=%s&network=mainnet',
-  SKY_PRICE: 0.078
+  uniswapV2UsdsSkyPool: '0x2621cc0b3f3c079c1db0e80794aa24976f0b9e3c'
 } as const;
 
 export const skyConfig = {

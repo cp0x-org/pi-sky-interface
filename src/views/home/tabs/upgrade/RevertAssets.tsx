@@ -8,6 +8,7 @@ import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { daiUsdsConverterConfig } from '../../../../config/abi/DaiUsdsConverter';
 import { usdsContractConfig } from '../../../../config/abi/Usds';
 import { daiContractConfig } from '../../../../config/abi/Dai';
+import { formatUSDS } from '../../../../utils/sky';
 
 interface Props {
   usdsUserBalance?: bigint;
@@ -176,7 +177,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="textPrimary">
-              {usdsUserBalance ? Number(formatEther(usdsUserBalance)).toFixed(4) : '0'} USDS
+              {usdsUserBalance ? formatUSDS(formatEther(usdsUserBalance)) : '0'} USDS
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>

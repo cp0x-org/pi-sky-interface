@@ -81,8 +81,8 @@ export default function USDSSkyTab() {
       </Typography>
       <Info
         contractAddress={skyConfig.contracts.StakingRewards}
-        balance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(2) : '0'}
-        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}
+        balance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
+        tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
       />
       <Tabs value={operationType} onChange={handleOperationChange}>
         <Tab label="Supply" />

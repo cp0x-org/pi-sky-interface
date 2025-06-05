@@ -67,11 +67,3 @@ export const config = getDefaultConfig({
   // chains: [mainnet, mainAnvil, mainTest],
   ssr: false
 });
-
-export const wagmiConfig = createConfig({
-  chains: [mainnetCore],
-  transports: {
-    [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/1uU1IPVa-YqQZ9OPBMVXA')
-  },
-  ssr: false
-});
