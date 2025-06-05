@@ -176,7 +176,15 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box
+            sx={{
+              display: {
+                xs: 'none',
+                sm: 'flex'
+              },
+              gap: 1
+            }}
+          >
             <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
             <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
             <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>

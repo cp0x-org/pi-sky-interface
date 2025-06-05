@@ -137,7 +137,9 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
             borderBottom: 1,
             borderColor: 'divider',
             py: 2,
-            gap: 2
+            px: { xs: 0, sm: 2 },
+            gap: { xs: 0.5, sm: 2 },
+            width: '100%'
           }}
         >
           <StyledTextField
@@ -168,7 +170,15 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
               {userBalance} USDS
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box
+            sx={{
+              display: {
+                xs: 'none',
+                sm: 'flex'
+              },
+              gap: 1
+            }}
+          >
             <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
             <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
             <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>

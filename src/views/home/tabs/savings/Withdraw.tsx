@@ -142,16 +142,6 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
             <UsdsLogo width="24" height="24" />
             <Typography>USDS</Typography>
           </Box>
-
-          {/*<Chip label="USDS" variant="outlined" avatar={<UsdsLogo width="24" height="24" />} sx={{ border: 'none' }} />*/}
-
-          {/*<Button*/}
-          {/*  disabled*/}
-          {/*  sx={{ maxWidth: 104 }}*/}
-          {/*  startIcon={<UsdsLogo width="24" height="24" />}*/}
-          {/*>*/}
-          {/*  USDS*/}
-          {/*</Button>*/}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -159,7 +149,15 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
               {savingsBalance} USDS
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box
+            sx={{
+              display: {
+                xs: 'none',
+                sm: 'flex'
+              },
+              gap: 1
+            }}
+          >
             <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
             <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
             <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
