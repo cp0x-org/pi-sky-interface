@@ -18,6 +18,7 @@ import { formatUSDS } from '../../../../utils/sky';
 import { formatTokenAmount } from '../../../../utils/formatters';
 import { StyledCard } from '../../../../components/StyledCard';
 import { StyledTextField } from '../../../../components/StyledTextField';
+import { StyledSelect } from '../../../../components/StyledSelect';
 interface Props {
   daiUserBalance?: bigint;
   mkrUserBalance?: bigint;
@@ -260,8 +261,8 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
             }}
           >
             <FormControl fullWidth>
-              <InputLabel id="select-with-image-label">Select Option</InputLabel>
-              <Select
+              {/*<InputLabel id="select-with-image-label">Select Option</InputLabel>*/}
+              <StyledSelect
                 value={tokenValue}
                 label="Token"
                 onChange={(e) => {
@@ -290,7 +291,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
                     </Box>
                   </MenuItem>
                 ))}
-              </Select>
+              </StyledSelect>
             </FormControl>
           </Box>
         </Box>

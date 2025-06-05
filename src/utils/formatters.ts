@@ -8,7 +8,19 @@ import { formatEther } from 'viem';
  */
 export const formatTokenAmount = (amount: string, decimals: number = 4): string => {
   try {
-    return Number(formatEther(BigInt(amount))).toFixed(decimals);
+    return (
+      Number(formatEther(BigInt(amount)))
+        // .toFixed(decimals)
+        .toLocaleString('en-US', {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        })
+    );
+
+    // return `${Number(value).toLocaleString('en-US', {
+    //   minimumFractionDigits: 2,
+    //   maximumFractionDigits: 2
+    // })}`;
   } catch (error) {
     console.error('Error formatting amount:', error);
     return '0.0000';
