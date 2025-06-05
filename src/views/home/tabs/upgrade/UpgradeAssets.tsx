@@ -1,8 +1,6 @@
 import { Box, Typography, TextField, Button, styled, Select } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
-import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-import { usdsContractConfig } from 'config/abi/Usds';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import InputLabel from 'ui-component/extended/Form/InputLabel';
@@ -17,6 +15,7 @@ import { mkrContractConfig } from 'config/abi/Mkr';
 
 import Avatar from 'ui-component/extended/Avatar';
 import { formatUSDS } from '../../../../utils/sky';
+import { formatTokenAmount } from '../../../../utils/formatters';
 interface Props {
   daiUserBalance?: bigint;
   mkrUserBalance?: bigint;
@@ -24,6 +23,8 @@ interface Props {
 
 const TOKEN_DAI = 'dai';
 const TOKEN_MKR = 'mkr';
+// Fixed conversion rate: 1 MKR = 24,000 SKY
+const MKR_TO_SKY_RATE = 24000;
 
 const tokenOptions = [
   { label: 'DAI', value: TOKEN_DAI, img: daiLogo },
@@ -59,11 +60,40 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
 
   const [isApproved, setIsApproved] = useState<boolean>(false);
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
+  const [expectedOutput, setExpectedOutput] = useState<string>('0');
 
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
   const [tokenValue, setTokenValue] = useState(tokenOptions[0].value);
+
+  // Calculate expected SKY output when amount or fee changes
+  useEffect(() => {
+    if (tokenValue === TOKEN_MKR && amount && amount !== '0') {
+      calculateExpectedSky(amount);
+    } else {
+      setExpectedOutput('0');
+    }
+  }, [amount, tokenValue]);
+
+  // Calculate the expected SKY output based on MKR input and fee
+  const calculateExpectedSky = (mkrAmount: string) => {
+    try {
+      const mkrAmountFloat = parseFloat(mkrAmount);
+      if (isNaN(mkrAmountFloat) || mkrAmountFloat <= 0) {
+        setExpectedOutput('0');
+        return;
+      }
+
+      // Calculate gross SKY amount (MKR * 24,000)
+      const grossSky = mkrAmountFloat * MKR_TO_SKY_RATE;
+
+      setExpectedOutput(formatUSDS(grossSky));
+    } catch (error) {
+      console.error('Error calculating expected SKY:', error);
+      setExpectedOutput('0');
+    }
+  };
 
   const handlePercentClick = (percent: number) => {
     let currentBalance: bigint | undefined;
@@ -91,13 +121,10 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     if (tokenValue === TOKEN_DAI) {
       return daiUserBalance ? formatUSDS(formatEther(daiUserBalance)) : '0';
     } else if (tokenValue === TOKEN_MKR) {
-      return mkrUserBalance ? formatUSDS(formatEther(mkrUserBalance)) : '0';
+      return mkrUserBalance ? formatTokenAmount(mkrUserBalance.toString(), 5) : '0';
     }
     return '0';
   };
-
-  // const { writeContract: writeApprove } = useWriteContract();
-  // const { writeContract: writeSupply } = useWriteContract();
 
   const {
     writeContract: writeApprove,
@@ -191,8 +218,13 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          Choose a token to upgrade, and enter an amount
+          {tokenValue === TOKEN_MKR ? 'Enter the amount of MKR to receive SKY:' : 'Enter the amount of DAI to receive USDS:'}
         </Typography>
+        {tokenValue === TOKEN_MKR && amount && amount !== '0' && (
+          <Typography variant="body2" sx={{ mb: 2, color: 'success.main' }}>
+            Expected output: {expectedOutput} SKY
+          </Typography>
+        )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <TextField
             fullWidth
@@ -204,6 +236,10 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
               setButtonText(e.target.value ? `Approve ${tokenValue.toUpperCase()}` : 'Enter Amount');
               setIsApproved(false);
               setIsConfirmed(false);
+
+              if (tokenValue === TOKEN_MKR && e.target.value) {
+                calculateExpectedSky(e.target.value);
+              }
             }}
             sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
           />

@@ -11,7 +11,7 @@ import { usdsContractConfig } from '../../../config/abi/Usds';
 import { useConfigChainId } from '../../../hooks/useConfigChainId';
 import { daiContractConfig } from '../../../config/abi/Dai';
 import { mkrContractConfig } from '../../../config/abi/Mkr';
-
+import Info from './upgrade/Info';
 export default function UpgradeTab() {
   const [operationType, setOperationType] = useState(0);
   const account = useAccount();
@@ -58,11 +58,7 @@ export default function UpgradeTab() {
         <Typography variant="h2" gutterBottom>
           Upgrade
         </Typography>
-        {/*<Info*/}
-        {/*  contractAddress={skyConfig.Mainnet.contracts.SavingsUSDS}*/}
-        {/*  balance={savingBalance ? Number(formatEther(savingBalance)).toFixed(2) : '0'}*/}
-        {/*  tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) : '$0.00'}*/}
-        {/*/>*/}
+        <Info />
         <Tabs value={operationType} onChange={handleOperationChange}>
           <Tab label="Upgrade" />
           <Tab label="Revert" />

@@ -20,6 +20,7 @@ import useStakingTvl from '../../../../hooks/useStakingTvl';
 import { formatUSDS } from '../../../../utils/sky';
 import { useDelegatorsSum } from '../../../../hooks/useDelegatorsSum';
 import { useSuppliersByUrns } from '../../../../hooks/useSuppliersByUrns';
+import { styled } from '@mui/material/styles';
 
 interface PositionsProps {
   stakeData?: {
@@ -29,15 +30,19 @@ interface PositionsProps {
   };
 }
 
-const formatAmount = (amount: string): string => {
-  try {
-    // Convert from wei to ETH and format to 4 decimal places
-    return Number(formatEther(BigInt(amount))).toFixed(4);
-  } catch (error) {
-    console.error('Error formatting amount:', error);
-    return '0.0000';
+const PositionCard = styled(Card)(({ theme }) => ({
+  ...theme.typography.body2,
+  borderRadius: 2,
+  height: '100%',
+  padding: theme.spacing(1),
+  color: theme.palette.text.primary,
+  cursor: 'pointer',
+  transition: 'transform 0.2s, box-shadow 0.2s',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: theme.shadows[4]
   }
-};
+}));
 
 const Positions: FC<PositionsProps> = ({ stakeData }) => {
   const { config: skyConfig } = useConfigChainId();
@@ -309,7 +314,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
         ) : (
           positions.map((position, index) => (
             <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-              <Card sx={{ borderRadius: 2, height: '100%' }}>
+              <PositionCard>
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
@@ -323,37 +328,6 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                   </Box>
 
                   <Divider sx={{ my: 2 }} />
-
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography color="text.secondary">Delegate Address:</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          maxWidth: '150px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                      >
-                        {shortenAddress(position.delegateID)}
-                      </Typography>
-                      <Box
-                        component="a"
-                        href={`https://etherscan.io/address/${position.delegateID}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          ml: 1,
-                          color: 'primary.main'
-                        }}
-                      >
-                        <IconExternalLink size={16} />
-                      </Box>
-                    </Box>
-                  </Box>
-
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                     <Typography color="text.secondary">Locked Amount:</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -373,23 +347,66 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                     </Typography>
                   </Box>
 
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography color="text.secondary">Delegate Address:</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          maxWidth: '150px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
+                        {shortenAddress(position.delegateID)}
+                      </Typography>
+                      {position.delegateID && (
+                        <Box
+                          component="a"
+                          href={`https://etherscan.io/address/${position.delegateID}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            ml: 1,
+                            color: 'primary.main'
+                          }}
+                        >
+                          <IconExternalLink size={16} />
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+
                   {position.transactions && position.transactions.lockHash && (
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                       <Typography color="text.secondary">Transaction:</Typography>
-                      <Box
-                        component="a"
-                        href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          color: 'primary.main',
-                          fontSize: '0.875rem'
-                        }}
-                      >
-                        {shortenAddress(position.transactions.lockHash)}
-                        <IconExternalLink size={14} style={{ marginLeft: '4px' }} />
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            maxWidth: '150px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                        >
+                          {shortenAddress(position.transactions.lockHash)}
+                        </Typography>
+                        <Box
+                          component="a"
+                          href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            ml: 1,
+                            color: 'primary.main'
+                          }}
+                        >
+                          <IconExternalLink size={16} />
+                        </Box>
                       </Box>
                     </Box>
                   )}
@@ -430,7 +447,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                     </Button>
                   </Box>
                 </CardContent>
-              </Card>
+              </PositionCard>
             </Box>
           ))
         )}
