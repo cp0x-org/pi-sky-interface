@@ -135,21 +135,19 @@ export default function HandlePosition({ editMode = false, positionData = null }
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
             functionName: 'selectVoteDelegate',
-            args: [address, positionIdBigInt, newDelegatorAddress]
+            args: [address, positionIdBigInt, newDelegatorAddress as `0x${string}`]
           })
         );
       }
 
       // Add the farm selection
-      if (stakeData.amount != '' && stakeData.amount != '0') {
-        dataArray.push(
-          encodeFunctionData({
-            abi: lockStakeContractConfig.abi,
-            functionName: 'lock',
-            args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
-          })
-        );
-      }
+      dataArray.push(
+        encodeFunctionData({
+          abi: lockStakeContractConfig.abi,
+          functionName: 'lock',
+          args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
+        })
+      );
     } else {
       // Standard new position flow
       dataArray = [
@@ -175,7 +173,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
             functionName: 'selectVoteDelegate',
-            args: [address, nextUrnIdx, stakeData.delegatorAddress]
+            args: [address, nextUrnIdx, stakeData.delegatorAddress as `0x`]
           })
         );
       }
@@ -203,7 +201,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
     address: skyConfig.contracts.LockStakeEngine,
     abi: lockStakeContractConfig.abi,
     functionName: 'multicall',
-    args: callDataArray.length > 0 ? [callDataArray] : undefined,
+    args: [callDataArray as readonly `0x${string}`[]],
     query: {
       enabled: !!address && callDataArray.length > 0 && isApproved && !isStaked
     }
@@ -217,15 +215,9 @@ export default function HandlePosition({ editMode = false, positionData = null }
       }
     }
 
-    if (stakeData.amount == '' || (stakeData.amount == '0' && editMode)) {
-      setIsApproved(true);
-      setConfirmButtonText('Confirm Staking');
-      // Run simulation for confirmation since we're sk
-    }
     if (address && stakeData.amount && allowanceData) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
-        console.log('Checking allowance for amount:', amountBigInt);
         if (allowanceData >= amountBigInt) {
           // Already approved enough tokens
           setIsApproved(true);
@@ -330,6 +322,13 @@ export default function HandlePosition({ editMode = false, positionData = null }
     if ((field === 'rewardAddress' || field === 'delegatorAddress') && value) {
       if (!isValidEthereumAddress(value)) {
         return;
+      }
+
+      // Make sure addresses always start with 0x for delegator/reward addresses
+      if (field === 'delegatorAddress' || field === 'rewardAddress') {
+        if (value && !value.startsWith('0x')) {
+          value = `0x${value}`;
+        }
       }
     }
 
@@ -436,7 +435,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
           address: skyConfig.contracts.LockStakeEngine,
           abi: lockStakeContractConfig.abi,
           functionName: 'multicall',
-          args: [callDataArray]
+          args: [callDataArray as readonly `0x${string}`[]]
         });
 
         console.log('Confirmation transaction sent');

@@ -132,7 +132,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
         address: skyConfig.contracts.LockStakeEngine,
         abi: lockStakeContractConfig.abi,
         functionName: 'multicall',
-        args: [[callData]]
+        args: [[callData] as readonly `0x${string}`[]]
       });
 
       console.log('Withdraw initiated for position', position.indexPosition);

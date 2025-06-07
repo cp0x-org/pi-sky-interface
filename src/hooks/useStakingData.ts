@@ -79,6 +79,7 @@ const calculatePositions = (stakingLocks: StakingLock[], stakingFrees: StakingFr
         delegateID: data.delegate || '', // Use delegate ID if available
         wad: netStaked.toString(), // Convert BigNumber back to string
         lockTimestamp: mostRecentLock?.blockTimestamp || '',
+        reward: '0', // Add default reward property as string to match StakingPosition interface
         transactions: {
           lockHash: mostRecentLock?.transactionHash,
           freeHash: mostRecentFree?.transactionHash
@@ -111,6 +112,7 @@ export interface StakingPosition {
   delegateID: string; // hash
   wad: string; // amount of tokens staked (difference between stakingLocks and stakingFrees)
   lockTimestamp: string;
+  reward?: string; // add reward property to match the interface in types/staking.ts
   transactions: {
     lockHash?: string;
     freeHash?: string;

@@ -84,7 +84,7 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Typography color="text.secondary">Amount to Stake:</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
               <Typography>{formatUSDS(stakeData.amount)} SKY</Typography>
             </Box>
           </Box>
@@ -92,7 +92,7 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
           {originalAmount && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
               <Typography color="text.secondary">New Total Amount:</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                 {formatUSDS(Number(stakeData.amount) + Number(originalAmount))} SKY
               </Box>
             </Box>
