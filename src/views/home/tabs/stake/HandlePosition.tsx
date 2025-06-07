@@ -55,7 +55,8 @@ export default function HandlePosition({ editMode = false, positionData = null }
   const [stakeData, setStakeData] = useState({
     amount: '',
     rewardAddress: skyConfig.contracts.USDS || '',
-    delegatorAddress: positionData?.delegateID || ''
+    delegatorAddress: positionData?.delegateID || '',
+    originalAmount: positionData?.wad ? formatEther(BigInt(positionData.wad)) : '0'
   });
 
   // For tracking position ID when in edit mode
@@ -127,26 +128,28 @@ export default function HandlePosition({ editMode = false, positionData = null }
         if (!newDelegatorAddress) {
           newDelegatorAddress = `0`;
         } else {
-          newDelegatorAddress = `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`;
+          newDelegatorAddress = stakeData.delegatorAddress;
         }
 
         dataArray.push(
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
             functionName: 'selectVoteDelegate',
-            args: [address, positionIdBigInt, `0x${newDelegatorAddress}`]
+            args: [address, positionIdBigInt, newDelegatorAddress]
           })
         );
       }
 
       // Add the farm selection
-      dataArray.push(
-        encodeFunctionData({
-          abi: lockStakeContractConfig.abi,
-          functionName: 'lock',
-          args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
-        })
-      );
+      if (stakeData.amount != '' && stakeData.amount != '0') {
+        dataArray.push(
+          encodeFunctionData({
+            abi: lockStakeContractConfig.abi,
+            functionName: 'lock',
+            args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
+          })
+        );
+      }
     } else {
       // Standard new position flow
       dataArray = [
@@ -172,7 +175,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
             functionName: 'selectVoteDelegate',
-            args: [address, nextUrnIdx, `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`]
+            args: [address, nextUrnIdx, stakeData.delegatorAddress]
           })
         );
       }
@@ -214,9 +217,15 @@ export default function HandlePosition({ editMode = false, positionData = null }
       }
     }
 
+    if (stakeData.amount == '' || (stakeData.amount == '0' && editMode)) {
+      setIsApproved(true);
+      setConfirmButtonText('Confirm Staking');
+      // Run simulation for confirmation since we're sk
+    }
     if (address && stakeData.amount && allowanceData) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
+        console.log('Checking allowance for amount:', amountBigInt);
         if (allowanceData >= amountBigInt) {
           // Already approved enough tokens
           setIsApproved(true);
@@ -482,13 +491,29 @@ export default function HandlePosition({ editMode = false, positionData = null }
     console.log('Rendering step component:', activeStep);
     switch (activeStep) {
       case 0:
-        return <StakeAndBorrow userBalance={userBalance} stakedAmount={stakeData.amount} onChange={(v) => handleChange('amount', v)} />;
+        return (
+          <StakeAndBorrow
+            userBalance={userBalance}
+            stakedAmount={stakeData.amount}
+            onChange={(v) => handleChange('amount', v)}
+            originalAmount={positionData?.wad ? formatEther(BigInt(positionData.wad)) : undefined}
+            editMode={editMode}
+          />
+        );
       case 1:
         return <Reward rewardAddress={stakeData.rewardAddress} onChange={(v) => handleChange('rewardAddress', v)} />;
       case 2:
         return <Delegate delegatorAddress={stakeData.delegatorAddress} onChange={(v) => handleChange('delegatorAddress', v)} />;
       case 3:
-        return <Confirm stakeData={stakeData} isApproved={isApproved} isStaked={isStaked} allowanceData={allowanceData} />;
+        return (
+          <Confirm
+            stakeData={stakeData}
+            isApproved={isApproved}
+            isStaked={isStaked}
+            allowanceData={allowanceData}
+            originalAmount={positionData ? formatEther(BigInt(positionData.wad)) : undefined}
+          />
+        );
       default:
         return null;
     }

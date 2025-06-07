@@ -8,6 +8,7 @@ import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { Chip, Divider, Alert } from '@mui/material';
 import { shortenAddress } from '../../../../utils/formatters';
+import { formatUSDS } from '../../../../utils/sky';
 
 interface ConfirmProps {
   stakeData: {
@@ -21,9 +22,10 @@ interface ConfirmProps {
   allowance?: bigint;
   editMode?: boolean;
   positionId?: string | null;
+  originalAmount?: string | null;
 }
 
-const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceData }) => {
+const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAmount, allowanceData }) => {
   const { config: skyConfig } = useConfigChainId();
   const contractAddress = skyConfig.contracts.LockStakeEngine;
 
@@ -82,11 +84,19 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceD
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Typography color="text.secondary">Amount to Stake:</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <SkyLogo width="20" height="20" style={{ marginRight: '8px' }} />
-              <Typography>{stakeData.amount} SKY</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <Typography>{formatUSDS(stakeData.amount)} SKY</Typography>
             </Box>
           </Box>
+
+          {originalAmount && (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+              <Typography color="text.secondary">New Total Amount:</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', alignItems: 'flex-end' }}>
+                {formatUSDS(Number(stakeData.amount) + Number(originalAmount))} SKY
+              </Box>
+            </Box>
+          )}
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
             <Typography color="text.secondary">Reward Address:</Typography>
@@ -148,7 +158,11 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceD
         </Alert>
       )}
 
-      {isApproved && !isStaked && <Alert severity="info">Now you can confirm your staking position.</Alert>}
+      {isApproved && !isStaked && stakeData.amount != '' && stakeData.amount != '0' && (
+        <Alert severity="info">Now you can confirm your staking position.</Alert>
+      )}
+
+      {isApproved && !isStaked && (stakeData.amount == '' || stakeData.amount == '0') && <Alert severity="info">No amount changes.</Alert>}
 
       {isStaked && <Alert severity="success">Congratulations! Your staking position has been successfully created.</Alert>}
     </>

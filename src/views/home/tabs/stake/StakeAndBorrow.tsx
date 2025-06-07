@@ -1,4 +1,4 @@
-import { Box, Typography, TextField, Button, styled, Alert } from '@mui/material';
+import { Box, Typography, TextField, Button, styled, Alert, Divider } from '@mui/material';
 import { FC, useState, useEffect } from 'react';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { useAccount, useChainId, useWriteContract } from 'wagmi';
@@ -9,11 +9,15 @@ import { useConfigChainId } from '../../../../hooks/useConfigChainId';
 import { formatUSDS } from '../../../../utils/sky';
 import { StyledCard } from '../../../../components/StyledCard';
 import { StyledTextField } from '../../../../components/StyledTextField';
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import { formatTokenAmount } from '../../../../utils/formatters';
 
 interface Props {
   userBalance?: bigint;
   stakedAmount: string;
   onChange: (v: string) => void;
+  originalAmount?: string;
+  editMode?: boolean;
 }
 
 const PercentButton = styled(Button)(({ theme }) => ({
@@ -29,9 +33,17 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange }) => {
+const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, originalAmount, editMode = false }) => {
   const [error, setError] = useState<string | null>(null);
   const maxAmount = userBalance ? formatEther(userBalance) : '0';
+
+  // Calculate difference for edit mode
+  const isEditingPosition = editMode && originalAmount;
+  const newAmount = parseFloat(stakedAmount || '0');
+  const origAmount = parseFloat(originalAmount || '0');
+  const isIncrease = newAmount > origAmount;
+  const isDecrease = newAmount < origAmount;
+  const diffAmount = Math.abs(newAmount - origAmount).toFixed(2);
 
   // Helper function to safely compare amounts
   const isAmountTooLarge = (amount: string, maxAmount: string): boolean => {
@@ -61,6 +73,10 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
 
   const handleAmountChange = (value: string) => {
     // Accept the input even if it exceeds balance, but show an error
+    if (!value || isNaN(Number(value)) || Number(value) < 0) {
+      onChange('0');
+      return;
+    }
     onChange(value);
   };
 
@@ -68,8 +84,35 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much SKY would you like to stake?
+          {editMode && originalAmount
+            ? `How much SKY would you like to have in this position? (Current: ${originalAmount} SKY)`
+            : 'How much SKY would you like to stake?'}
         </Typography>
+
+        {editMode && originalAmount && (
+          <Box
+            sx={{
+              p: 2,
+              mb: 2,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">New total amount:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                    {stakedAmount ? formatUSDS(stakedAmount) : '0'} + {formatUSDS(originalAmount)} ={' '}
+                    {formatUSDS(Number(stakedAmount) + Number(originalAmount))} SKY
+                  </Typography>
+                </Box>
+              </>
+            </Box>
+          </Box>
+        )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: error ? 'error.main' : 'divider', py: 2, gap: 2 }}>
           <StyledTextField
             fullWidth
