@@ -44,7 +44,6 @@ export default function MainLayout() {
     { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" /> },
     { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" /> },
     { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" /> }
-    // { label: 'ExperimentTab', path: 'experiment', iconPosition: 'top' }
   ];
 
   const navigate = useNavigate();

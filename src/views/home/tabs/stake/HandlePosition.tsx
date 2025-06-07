@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import { Step, StepLabel, Stepper, Stack, Alert, Typography, Grid, CardContent, CardHeader } from '@mui/material';
+import { StakingPosition } from '../../../../types/staking';
 import { IconExternalLink } from '@tabler/icons-react';
 import StakeAndBorrow from './StakeAndBorrow';
 import Reward from './Reward';
@@ -41,16 +42,24 @@ async function fetchUrnsCount(skyConfig: SkyConfig, config: Config, address: `0x
   return result as bigint;
 }
 
-export default function HandlePosition() {
+interface HandlePositionProps {
+  editMode?: boolean;
+  positionData?: StakingPosition | null;
+}
+
+export default function HandlePosition({ editMode = false, positionData = null }: HandlePositionProps) {
   const { address } = useAccount();
   const { config: skyConfig } = useConfigChainId();
   const config = useConfig();
   const [activeStep, setActiveStep] = useState(0);
   const [stakeData, setStakeData] = useState({
     amount: '',
-    rewardAddress: '',
-    delegatorAddress: ''
+    rewardAddress: skyConfig.contracts.USDS || '',
+    delegatorAddress: positionData?.delegateID || ''
   });
+
+  // For tracking position ID when in edit mode
+  const [positionId, setPositionId] = useState<string | null>(positionData?.indexPosition || null);
 
   // Approval state
   const [isApproved, setIsApproved] = useState(false);
@@ -104,38 +113,83 @@ export default function HandlePosition() {
   }, [address, skyConfig]);
 
   const callDataArray = useMemo(() => {
-    if (!address || !stakeData.amount || !stakeData.rewardAddress || !stakeData.delegatorAddress) return [];
+    if (!address || (!editMode && !stakeData.amount) || !stakeData.rewardAddress) return [];
 
-    const dataArray = [
-      encodeFunctionData({
-        abi: lockStakeContractConfig.abi,
-        functionName: 'open',
-        args: [nextUrnIdx]
-      }),
-      encodeFunctionData({
-        abi: lockStakeContractConfig.abi,
-        functionName: 'lock',
-        args: [address, nextUrnIdx, parseEther(stakeData.amount), 1]
-      }),
-      encodeFunctionData({
-        abi: lockStakeContractConfig.abi,
-        functionName: 'selectFarm',
-        args: [address, nextUrnIdx, skyConfig.contracts.USDSStakingRewards, 1]
-      })
-    ];
+    let dataArray = [];
 
-    if (stakeData.delegatorAddress) {
+    if (editMode && positionId !== null) {
+      // In edit mode, we only update the delegate and reward settings
+      const positionIdBigInt = BigInt(positionId);
+
+      // Add delegate selection if provided
+      if (stakeData.delegatorAddress != positionData?.delegateID) {
+        let newDelegatorAddress = stakeData.delegatorAddress;
+        if (!newDelegatorAddress) {
+          newDelegatorAddress = `0`;
+        } else {
+          newDelegatorAddress = `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`;
+        }
+
+        dataArray.push(
+          encodeFunctionData({
+            abi: lockStakeContractConfig.abi,
+            functionName: 'selectVoteDelegate',
+            args: [address, positionIdBigInt, `0x${newDelegatorAddress}`]
+          })
+        );
+      }
+
+      // Add the farm selection
       dataArray.push(
         encodeFunctionData({
           abi: lockStakeContractConfig.abi,
-          functionName: 'selectVoteDelegate',
-          args: [address, nextUrnIdx, `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`]
+          functionName: 'lock',
+          args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
         })
       );
+    } else {
+      // Standard new position flow
+      dataArray = [
+        encodeFunctionData({
+          abi: lockStakeContractConfig.abi,
+          functionName: 'open',
+          args: [nextUrnIdx]
+        }),
+        encodeFunctionData({
+          abi: lockStakeContractConfig.abi,
+          functionName: 'lock',
+          args: [address, nextUrnIdx, parseEther(stakeData.amount), 1]
+        }),
+        encodeFunctionData({
+          abi: lockStakeContractConfig.abi,
+          functionName: 'selectFarm',
+          args: [address, nextUrnIdx, skyConfig.contracts.USDSStakingRewards, 1]
+        })
+      ];
+
+      if (stakeData.delegatorAddress) {
+        dataArray.push(
+          encodeFunctionData({
+            abi: lockStakeContractConfig.abi,
+            functionName: 'selectVoteDelegate',
+            args: [address, nextUrnIdx, `0x${stakeData.delegatorAddress.replace(/^0x/, '')}`]
+          })
+        );
+      }
     }
 
     return dataArray;
-  }, [address, stakeData.amount, stakeData.rewardAddress, stakeData.delegatorAddress, nextUrnIdx, skyConfig.contracts.USDSStakingRewards]);
+  }, [
+    address,
+    editMode,
+    stakeData.amount,
+    stakeData.rewardAddress,
+    stakeData.delegatorAddress,
+    positionId,
+    positionData?.delegateID,
+    nextUrnIdx,
+    skyConfig.contracts.USDSStakingRewards
+  ]);
 
   // Simulate confirm transaction
   const {
@@ -154,6 +208,12 @@ export default function HandlePosition() {
 
   // Effect to check if approval is needed when amount changes or allowance updates
   useEffect(() => {
+    if (editMode) {
+      if (positionData) {
+        setPositionId(positionData.indexPosition);
+      }
+    }
+
     if (address && stakeData.amount && allowanceData) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
@@ -171,7 +231,7 @@ export default function HandlePosition() {
         console.error('Error checking allowance:', error);
       }
     }
-  }, [address, stakeData.amount, allowanceData, refetchConfirmSimulation]);
+  }, [address, stakeData.amount, allowanceData, refetchConfirmSimulation, editMode]);
 
   const { writeContract: writeConfirm, isSuccess: isConfirmSuccess, isPending: isConfirmPending, error: confirmError } = useWriteContract();
 
@@ -212,9 +272,9 @@ export default function HandlePosition() {
       setConfirmButtonText('Approve SKY');
     }
     if (isConfirmSuccess) {
-      console.log('Staking confirmed successfully!');
+      console.log(editMode ? 'Position updated successfully!' : 'Staking confirmed successfully!');
       setIsStaked(true);
-      setConfirmButtonText('Success!');
+      setConfirmButtonText(editMode ? 'Position Updated!' : 'Success!');
     }
     if (confirmError) {
       console.error('Staking failed:', confirmError);
@@ -291,13 +351,18 @@ export default function HandlePosition() {
   };
 
   async function handleSubmit() {
-    if (!address || !stakeData.amount) {
-      console.log('Missing address or stake amount');
+    if (!address) {
+      console.log('Missing address');
       return;
     }
 
-    // Check if amount exceeds balance
-    if (userBalance) {
+    if (!editMode && !stakeData.amount) {
+      console.log('Missing stake amount');
+      return;
+    }
+
+    // In edit mode, we don't need to check balance since we're not staking more
+    if (!editMode && userBalance) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
         if (amountBigInt > userBalance) {
@@ -377,7 +442,7 @@ export default function HandlePosition() {
   }
 
   const isNextButtonDisabled = () => {
-    // Always disable if wallet is not connected
+    // Always disable if the wallet is not connected
     if (!address) {
       return true;
     }
@@ -414,6 +479,7 @@ export default function HandlePosition() {
   };
 
   const getStepComponent = () => {
+    console.log('Rendering step component:', activeStep);
     switch (activeStep) {
       case 0:
         return <StakeAndBorrow userBalance={userBalance} stakedAmount={stakeData.amount} onChange={(v) => handleChange('amount', v)} />;

@@ -19,6 +19,8 @@ interface ConfirmProps {
   isStaked: boolean;
   allowanceData?: bigint;
   allowance?: bigint;
+  editMode?: boolean;
+  positionId?: string | null;
 }
 
 const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, allowanceData }) => {

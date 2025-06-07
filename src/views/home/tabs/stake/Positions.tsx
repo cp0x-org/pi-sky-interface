@@ -1,26 +1,27 @@
 import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
-import { useDelegateData } from '../../../../hooks/useDelegateData';
+import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { Chip, Divider, Alert, CircularProgress, Paper, Button, Snackbar } from '@mui/material';
 import { useAccount, useWriteContract } from 'wagmi';
 import { encodeFunctionData, formatEther, parseEther } from 'viem';
-import { useStakingData } from '../../../../hooks/useStakingData';
+import { useStakingData } from 'hooks/useStakingData';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
-import { useStakingPositions } from '../../../../hooks/useStakingPositions';
+import { useStakingPositions } from 'hooks/useStakingPositions';
 import { ethers } from 'ethers';
-import { useStabilityRate } from '../../../../hooks/useStabilityRate';
-import { useStakingApr } from '../../../../hooks/useStakingApr';
-import useStakingTvl from '../../../../hooks/useStakingTvl';
-import { formatUSDS } from '../../../../utils/sky';
-import { useDelegatorsSum } from '../../../../hooks/useDelegatorsSum';
-import { useSuppliersByUrns } from '../../../../hooks/useSuppliersByUrns';
+import { useStabilityRate } from 'hooks/useStabilityRate';
+import { useStakingApr } from 'hooks/useStakingApr';
+import useStakingTvl from 'hooks/useStakingTvl';
+import { formatUSDS } from 'utils/sky';
+import { useDelegatorsSum } from 'hooks/useDelegatorsSum';
+import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import { styled } from '@mui/material/styles';
+import { StakingPosition } from 'types/staking';
 
 interface PositionsProps {
   stakeData?: {
@@ -28,6 +29,7 @@ interface PositionsProps {
     rewardAddress: string;
     delegatorAddress: string;
   };
+  onEditPosition?: (position: StakingPosition) => void;
 }
 
 const PositionCard = styled(Card)(({ theme }) => ({
@@ -44,7 +46,7 @@ const PositionCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-const Positions: FC<PositionsProps> = ({ stakeData }) => {
+const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
@@ -103,7 +105,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
-  const handleWithdraw = (position: any) => {
+  const handleWithdraw = (position: StakingPosition) => {
     if (!address || !position.indexPosition || !position.wad) {
       console.error('Missing required data for withdrawal');
       setSnackbarMessage('Missing required data for withdrawal');
@@ -122,7 +124,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
       const callData = encodeFunctionData({
         abi: lockStakeContractConfig.abi,
         functionName: 'free',
-        args: [address, BigInt(position.indexPosition), address, position.wad]
+        args: [address, BigInt(position.indexPosition), address, BigInt(position.wad)]
       });
 
       // Execute the contract call
@@ -143,7 +145,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
     }
   };
 
-  const handleClaim = (position: any) => {
+  const handleClaim = (position: StakingPosition) => {
     if (!address || !position.indexPosition) {
       console.error('Missing required data for claiming rewards');
       setSnackbarMessage('Missing required data for claiming rewards');
@@ -394,6 +396,17 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                       <Divider sx={{ my: 2 }} />
 
                       <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {onEditPosition && (
+                          <Button
+                            variant="outlined"
+                            color="info"
+                            fullWidth
+                            onClick={() => onEditPosition(position)}
+                            disabled={withdrawing[position.indexPosition] || claiming[position.indexPosition] || isPending}
+                          >
+                            Edit Position
+                          </Button>
+                        )}
                         <Button
                           variant="outlined"
                           color="secondary"
@@ -408,7 +421,7 @@ const Positions: FC<PositionsProps> = ({ stakeData }) => {
                         >
                           {claiming[position.indexPosition]
                             ? 'Claiming...'
-                            : `Claim ${position?.reward ? Number(formatEther(position?.reward)).toFixed(5) : '0'} USDS`}
+                            : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
                         </Button>
 
                         <Button

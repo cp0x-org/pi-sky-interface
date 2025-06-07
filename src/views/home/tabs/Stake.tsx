@@ -18,17 +18,26 @@ import { config } from '../../../wagmi-config';
 import { SkyContracts, SkyIcons } from 'config/index';
 import HandlePosition from './stake/HandlePosition';
 import Positions from './stake/Positions';
+import { StakingPosition } from '../../../types/staking';
 
 export default function StakeTab() {
   const { address } = useAccount();
   const { config: skyConfig } = useConfigChainId();
   const [showNewPosition, setShowNewPosition] = useState(false);
+  const [editingPosition, setEditingPosition] = useState<StakingPosition | null>(null);
 
   const handleOpenNewPosition = () => {
+    setEditingPosition(null);
+    setShowNewPosition(true);
+  };
+
+  const handleEditPosition = (position: StakingPosition) => {
+    setEditingPosition(position);
     setShowNewPosition(true);
   };
 
   const handleBackToPositions = () => {
+    setEditingPosition(null);
     setShowNewPosition(false);
   };
 
@@ -52,17 +61,19 @@ export default function StakeTab() {
               Open New Position
             </Button>
           </Box>
-          <Positions />
+          <Positions onEditPosition={handleEditPosition} />
         </>
       ) : (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h4">Create New Position</Typography>
+            <Typography variant="h4">
+              {editingPosition ? 'Edit Position #' + Number(Number(editingPosition.indexPosition) + 1) : 'Create New Position'}
+            </Typography>
             <Button variant="outlined" color="primary" onClick={handleBackToPositions}>
               Back to Positions
             </Button>
           </Box>
-          <HandlePosition />
+          <HandlePosition editMode={!!editingPosition} positionData={editingPosition} />
         </>
       )}
     </Box>

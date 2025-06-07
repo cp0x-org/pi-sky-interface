@@ -10,7 +10,6 @@ import UpgradeTab from '../views/home/tabs/Upgrade';
 import StakeTab from '../views/home/tabs/Stake';
 import USDSSkyTab from '../views/home/tabs/rewards/USDSSky';
 import ChronicleTab from '../views/home/tabs/rewards/Chronicle';
-import ExperimentTab from '../views/home/tabs/Experiment';
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -45,10 +44,6 @@ const MainRoutes = {
     {
       path: '/stake',
       element: <StakeTab />
-    },
-    {
-      path: '/experiment',
-      element: <ExperimentTab />
     }
   ]
 };

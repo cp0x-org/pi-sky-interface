@@ -5,27 +5,12 @@ import { lockStakeContractConfig } from '../config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
 import { simulateContract } from '@wagmi/core';
 import { useConfig } from 'wagmi';
-
-export interface StakingPositionData {
-  positions: Array<{
-    indexPosition: string;
-    delegateID: string;
-    wad: string;
-    lockTimestamp: string;
-    reward?: bigint;
-    transactions: {
-      lockHash?: string;
-      freeHash?: string;
-    };
-  }>;
-  isLoading: boolean;
-  error: string | null;
-}
+import { StakingPosition, StakingPositionData } from '../types/staking';
 
 export const useStakingPositions = (): StakingPositionData => {
   const { positions: originalPositions, error: positionsError } = useStakingData();
   const { address } = useAccount();
-  const [positionsWithRewards, setPositionsWithRewards] = useState<StakingPositionData['positions']>([]);
+  const [positionsWithRewards, setPositionsWithRewards] = useState<StakingPosition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config: skyConfig } = useConfigChainId();
