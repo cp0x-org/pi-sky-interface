@@ -33,7 +33,7 @@ const MenuItems = () => {
         </Button>
 
         {/* External links using anchor tags */}
-        <Button href="https://pi.cp0x.com" target="_blank" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
+        <Button href="https://pi.cp0x.com" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
           Permissionless Interfaces
         </Button>
 
