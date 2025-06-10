@@ -15,25 +15,28 @@ export default function Footer() {
       }}
     >
       <Stack
-        direction="row"
+        direction={{ xs: 'column', md: 'row' }}
         sx={{
           width: '100%',
           maxWidth: '1280px',
           mx: 'auto',
           px: 3,
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          alignItems: { xs: 'center', md: 'center' },
+          justifyContent: 'space-between',
+          gap: { xs: 2, md: 0 }
         }}
       >
-        <Link href="/" className="logo-wrapper" sx={{ textDecoration: 'none' }}>
+        <Link href="/" className="logo-wrapper" sx={{ textDecoration: 'none', mb: { xs: 1, md: 0 } }}>
           <Cp0xLogo style={{ width: 70, height: 'auto' }} />
         </Link>
         <Box
           className="wallet"
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 1
+            gap: 1,
+            width: { xs: '100%', md: 'auto' },
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'center', md: 'center' }
           }}
         >
           <Typography
@@ -62,8 +65,10 @@ export default function Footer() {
           className="wallet"
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 1
+            gap: 1,
+            width: { xs: '100%', md: 'auto' },
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'center', md: 'center' }
           }}
         >
           <Typography
@@ -92,7 +97,10 @@ export default function Footer() {
           sx={{
             display: 'flex',
             gap: 2,
-            alignItems: 'center'
+            alignItems: 'center',
+            justifyContent: { xs: 'center', md: 'center' },
+            width: { xs: '100%', md: 'auto' },
+            mt: { xs: 1, md: 0 }
           }}
         >
           <Link
