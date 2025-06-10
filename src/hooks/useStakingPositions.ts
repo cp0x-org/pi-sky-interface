@@ -1,11 +1,11 @@
 import { useStakingData } from './useStakingData';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
-import { lockStakeContractConfig } from '../config/abi/LockStackeEngine';
+import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
 import { simulateContract } from '@wagmi/core';
 import { useConfig } from 'wagmi';
-import { StakingPosition, StakingPositionData } from '../types/staking';
+import { StakingPosition, StakingPositionData } from 'types/staking';
 
 export const useStakingPositions = (): StakingPositionData => {
   const { positions: originalPositions, error: positionsError } = useStakingData();

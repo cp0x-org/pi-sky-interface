@@ -1,6 +1,6 @@
 import { useReadContract } from 'wagmi';
-import { univ2UsdsSkyPoolContractConfig } from '../config/abi/UniswapV2';
-import { apiConfig } from '../config/index';
+import { univ2UsdsSkyPoolContractConfig } from 'config/abi/UniswapV2';
+import { apiConfig } from 'config/index';
 import { useMemo } from 'react';
 import { formatUnits } from 'viem';
 

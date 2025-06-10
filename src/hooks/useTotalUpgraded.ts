@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
 
-// Total Upgraded Types
-interface TotalResponse {
-  total: string;
-}
-
 interface TotalUpgradedResponse {
   data: {
     mkrTotal: {

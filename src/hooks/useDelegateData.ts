@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useConfigChainId } from './useConfigChainId';
 
 export interface DelegatesResponse {
   paginationInfo: {
