@@ -1,11 +1,11 @@
 import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 
 // material-ui
-import { Box, Button, Stack, useMediaQuery, useTheme } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Box, Button, Stack, Theme, useMediaQuery, useTheme } from '@mui/material';
 
-// Custom styled components
-const MenuButton = styled(Button)(({ theme }) => ({
+// Menu button styling as an object for reuse
+const menuButtonStyle = (theme: Theme) => ({
   color: theme.palette.text.primary,
   fontWeight: 500,
   fontSize: '15px',
@@ -16,7 +16,7 @@ const MenuButton = styled(Button)(({ theme }) => ({
     backgroundColor: theme.palette.primary.light,
     color: theme.palette.primary.main
   }
-}));
+});
 
 const MenuItems = () => {
   const theme = useTheme();
@@ -27,9 +27,19 @@ const MenuItems = () => {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
       <Stack direction="row" spacing={1}>
-        <MenuButton to="/">Home</MenuButton>
-        <MenuButton to="https://pi.cp0x.com">Permissionless Interfaces</MenuButton>
-        <MenuButton to="https://cp0x.com">Referalls Project</MenuButton>
+        {/* Internal link using RouterLink */}
+        <Button component={RouterLink} to="/" sx={menuButtonStyle(theme)}>
+          Home
+        </Button>
+
+        {/* External links using anchor tags */}
+        <Button href="https://pi.cp0x.com" target="_blank" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
+          Permissionless Interfaces
+        </Button>
+
+        <Button href="https://cp0x.com" target="_blank" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
+          Referalls Project
+        </Button>
       </Stack>
     </Box>
   );

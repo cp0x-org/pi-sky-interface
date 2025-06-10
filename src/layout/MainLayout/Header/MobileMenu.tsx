@@ -9,6 +9,7 @@ import { IconMenu2, IconX } from '@tabler/icons-react';
 interface MobileMenuItemProps {
   title: string;
   path?: string;
+  isExternal?: boolean;
 }
 
 const MobileMenu = () => {
@@ -22,15 +23,18 @@ const MobileMenu = () => {
   const menuItems: MobileMenuItemProps[] = [
     {
       title: 'Home',
-      path: '/'
+      path: '/',
+      isExternal: false
     },
     {
       title: 'Permissionless Interfaces',
-      path: 'https://pi.cp0x.com'
+      path: 'https://pi.cp0x.com',
+      isExternal: true
     },
     {
       title: 'Referalls Project',
-      path: 'https://cp0x.com'
+      path: 'https://cp0x.com',
+      isExternal: true
     }
   ];
 
@@ -61,9 +65,15 @@ const MobileMenu = () => {
         <List component="nav" sx={{ px: 2, pt: 1 }}>
           {menuItems.map((item) => (
             <React.Fragment key={item.title}>
-              <ListItemButton component={RouterLink} to={item.path || '#'} onClick={handleToggleDrawer}>
-                <ListItemText primary={item.title} />
-              </ListItemButton>
+              {item.isExternal ? (
+                <ListItemButton component="a" href={item.path} target="_blank" rel="noopener noreferrer" onClick={handleToggleDrawer}>
+                  <ListItemText primary={item.title} />
+                </ListItemButton>
+              ) : (
+                <ListItemButton component={RouterLink} to={item.path || '#'} onClick={handleToggleDrawer}>
+                  <ListItemText primary={item.title} />
+                </ListItemButton>
+              )}
             </React.Fragment>
           ))}
         </List>
