@@ -76,7 +76,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   useEffect(() => {
     if (isApproveSuccess) {
       setIsApproved(true);
-      setButtonText('Supply DAI');
+      setButtonText('Revert USDS -> DAI');
     }
     if (isApproveError) {
       console.error('Approval failed:', approveError);

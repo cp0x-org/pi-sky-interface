@@ -17,7 +17,10 @@
         "jsx": "react-jsx",
         "baseUrl": "src",
         "paths": {
-            "ui-component/*": ["ui-component/*"]
+            "ui-component/*": ["ui-component/*"],
+            "hooks/*": ["hooks/*"],
+            "config/*": ["config/*"],
+
         }
     },
     "exclude": ["node_modules"],

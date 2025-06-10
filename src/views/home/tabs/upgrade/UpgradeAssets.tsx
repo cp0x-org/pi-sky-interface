@@ -1,5 +1,5 @@
 import { Box, Typography, TextField, Button, styled, Select } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
@@ -66,6 +66,34 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     functionName: 'rate'
   });
 
+  // Calculate the expected SKY output based on MKR input and fee
+  const calculateExpectedSky = useCallback(
+    (mkrAmount: string) => {
+      try {
+        const mkrAmountFloat = parseFloat(mkrAmount);
+        if (isNaN(mkrAmountFloat) || mkrAmountFloat <= 0) {
+          setExpectedOutput('0');
+          return;
+        }
+
+        if (!mkrToSkyRate) {
+          console.error('MKR to SKY rate not available');
+          return;
+        }
+
+        // Calculate gross SKY amount using the rate from the contract
+        const rate = Number(mkrToSkyRate);
+        const grossSky = mkrAmountFloat * rate;
+
+        setExpectedOutput(formatUSDS(grossSky));
+      } catch (error) {
+        console.error('Error calculating expected SKY:', error);
+        setExpectedOutput('0');
+      }
+    },
+    [mkrToSkyRate]
+  );
+
   // Calculate expected SKY output when amount or fee changes
   useEffect(() => {
     if (tokenValue === TOKEN_MKR && amount && amount !== '0') {
@@ -73,32 +101,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     } else {
       setExpectedOutput('0');
     }
-  }, [amount, tokenValue]);
-
-  // Calculate the expected SKY output based on MKR input and fee
-  const calculateExpectedSky = (mkrAmount: string) => {
-    try {
-      const mkrAmountFloat = parseFloat(mkrAmount);
-      if (isNaN(mkrAmountFloat) || mkrAmountFloat <= 0) {
-        setExpectedOutput('0');
-        return;
-      }
-
-      if (!mkrToSkyRate) {
-        console.error('MKR to SKY rate not available');
-        return;
-      }
-
-      // Calculate gross SKY amount using the rate from the contract
-      const rate = Number(mkrToSkyRate);
-      const grossSky = mkrAmountFloat * rate;
-
-      setExpectedOutput(formatUSDS(grossSky));
-    } catch (error) {
-      console.error('Error calculating expected SKY:', error);
-      setExpectedOutput('0');
-    }
-  };
+  }, [amount, calculateExpectedSky, tokenValue]);
 
   const handlePercentClick = (percent: number) => {
     let currentBalance: bigint | undefined;

@@ -8,7 +8,7 @@ import { parseEther, formatEther } from 'viem';
 import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
 import { skyConfig } from 'config/index';
 import Alert from '@mui/material/Alert';
-import { openSnackbar } from '../../../../../store/slices/snackbar';
+import { dispatchSuccess, dispatchError } from '../../../../../utils/snackbar';
 import { useDispatch } from 'store';
 import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
 import { formatUSDS } from '../../../../../utils/sky';
@@ -16,6 +16,7 @@ import { StyledCard } from '../../../../../components/StyledCard';
 import { StyledTextField } from '../../../../../components/StyledTextField';
 interface Props {
   userBalance?: bigint;
+  rewardAddress?: string;
 }
 
 const PercentButton = styled(Button)(({ theme }) => ({
@@ -31,10 +32,11 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Stake: FC<Props> = ({ userBalance = 0n }) => {
+const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isApproved, setIsApproved] = useState<boolean>(false);
+  const [isMsgDispatched, setIsMsgDispatched] = useState<boolean>(false);
   const [isDeposited, setIsDeposited] = useState<boolean>(false);
   const [showAlert, setShowAlert] = useState<boolean>(true);
   const dispatch = useDispatch();
@@ -70,30 +72,30 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
     if (isApproveSuccess) {
       setIsApproved(true);
       setButtonText('Supply USDS');
+      dispatchSuccess('USDS Approved Successfully!');
     }
     if (isApproveError) {
       console.error('Approval failed:', approveError);
       setButtonText('Enter Amount');
+      dispatchError('Approval failed');
     }
     if (isDepositSuccess) {
       setIsDeposited(true);
       setButtonText('Success!');
       setShowAlert(true);
+      dispatchSuccess('USDS deposited successfully!');
     }
     if (isDepositError) {
       console.error('Deposit failed:', depositError);
       setButtonText('ERROR');
+      dispatchError('Deposit failed');
     }
     if (showAlert) {
-      openSnackbar({
-        open: true,
-        anchorOrigin: { vertical: 'top', horizontal: 'center' }
-      });
       setTimeout(function () {
         setShowAlert(false);
       }, 3000);
     }
-  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
+  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError, showAlert]);
 
   const handleMainButtonClick = async () => {
     // dispatch(
@@ -119,12 +121,12 @@ const Stake: FC<Props> = ({ userBalance = 0n }) => {
           ...usdsContractConfig,
           address: skyConfig.contracts.USDS,
           functionName: 'approve',
-          args: [skyConfig.contracts.StakingRewards, BigInt(amountInWei)]
+          args: [rewardAddress as `0x${string}`, BigInt(amountInWei)]
         });
       } else if (!isDeposited) {
         writeDeposit({
           ...stakingRewardContractConfig,
-          address: skyConfig.contracts.StakingRewards,
+          address: rewardAddress as `0x${string}`,
           functionName: 'stake',
           args: [BigInt(amountInWei), 1]
         });

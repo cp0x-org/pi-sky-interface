@@ -1,18 +1,18 @@
 import { Box, Typography, TextField, Button, styled } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useWriteContract } from 'wagmi';
-// import { usdsContractConfig } from '../contracts/Usds';
-// import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
+import { useWriteContract } from 'wagmi';
 import { parseEther } from 'viem';
-import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
-import { skyConfig } from 'config/index';
-import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
+import { stakingRewardContractConfig } from 'config/abi/StakingReward';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import { StyledCard } from '../../../../../components/StyledCard';
 import { StyledTextField } from '../../../../../components/StyledTextField';
+import { formatTokenAmount } from '../../../../../utils/formatters';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 
 interface Props {
   stakedBalance?: string;
+  rewardBalance?: bigint;
 }
 
 const PercentButton = styled(Button)(({ theme }) => ({
@@ -28,7 +28,7 @@ const PercentButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
+const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
@@ -64,12 +64,23 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
     if (isWithdrawSuccess) {
       setIsWithdrawed(true);
       setButtonText('Success!');
+      dispatchSuccess('USDS withdrawn successfully!');
     }
     if (isWithdrawError) {
       console.error('Withdraw failed:', withdrawError);
       setButtonText('ERROR');
+      dispatchError('Withdraw failed');
     }
   }, [isWithdrawSuccess, isWithdrawError, withdrawError]);
+
+  useEffect(() => {
+    if (isClaimSuccess) {
+      dispatchSuccess(`${formattedReward} USDS claimed successfully!`);
+    }
+    if (isClaimError) {
+      dispatchError('Failed to claim rewards');
+    }
+  }, [isClaimSuccess, isClaimError, formattedReward]);
 
   const handleMainButtonClick = async () => {
     if (!amount) {
@@ -147,6 +158,11 @@ const Withdraw: FC<Props> = ({ stakedBalance = '...' }) => {
           </Box>
         </Box>
       </Box>
+      {rewardBalance != 0n && (
+        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={() => handleMainButtonClick()}>
+          Claim {formatTokenAmount(rewardBalance.toString(), 4)} SKY
+        </Button>
+      )}
       <Box>
         <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={() => handleMainButtonClick()}>
           {buttonText}
