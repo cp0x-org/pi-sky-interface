@@ -29,7 +29,7 @@ const MobileMenu = () => {
     {
       title: 'Permissionless Interfaces',
       path: 'https://pi.cp0x.com',
-      isExternal: true
+      isExternal: false
     },
     {
       title: 'Referalls Project',
