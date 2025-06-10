@@ -20,6 +20,8 @@
             "ui-component/*": ["ui-component/*"],
             "hooks/*": ["hooks/*"],
             "config/*": ["config/*"],
+            "components/*": ["components/*"],
+            "utils/*": ["utils/*"]
 
         }
     },

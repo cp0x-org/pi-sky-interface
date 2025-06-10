@@ -1,45 +1,29 @@
 import { FC } from 'react';
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { parseEther, formatEther } from 'viem';
-import { stakingRewardContractConfig } from '../../../../../config/abi/StakingReward';
-import { skyConfig } from 'config/index';
-import Alert from '@mui/material/Alert';
-import { dispatchSuccess, dispatchError } from '../../../../../utils/snackbar';
-import { useDispatch } from 'store';
-import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
-import { formatUSDS } from '../../../../../utils/sky';
-import { StyledCard } from '../../../../../components/StyledCard';
-import { StyledTextField } from '../../../../../components/StyledTextField';
+import { stakingRewardContractConfig } from 'config/abi/StakingReward';
+import { dispatchSuccess, dispatchError } from 'utils/snackbar';
+import { useConfigChainId } from 'hooks/useConfigChainId';
+import { formatUSDS } from 'utils/sky';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
+import { PercentButton } from 'components/PercentButton';
+
 interface Props {
   userBalance?: bigint;
   rewardAddress?: string;
 }
 
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
-
 const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [isMsgDispatched, setIsMsgDispatched] = useState<boolean>(false);
   const [isDeposited, setIsDeposited] = useState<boolean>(false);
-  const [showAlert, setShowAlert] = useState<boolean>(true);
-  const dispatch = useDispatch();
+
   const handlePercentClick = (percent: number) => {
     if (!userBalance) return;
     const value = (Number(formatEther(BigInt(userBalance))) * percent) / 100;
@@ -47,8 +31,6 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     setButtonText('Approve supply amount');
   };
   const { config: skyConfig } = useConfigChainId();
-  // const { writeContract: writeApprove } = useWriteContract();
-  // const { writeContract: writeSupply } = useWriteContract();
 
   const {
     writeContract: writeApprove,
@@ -72,42 +54,34 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     if (isApproveSuccess) {
       setIsApproved(true);
       setButtonText('Supply USDS');
-      dispatchSuccess('USDS Approved Successfully!');
-    }
-    if (isApproveError) {
+    } else if (isApproveError) {
       console.error('Approval failed:', approveError);
       setButtonText('Enter Amount');
-      dispatchError('Approval failed');
-    }
-    if (isDepositSuccess) {
+    } else if (isDepositSuccess) {
       setIsDeposited(true);
       setButtonText('Success!');
-      setShowAlert(true);
+    } else if (isDepositError) {
+      console.error('Deposit failed:', depositError);
+      setButtonText('ERROR');
+    }
+  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
+
+  useEffect(() => {
+    if (isDepositSuccess) {
       dispatchSuccess('USDS deposited successfully!');
     }
     if (isDepositError) {
-      console.error('Deposit failed:', depositError);
-      setButtonText('ERROR');
       dispatchError('Deposit failed');
     }
-    if (showAlert) {
-      setTimeout(function () {
-        setShowAlert(false);
-      }, 3000);
+    if (isApproveSuccess) {
+      dispatchSuccess('USDS Approved Successfully!');
     }
-  }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError, showAlert]);
+    if (isApproveError) {
+      dispatchError('USDS Approve Failed!');
+    }
+  }, [isApproveError, isApproveSuccess, isDepositError, isDepositSuccess]);
 
   const handleMainButtonClick = async () => {
-    // dispatch(
-    //   openSnackbar({
-    //     open: true,
-    //     anchorOrigin: { vertical: 'top', horizontal: 'center' },
-    //     message: 'This is default message',
-    //     variant: 'alert',
-    //     alert: { color: 'success' },
-    //     severity: 'success'
-    //   })
-    // );
     if (!amount) {
       console.log('Supply amount is empty');
       return;

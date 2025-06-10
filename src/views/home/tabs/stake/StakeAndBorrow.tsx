@@ -1,16 +1,11 @@
-import { Box, Typography, TextField, Button, styled, Alert, Divider } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { FC, useState, useEffect } from 'react';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { useAccount, useChainId, useWriteContract } from 'wagmi';
-import { usdsContractConfig } from 'config/abi/Usds';
-import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
-import { formatEther, parseEther } from 'viem';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { formatEther } from 'viem';
 import { formatUSDS } from '../../../../utils/sky';
 import { StyledCard } from '../../../../components/StyledCard';
 import { StyledTextField } from '../../../../components/StyledTextField';
-import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-import { formatTokenAmount } from '../../../../utils/formatters';
+import { PercentButton } from 'components/PercentButton';
 
 interface Props {
   userBalance?: bigint;
@@ -20,30 +15,9 @@ interface Props {
   editMode?: boolean;
 }
 
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
-
 const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, originalAmount, editMode = false }) => {
   const [error, setError] = useState<string | null>(null);
   const maxAmount = userBalance ? formatEther(userBalance) : '0';
-
-  // Calculate difference for edit mode
-  const isEditingPosition = editMode && originalAmount;
-  const newAmount = parseFloat(stakedAmount || '0');
-  const origAmount = parseFloat(originalAmount || '0');
-  const isIncrease = newAmount > origAmount;
-  const isDecrease = newAmount < origAmount;
-  const diffAmount = Math.abs(newAmount - origAmount).toFixed(2);
 
   // Helper function to safely compare amounts
   const isAmountTooLarge = (amount: string, maxAmount: string): boolean => {
@@ -52,6 +26,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, o
       const maxAmountNum = parseFloat(maxAmount);
       return amountNum > maxAmountNum;
     } catch (error) {
+      console.log(error);
       return false;
     }
   };
@@ -63,7 +38,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, o
     } else {
       setError(null);
     }
-  }, [stakedAmount, maxAmount]);
+  }, [stakedAmount, maxAmount, isAmountTooLarge]);
 
   const handlePercentClick = (percent: number) => {
     if (!userBalance) return;

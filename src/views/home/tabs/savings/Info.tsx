@@ -18,7 +18,7 @@ interface InfoProps {
   contractAddress?: string;
 }
 
-const Info: FC<InfoProps> = ({ rate = 0, balance = '...', tvl = '...', contractAddress = '' }) => {
+const Info: FC<InfoProps> = ({ rate = 0, balance = '0', tvl = '0', contractAddress = '' }) => {
   return (
     <Card
       sx={{

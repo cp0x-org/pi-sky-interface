@@ -94,7 +94,11 @@ export default function ChronicleTab() {
               <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.ChroniclePoints} />
             </TabPanel>
             <TabPanel value={operationType} index={1}>
-              <Withdraw stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'} rewardBalance={userRewardBalance} />
+              <Withdraw
+                stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
+                rewardBalance={userRewardBalance}
+                rewardAddress={skyConfig.contracts.ChroniclePoints}
+              />
             </TabPanel>
           </Box>
         </Grid>

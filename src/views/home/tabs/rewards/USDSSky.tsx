@@ -99,6 +99,7 @@ export default function USDSSkyTab() {
               <Withdraw
                 stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'}
                 rewardBalance={userRewardBalance}
+                rewardAddress={skyConfig.contracts.StakingRewards}
               />
             </TabPanel>
           </Box>

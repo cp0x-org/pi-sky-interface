@@ -85,7 +85,7 @@ export default function IconVariants() {
   }, [snackbarState.iconVariant]);
 
   return (
-    <SnackbarProvider iconVariant={hideIcon ? undefined : { info: icon }} hideIconVariant={hideIcon} maxSnack={3}>
+    <SnackbarProvider iconVariant={hideIcon ? undefined : { info: icon }} hideIconVariant={hideIcon} maxSnack={1}>
       <IconVariantsContent />
     </SnackbarProvider>
   );

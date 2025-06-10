@@ -19,4 +19,5 @@ export interface SnackbarProps {
   hideIconVariant: boolean;
   actionButton: boolean;
   severity: 'error' | 'info' | 'success' | 'warning';
+  autoHideDuration: number;
 }

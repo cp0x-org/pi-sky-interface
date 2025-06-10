@@ -1,33 +1,20 @@
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-
 import { formatEther, parseEther } from 'viem';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
-import { daiUsdsConverterConfig } from '../../../../config/abi/DaiUsdsConverter';
-import { usdsContractConfig } from '../../../../config/abi/Usds';
-import { daiContractConfig } from '../../../../config/abi/Dai';
-import { formatUSDS } from '../../../../utils/sky';
-import { StyledCard } from '../../../../components/StyledCard';
-import { StyledTextField } from '../../../../components/StyledTextField';
+import { useConfigChainId } from 'hooks/useConfigChainId';
+import { daiUsdsConverterConfig } from 'config/abi/DaiUsdsConverter';
+import { usdsContractConfig } from 'config/abi/Usds';
+import { formatUSDS } from 'utils/sky';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
+import { PercentButton } from 'components/PercentButton';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 
 interface Props {
   usdsUserBalance?: bigint;
 }
-
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
 
 const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
@@ -52,9 +39,6 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     setIsConfirmed(false);
   };
 
-  // const { writeContract: writeApprove } = useWriteContract();
-  // const { writeContract: writeSupply } = useWriteContract();
-
   const {
     writeContract: writeApprove,
     isSuccess: isApproveSuccess,
@@ -74,21 +58,23 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   } = useWriteContract();
 
   useEffect(() => {
+    if (isConfirmSuccess) {
+      setIsConfirmed(true);
+      dispatchSuccess('USDS reverted successfully!');
+    }
+    if (isConfirmError) {
+      console.error('Deposit failed:', confirmError);
+      dispatchError('USDS revert failed!');
+    }
     if (isApproveSuccess) {
       setIsApproved(true);
       setButtonText('Revert USDS -> DAI');
+      dispatchSuccess('USDS Approved Successfully!');
     }
     if (isApproveError) {
       console.error('Approval failed:', approveError);
       setButtonText('Enter Amount');
-    }
-    if (isConfirmSuccess) {
-      setIsConfirmed(true);
-      setButtonText('Success!');
-    }
-    if (isConfirmError) {
-      console.error('Deposit failed:', confirmError);
-      setButtonText('ERROR');
+      dispatchError('USDS Approve Failed!');
     }
   }, [isApproveSuccess, isApproveError, approveError, isConfirmSuccess, isConfirmError, confirmError]);
 
@@ -154,16 +140,6 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
             <UsdsLogo width="24" height="24" />
             <Typography>USDS</Typography>
           </Box>
-
-          {/*<Chip label="USDS" variant="outlined" avatar={<UsdsLogo width="24" height="24" />} sx={{ border: 'none' }} />*/}
-
-          {/*<Button*/}
-          {/*  disabled*/}
-          {/*  sx={{ maxWidth: 104 }}*/}
-          {/*  startIcon={<UsdsLogo width="24" height="24" />}*/}
-          {/*>*/}
-          {/*  USDS*/}
-          {/*</Button>*/}
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
