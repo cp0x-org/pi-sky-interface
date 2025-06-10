@@ -21,7 +21,8 @@
             "hooks/*": ["hooks/*"],
             "config/*": ["config/*"],
             "components/*": ["components/*"],
-            "utils/*": ["utils/*"]
+            "utils/*": ["utils/*"],
+            "types/*": ["types/*"]
 
         }
     },

@@ -5,7 +5,7 @@ import { Typography, Alert } from '@mui/material';
 import { useAccount } from 'wagmi';
 import HandlePosition from './stake/HandlePosition';
 import Positions from './stake/Positions';
-import { StakingPosition } from '../../../types/staking';
+import { StakingPosition } from 'types/staking';
 
 export default function StakeTab() {
   const { address } = useAccount();

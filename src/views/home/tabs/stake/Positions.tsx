@@ -9,16 +9,13 @@ import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { Chip, Divider, Alert, CircularProgress, Paper, Button, Snackbar } from '@mui/material';
 import { useAccount, useWriteContract } from 'wagmi';
-import { encodeFunctionData, formatEther, parseEther } from 'viem';
-import { useStakingData } from 'hooks/useStakingData';
+import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useStakingPositions } from 'hooks/useStakingPositions';
 import { ethers } from 'ethers';
-import { useStabilityRate } from 'hooks/useStabilityRate';
 import { useStakingApr } from 'hooks/useStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
 import { formatUSDS } from 'utils/sky';
-import { useDelegatorsSum } from 'hooks/useDelegatorsSum';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
@@ -51,10 +48,8 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
-  const { rate, isLoading: isStabilityLoading, error: stabilityError } = useStabilityRate();
-  const { apr, isLoading: isLoadingApr, error: errorApr } = useStakingApr();
-  // const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useDelegatorsSum();
-  const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useSuppliersByUrns();
+  const { apr } = useStakingApr();
+  const { totalDelegators } = useSuppliersByUrns();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 

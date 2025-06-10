@@ -2,11 +2,11 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { useTotalUpgraded } from '../../../../hooks/useTotalUpgraded';
-import { formatTokenAmount } from '../../../../utils/formatters';
+import { useTotalUpgraded } from 'hooks/useTotalUpgraded';
+import { formatTokenAmount } from 'utils/formatters';
 import { useReadContract } from 'wagmi';
-import { mkrSkyConverterConfig } from '../../../../config/abi/MkrSkyConverter';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 
 export default function Info() {

@@ -2,9 +2,9 @@ import { Box, Typography } from '@mui/material';
 import { FC, useState, useEffect } from 'react';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { formatEther } from 'viem';
-import { formatUSDS } from '../../../../utils/sky';
-import { StyledCard } from '../../../../components/StyledCard';
-import { StyledTextField } from '../../../../components/StyledTextField';
+import { formatUSDS } from 'utils/sky';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
 
 interface Props {

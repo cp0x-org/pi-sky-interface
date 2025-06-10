@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import { ethers } from 'ethers';
 import { useAccount, useReadContract } from 'wagmi';
-import { useConfigChainId } from '../../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 
 // Define the ABI for the jug contract

@@ -1,29 +1,27 @@
 import Card from '@mui/material/Card';
-import { useDelegateData } from '../../../../hooks/useDelegateData';
+import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
-import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import { Alert, CircularProgress } from '@mui/material';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
-import { useStakingPositions } from '../../../../hooks/useStakingPositions';
-import { useStabilityRate } from '../../../../hooks/useStabilityRate';
-import { useStakingApr } from '../../../../hooks/useStakingApr';
-import useStakingTvl from '../../../../hooks/useStakingTvl';
-import { formatUSDS } from '../../../../utils/sky';
-import { useSuppliersByUrns } from '../../../../hooks/useSuppliersByUrns';
+import { useStakingPositions } from 'hooks/useStakingPositions';
+import { useStakingApr } from 'hooks/useStakingApr';
+import useStakingTvl from 'hooks/useStakingTvl';
+import { formatUSDS } from 'utils/sky';
+import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 
 export default function StakingSummary() {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
-  const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
-  const { apr, isLoading: isLoadingApr, error: errorApr } = useStakingApr();
-  const { totalDelegators, isLoading: isDelegatorsLoading, error: delegatorError } = useSuppliersByUrns();
+  const { isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
+  const { apr } = useStakingApr();
+  const { totalDelegators } = useSuppliersByUrns();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 

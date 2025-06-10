@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import { Step, StepLabel, Stepper, Stack, Alert, Typography, Grid, CardHeader } from '@mui/material';
-import { StakingPosition } from '../../../../types/staking';
+import { StakingPosition } from 'types/staking';
 import StakeAndBorrow from './StakeAndBorrow';
 import Reward from './Reward';
 import Delegate from './Delegate';

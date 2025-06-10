@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from '../../../../ui-component/TabPanel';
+import TabPanel from 'ui-component/TabPanel';
 import Info from './components/Info';
 import Stake from './components/Stake';
 import Withdraw from './components/Withdraw';
@@ -15,9 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
-import { simulateContract } from '@wagmi/core';
 
 export default function USDSSkyTab() {
   const [operationType, setOperationType] = useState(0);
@@ -25,7 +24,6 @@ export default function USDSSkyTab() {
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
-  const config = useConfig();
 
   const handleOperationChange = (event: React.SyntheticEvent, newValue: number) => {
     setOperationType(newValue);

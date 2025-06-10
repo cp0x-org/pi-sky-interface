@@ -4,11 +4,10 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
-import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import { Chip, Divider, Alert } from '@mui/material';
-import { shortenAddress } from '../../../../utils/formatters';
-import { formatUSDS } from '../../../../utils/sky';
+import { shortenAddress } from 'utils/formatters';
+import { formatUSDS } from 'utils/sky';
 
 interface ConfirmProps {
   stakeData: {

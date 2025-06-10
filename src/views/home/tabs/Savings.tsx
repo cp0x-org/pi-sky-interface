@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from '../../../ui-component/TabPanel';
+import TabPanel from 'ui-component/TabPanel';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { formatEther } from 'viem';
@@ -13,7 +13,7 @@ import Deposit from './savings/Deposit';
 import Withdraw from './savings/Withdraw';
 import Typography from '@mui/material/Typography';
 import { formatUSDS } from 'utils/sky';
-import { useConfigChainId } from '../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 
 export default function SavingsTab() {
