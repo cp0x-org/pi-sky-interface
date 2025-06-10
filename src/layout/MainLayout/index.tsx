@@ -102,23 +102,11 @@ export default function MainLayout() {
               <Box sx={{ p: 3 }}>
                 <Outlet />
               </Box>
-              {/*<TabPanel value={mainTab} index={0}>*/}
-              {/*  <RewardTab />*/}
-              {/*</TabPanel>*/}
-              {/*<TabPanel value={mainTab} index={1}>*/}
-              {/*  <SavingsTab />*/}
-              {/*</TabPanel>*/}
-              {/*<TabPanel value={mainTab} index={2}>*/}
-              {/*  <UpgradeTab />*/}
-              {/*</TabPanel>*/}
-              {/*<TabPanel value={mainTab} index={3}>*/}
-              {/*  <StakeTab />*/}
-              {/*</TabPanel>*/}
             </Box>
           </MainCard>
-
-          <Footer />
         </Container>
+        {/* footer */}
+        <Footer />
       </MainContentStyled>
     </Box>
   );
