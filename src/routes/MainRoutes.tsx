@@ -10,6 +10,7 @@ import UpgradeTab from '../views/home/tabs/Upgrade';
 import StakeTab from '../views/home/tabs/Stake';
 import USDSSkyTab from '../views/home/tabs/rewards/USDSSky';
 import ChronicleTab from '../views/home/tabs/rewards/Chronicle';
+import Error from '../views/pages/maintenance/Error';
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -44,6 +45,10 @@ const MainRoutes = {
     {
       path: '/stake',
       element: <StakeTab />
+    },
+    {
+      path: '*',
+      element: <Error />
     }
   ]
 };
