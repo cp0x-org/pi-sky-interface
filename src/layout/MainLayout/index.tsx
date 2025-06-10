@@ -12,8 +12,6 @@ import Box from '@mui/material/Box';
 // project imports
 import Footer from './Footer';
 import Header from './Header';
-// import Sidebar from './Sidebar';
-// import HorizontalBar from './HorizontalBar';
 import MainContentStyled from './MainContentStyled';
 import Loader from 'ui-component/Loader';
 import Breadcrumbs from 'ui-component/extended/Breadcrumbs';
@@ -67,9 +65,6 @@ export default function MainLayout() {
   }, [downMD]);
 
   const isHorizontal = menuOrientation === MenuOrientation.HORIZONTAL && !downMD;
-
-  // horizontal menu-list bar : drawer
-  // const menu = useMemo(() => (isHorizontal ? <HorizontalBar /> : <Sidebar />), [isHorizontal]);
 
   if (menuMasterLoading) return <Loader />;
 
