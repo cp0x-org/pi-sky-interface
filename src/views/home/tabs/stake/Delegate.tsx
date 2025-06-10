@@ -74,7 +74,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
   const handleSelect = (address: string) => {
     const newSelected = address === selected ? null : address;
     setSelected(newSelected);
-    onChange(newSelected || '');
+    onChange(newSelected || '0x0');
   };
 
   if (loading) return <CircularProgress />;

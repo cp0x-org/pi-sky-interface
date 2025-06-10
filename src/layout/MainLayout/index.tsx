@@ -12,8 +12,6 @@ import Box from '@mui/material/Box';
 // project imports
 import Footer from './Footer';
 import Header from './Header';
-// import Sidebar from './Sidebar';
-// import HorizontalBar from './HorizontalBar';
 import MainContentStyled from './MainContentStyled';
 import Loader from 'ui-component/Loader';
 import Breadcrumbs from 'ui-component/extended/Breadcrumbs';
@@ -44,7 +42,6 @@ export default function MainLayout() {
     { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" /> },
     { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" /> },
     { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" /> }
-    // { label: 'ExperimentTab', path: 'experiment', iconPosition: 'top' }
   ];
 
   const navigate = useNavigate();
@@ -68,9 +65,6 @@ export default function MainLayout() {
   }, [downMD]);
 
   const isHorizontal = menuOrientation === MenuOrientation.HORIZONTAL && !downMD;
-
-  // horizontal menu-list bar : drawer
-  // const menu = useMemo(() => (isHorizontal ? <HorizontalBar /> : <Sidebar />), [isHorizontal]);
 
   if (menuMasterLoading) return <Loader />;
 
@@ -103,23 +97,11 @@ export default function MainLayout() {
               <Box sx={{ p: 3 }}>
                 <Outlet />
               </Box>
-              {/*<TabPanel value={mainTab} index={0}>*/}
-              {/*  <RewardTab />*/}
-              {/*</TabPanel>*/}
-              {/*<TabPanel value={mainTab} index={1}>*/}
-              {/*  <SavingsTab />*/}
-              {/*</TabPanel>*/}
-              {/*<TabPanel value={mainTab} index={2}>*/}
-              {/*  <UpgradeTab />*/}
-              {/*</TabPanel>*/}
-              {/*<TabPanel value={mainTab} index={3}>*/}
-              {/*  <StakeTab />*/}
-              {/*</TabPanel>*/}
             </Box>
           </MainCard>
-
-          <Footer />
         </Container>
+        {/* footer */}
+        <Footer />
       </MainContentStyled>
     </Box>
   );

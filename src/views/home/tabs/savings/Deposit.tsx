@@ -1,31 +1,19 @@
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useChainId, useWriteContract } from 'wagmi';
+import { useAccount, useWriteContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { parseEther } from 'viem';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
-import { useTheme } from '@mui/material/styles';
-import { StyledCard } from '../../../../components/StyledCard';
-import { StyledTextField } from '../../../../components/StyledTextField';
+import { useConfigChainId } from 'hooks/useConfigChainId';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
+import { PercentButton } from 'components/PercentButton';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 
 interface Props {
   userBalance?: string;
 }
-
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
 
 const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   const [amount, setAmount] = useState<string>('');
@@ -34,7 +22,6 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   const [isDeposited, setIsDeposited] = useState<boolean>(false);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
-  const theme = useTheme();
   const { config: skyConfig } = useConfigChainId();
 
   const handlePercentClick = (percent: number) => {
@@ -51,9 +38,6 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
     setAmount(value.toString());
     setButtonText('Approve supply amount');
   };
-
-  // const { writeContract: writeApprove } = useWriteContract();
-  // const { writeContract: writeSupply } = useWriteContract();
 
   const {
     writeContract: writeApprove,
@@ -74,21 +58,23 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   } = useWriteContract();
 
   useEffect(() => {
+    if (isDepositSuccess) {
+      setIsDeposited(true);
+      dispatchSuccess('USDS deposited successfully!');
+    }
+    if (isDepositError) {
+      console.error('Deposit failed:', depositError);
+      dispatchError('Deposit failed');
+    }
     if (isApproveSuccess) {
       setIsApproved(true);
       setButtonText('Supply USDS');
+      dispatchSuccess('USDS Approved Successfully!');
     }
     if (isApproveError) {
       console.error('Approval failed:', approveError);
       setButtonText('Enter Amount');
-    }
-    if (isDepositSuccess) {
-      setIsDeposited(true);
-      setButtonText('Success!');
-    }
-    if (isDepositError) {
-      console.error('Deposit failed:', depositError);
-      setButtonText('ERROR');
+      dispatchError('USDS Approve Failed!');
     }
   }, [isApproveSuccess, isApproveError, approveError, isDepositSuccess, isDepositError, depositError]);
 

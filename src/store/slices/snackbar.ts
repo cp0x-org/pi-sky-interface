@@ -19,11 +19,12 @@ const initialState: SnackbarProps = {
   },
   transition: 'Fade',
   close: true,
-  maxStack: 3,
+  maxStack: 1,
   dense: false,
   iconVariant: 'usedefault',
   actionButton: false,
-  hideIconVariant: false
+  hideIconVariant: false,
+  autoHideDuration: 6000
 };
 
 // ==============================|| SLICE - SNACKBAR ||============================== //
@@ -33,7 +34,8 @@ const snackbar = createSlice({
   initialState,
   reducers: {
     openSnackbar(state, action) {
-      const { open, message, anchorOrigin, variant, alert, transition, close, actionButton, severity, hideIconVariant } = action.payload;
+      const { open, message, anchorOrigin, variant, alert, transition, close, actionButton, severity, hideIconVariant, autoHideDuration } =
+        action.payload;
 
       state.action = !state.action;
       state.open = open || initialState.open;
@@ -49,6 +51,7 @@ const snackbar = createSlice({
       state.close = close === false ? close : initialState.close;
       state.actionButton = actionButton || initialState.actionButton;
       state.hideIconVariant = hideIconVariant === undefined ? initialState.hideIconVariant : hideIconVariant;
+      state.autoHideDuration = autoHideDuration || initialState.autoHideDuration;
     },
 
     closeSnackbar(state) {

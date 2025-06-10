@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from '../../../../ui-component/TabPanel';
+import TabPanel from 'ui-component/TabPanel';
 import Info from './components/Info';
 import Stake from './components/Stake';
 import Withdraw from './components/Withdraw';
@@ -12,10 +12,10 @@ import { usdsContractConfig } from 'config/abi/Usds';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
-import { stakingRewardContractConfig } from '../../../../config/abi/StakingReward';
+import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 
 export default function ChronicleTab() {
@@ -59,6 +59,16 @@ export default function ChronicleTab() {
     functionName: 'totalSupply'
   });
 
+  const { data: userRewardBalance } = useReadContract({
+    ...stakingRewardContractConfig,
+    address: skyConfig.contracts.ChroniclePoints,
+    functionName: 'earned',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address
+    }
+  });
+
   return (
     <Box sx={{ width: '100%' }}>
       <Button variant="outlined" onClick={handleBack} sx={{ mb: 2 }}>
@@ -77,14 +87,18 @@ export default function ChronicleTab() {
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
             <Tabs value={operationType} onChange={handleOperationChange}>
               <Tab label="Supply" />
-              <Tab label="Withdraw" />
+              {userRewardBalance ? <Tab label="Withdraw/Claim" /> : <Tab label="Withdraw" />}
             </Tabs>
 
             <TabPanel value={operationType} index={0}>
-              <Stake userBalance={userBalance} />
+              <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.ChroniclePoints} />
             </TabPanel>
             <TabPanel value={operationType} index={1}>
-              <Withdraw stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'} />
+              <Withdraw
+                stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
+                rewardBalance={userRewardBalance}
+                rewardAddress={skyConfig.contracts.ChroniclePoints}
+              />
             </TabPanel>
           </Box>
         </Grid>

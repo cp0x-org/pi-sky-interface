@@ -1,35 +1,21 @@
-import { Box, Typography, TextField, Button, styled, Alert } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { FC, useState, useEffect } from 'react';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { useAccount, useChainId, useWriteContract } from 'wagmi';
-import { usdsContractConfig } from 'config/abi/Usds';
-import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
-import { formatEther, parseEther } from 'viem';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
-import { formatUSDS } from '../../../../utils/sky';
-import { StyledCard } from '../../../../components/StyledCard';
-import { StyledTextField } from '../../../../components/StyledTextField';
+import { formatEther } from 'viem';
+import { formatUSDS } from 'utils/sky';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
+import { PercentButton } from 'components/PercentButton';
 
 interface Props {
   userBalance?: bigint;
   stakedAmount: string;
   onChange: (v: string) => void;
+  originalAmount?: string;
+  editMode?: boolean;
 }
 
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
-
-const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange }) => {
+const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, originalAmount, editMode = false }) => {
   const [error, setError] = useState<string | null>(null);
   const maxAmount = userBalance ? formatEther(userBalance) : '0';
 
@@ -40,6 +26,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
       const maxAmountNum = parseFloat(maxAmount);
       return amountNum > maxAmountNum;
     } catch (error) {
+      console.log(error);
       return false;
     }
   };
@@ -51,7 +38,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
     } else {
       setError(null);
     }
-  }, [stakedAmount, maxAmount]);
+  }, [stakedAmount, maxAmount, isAmountTooLarge]);
 
   const handlePercentClick = (percent: number) => {
     if (!userBalance) return;
@@ -61,6 +48,10 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
 
   const handleAmountChange = (value: string) => {
     // Accept the input even if it exceeds balance, but show an error
+    if (!value || isNaN(Number(value)) || Number(value) < 0) {
+      onChange('0');
+      return;
+    }
     onChange(value);
   };
 
@@ -68,8 +59,35 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange })
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much SKY would you like to stake?
+          {editMode && originalAmount
+            ? `How much SKY would you like to have in this position? (Current: ${originalAmount} SKY)`
+            : 'How much SKY would you like to stake?'}
         </Typography>
+
+        {editMode && originalAmount && (
+          <Box
+            sx={{
+              p: 2,
+              mb: 2,
+              bgcolor: 'background.paper',
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">New total amount:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                    {stakedAmount ? formatUSDS(stakedAmount) : '0'} + {formatUSDS(originalAmount)} ={' '}
+                    {formatUSDS(Number(stakedAmount) + Number(originalAmount))} SKY
+                  </Typography>
+                </Box>
+              </>
+            </Box>
+          </Box>
+        )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: error ? 'error.main' : 'divider', py: 2, gap: 2 }}>
           <StyledTextField
             fullWidth

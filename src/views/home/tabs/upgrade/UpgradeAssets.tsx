@@ -1,9 +1,8 @@
-import { Box, Typography, TextField, Button, styled, Select } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
+import { Box, Typography, Button } from '@mui/material';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
-import InputLabel from 'ui-component/extended/Form/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import daiLogo from 'assets/images/sky/ethereum/dai.svg?url';
@@ -13,13 +12,15 @@ import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
 import { daiContractConfig } from 'config/abi/Dai';
 import { mkrContractConfig } from 'config/abi/Mkr';
 import { SelectChangeEvent } from '@mui/material/Select';
-
 import Avatar from 'ui-component/extended/Avatar';
-import { formatUSDS } from '../../../../utils/sky';
-import { formatTokenAmount } from '../../../../utils/formatters';
-import { StyledCard } from '../../../../components/StyledCard';
-import { StyledTextField } from '../../../../components/StyledTextField';
-import { StyledSelect } from '../../../../components/StyledSelect';
+import { formatUSDS } from 'utils/sky';
+import { formatTokenAmount } from 'utils/formatters';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
+import { StyledSelect } from 'components/StyledSelect';
+import { PercentButton } from 'components/PercentButton';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+
 interface Props {
   daiUserBalance?: bigint;
   mkrUserBalance?: bigint;
@@ -32,19 +33,6 @@ const tokenOptions = [
   { label: 'DAI', value: TOKEN_DAI, img: daiLogo },
   { label: 'MKR', value: TOKEN_MKR, img: mkrLogo }
 ];
-
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
 
 const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
@@ -66,6 +54,34 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     functionName: 'rate'
   });
 
+  // Calculate the expected SKY output based on MKR input and fee
+  const calculateExpectedSky = useCallback(
+    (mkrAmount: string) => {
+      try {
+        const mkrAmountFloat = parseFloat(mkrAmount);
+        if (isNaN(mkrAmountFloat) || mkrAmountFloat <= 0) {
+          setExpectedOutput('0');
+          return;
+        }
+
+        if (!mkrToSkyRate) {
+          console.error('MKR to SKY rate not available');
+          return;
+        }
+
+        // Calculate gross SKY amount using the rate from the contract
+        const rate = Number(mkrToSkyRate);
+        const grossSky = mkrAmountFloat * rate;
+
+        setExpectedOutput(formatUSDS(grossSky));
+      } catch (error) {
+        console.error('Error calculating expected SKY:', error);
+        setExpectedOutput('0');
+      }
+    },
+    [mkrToSkyRate]
+  );
+
   // Calculate expected SKY output when amount or fee changes
   useEffect(() => {
     if (tokenValue === TOKEN_MKR && amount && amount !== '0') {
@@ -73,32 +89,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     } else {
       setExpectedOutput('0');
     }
-  }, [amount, tokenValue]);
-
-  // Calculate the expected SKY output based on MKR input and fee
-  const calculateExpectedSky = (mkrAmount: string) => {
-    try {
-      const mkrAmountFloat = parseFloat(mkrAmount);
-      if (isNaN(mkrAmountFloat) || mkrAmountFloat <= 0) {
-        setExpectedOutput('0');
-        return;
-      }
-
-      if (!mkrToSkyRate) {
-        console.error('MKR to SKY rate not available');
-        return;
-      }
-
-      // Calculate gross SKY amount using the rate from the contract
-      const rate = Number(mkrToSkyRate);
-      const grossSky = mkrAmountFloat * rate;
-
-      setExpectedOutput(formatUSDS(grossSky));
-    } catch (error) {
-      console.error('Error calculating expected SKY:', error);
-      setExpectedOutput('0');
-    }
-  };
+  }, [amount, calculateExpectedSky, tokenValue]);
 
   const handlePercentClick = (percent: number) => {
     let currentBalance: bigint | undefined;
@@ -150,23 +141,35 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   } = useWriteContract();
 
   useEffect(() => {
+    if (isConfirmSuccess) {
+      setIsConfirmed(true);
+      const token = tokenValue === TOKEN_DAI ? TOKEN_DAI : TOKEN_MKR;
+      dispatchSuccess(`${token.toUpperCase()} Upgraded Successfully!`);
+      return; // ничего больше не делаем
+    }
+
+    if (isConfirmError) {
+      console.error('Deposit failed:', confirmError);
+      const token = tokenValue === TOKEN_DAI ? TOKEN_DAI : TOKEN_MKR;
+      dispatchError(`${token.toUpperCase()} Upgrade failed!`);
+      return;
+    }
+
     if (isApproveSuccess) {
       setIsApproved(true);
       setButtonText('Upgrade tokens');
+      const token = tokenValue === TOKEN_DAI ? TOKEN_DAI : TOKEN_MKR;
+      dispatchSuccess(`${token.toUpperCase()} Approved Successfully!`);
+      return;
     }
+
     if (isApproveError) {
       console.error('Approval failed:', approveError);
       setButtonText('Enter Amount');
+      const token = tokenValue === TOKEN_DAI ? TOKEN_DAI : TOKEN_MKR;
+      dispatchError(`${token.toUpperCase()} Approve failed!`);
     }
-    if (isConfirmSuccess) {
-      setIsConfirmed(true);
-      setButtonText('Success!');
-    }
-    if (isConfirmError) {
-      console.error('Deposit failed:', confirmError);
-      setButtonText('ERROR');
-    }
-  }, [isApproveSuccess, isApproveError, approveError, isConfirmSuccess, isConfirmError, confirmError]);
+  }, [isApproveSuccess, isApproveError, approveError, isConfirmSuccess, isConfirmError, confirmError, tokenValue]);
 
   const handleMainButtonClick = async () => {
     if (!amount) {

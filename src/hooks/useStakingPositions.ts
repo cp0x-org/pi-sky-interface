@@ -1,31 +1,16 @@
 import { useStakingData } from './useStakingData';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
-import { lockStakeContractConfig } from '../config/abi/LockStackeEngine';
+import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
 import { simulateContract } from '@wagmi/core';
 import { useConfig } from 'wagmi';
-
-export interface StakingPositionData {
-  positions: Array<{
-    indexPosition: string;
-    delegateID: string;
-    wad: string;
-    lockTimestamp: string;
-    reward?: bigint;
-    transactions: {
-      lockHash?: string;
-      freeHash?: string;
-    };
-  }>;
-  isLoading: boolean;
-  error: string | null;
-}
+import { StakingPosition, StakingPositionData } from 'types/staking';
 
 export const useStakingPositions = (): StakingPositionData => {
   const { positions: originalPositions, error: positionsError } = useStakingData();
   const { address } = useAccount();
-  const [positionsWithRewards, setPositionsWithRewards] = useState<StakingPositionData['positions']>([]);
+  const [positionsWithRewards, setPositionsWithRewards] = useState<StakingPosition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { config: skyConfig } = useConfigChainId();
@@ -34,7 +19,12 @@ export const useStakingPositions = (): StakingPositionData => {
   useEffect(() => {
     const fetchRewards = async () => {
       if (!originalPositions?.length || !address) {
-        setPositionsWithRewards(originalPositions || []);
+        // Ensure positions have the reward property even when no fetching is needed
+        const positionsWithDefaultReward = (originalPositions || []).map((position) => ({
+          ...position,
+          reward: position.reward || '0'
+        }));
+        setPositionsWithRewards(positionsWithDefaultReward);
         setIsLoading(false);
         return;
       }
@@ -58,19 +48,26 @@ export const useStakingPositions = (): StakingPositionData => {
 
               return {
                 ...position,
-                reward
+                reward: reward.toString()
               };
             } catch (e) {
               console.warn(`Ошибка при симуляции getReward для позиции ${position.indexPosition}`, e);
               return {
                 ...position,
-                reward: 0n
+                reward: '0'
               };
             }
           })
         );
 
-        const sortedPositions = updated.sort((a, b) => Number(a.indexPosition) - Number(b.indexPosition));
+        // Convert bigint rewards to strings to match the StakingPosition interface
+        const sortedPositions = updated
+          .map((position) => ({
+            ...position,
+            reward: position.reward.toString() // Convert bigint to string
+          }))
+          .sort((a, b) => Number(a.indexPosition) - Number(b.indexPosition));
+
         setPositionsWithRewards(sortedPositions);
         setIsLoading(false);
       } catch (e) {

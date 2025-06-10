@@ -2,7 +2,7 @@ import { FC, SVGProps, useState, useEffect, useMemo } from 'react';
 import { Card, CardActionArea, Typography, Box } from '@mui/material';
 
 import { ReactComponent as UsdsIcon } from 'assets/images/sky/ethereum/usds.svg';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 
 interface Token {
   label: string;

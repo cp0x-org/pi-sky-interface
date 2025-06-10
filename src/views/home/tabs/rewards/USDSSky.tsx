@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from '../../../../ui-component/TabPanel';
+import TabPanel from 'ui-component/TabPanel';
 import Info from './components/Info';
 import Stake from './components/Stake';
 import Withdraw from './components/Withdraw';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useConfig, useReadContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
+import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 
 export default function USDSSkyTab() {
@@ -32,6 +32,16 @@ export default function USDSSkyTab() {
   const handleBack = () => {
     navigate('/rewards');
   };
+
+  const { data: userRewardBalance } = useReadContract({
+    ...stakingRewardContractConfig,
+    address: skyConfig.contracts.StakingRewards,
+    functionName: 'earned',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address
+    }
+  });
 
   const { data: userBalance } = useReadContract({
     ...usdsContractConfig,
@@ -77,14 +87,18 @@ export default function USDSSkyTab() {
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
             <Tabs value={operationType} onChange={handleOperationChange}>
               <Tab label="Supply" />
-              <Tab label="Withdraw" />
+              {userRewardBalance ? <Tab label="Withdraw/Claim" /> : <Tab label="Withdraw" />}
             </Tabs>
 
             <TabPanel value={operationType} index={0}>
-              <Stake userBalance={userBalance} />
+              <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.StakingRewards} />
             </TabPanel>
             <TabPanel value={operationType} index={1}>
-              <Withdraw stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'} />
+              <Withdraw
+                stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'}
+                rewardBalance={userRewardBalance}
+                rewardAddress={skyConfig.contracts.StakingRewards}
+              />
             </TabPanel>
           </Box>
         </Grid>

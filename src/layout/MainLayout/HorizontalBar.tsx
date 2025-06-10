@@ -48,7 +48,6 @@ export default function HorizontalBar() {
     <ElevationScroll>
       <AppBar
         sx={{
-          top: 71,
           bgcolor: mode === ThemeMode.DARK ? 'background.default' : 'background.paper',
           width: '100%',
           height: 62,

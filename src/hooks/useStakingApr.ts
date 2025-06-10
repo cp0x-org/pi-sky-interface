@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { USDSStakingReward } from 'config/abi/USDSStakingReward';
 import { useConfigChainId } from './useConfigChainId';
-import { apiConfig } from '../config/index';
 import { useSkyPrice } from './useSkyPrice';
 const SECONDS_IN_YEAR = 31_536_000n;
 

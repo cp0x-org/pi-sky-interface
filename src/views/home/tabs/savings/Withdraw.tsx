@@ -1,43 +1,28 @@
-import { Box, Typography, TextField, Button, styled } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useAccount, useWriteContract } from 'wagmi';
-
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { parseEther } from 'viem';
-import { skyConfig } from 'config/index';
-import { useConfigChainId } from '../../../../hooks/useConfigChainId';
-import { useTheme } from '@mui/material/styles';
-import { StyledCard } from '../../../../components/StyledCard';
-import { StyledTextField } from '../../../../components/StyledTextField';
+import { useConfigChainId } from 'hooks/useConfigChainId';
+import { StyledCard } from 'components/StyledCard';
+import { StyledTextField } from 'components/StyledTextField';
+import { PercentButton } from 'components/PercentButton';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 
 interface Props {
   savingsBalance?: string;
 }
 
-const PercentButton = styled(Button)(({ theme }) => ({
-  height: 24,
-  padding: '5px 8px 3px',
-  borderRadius: 32,
-  fontSize: 13,
-  fontWeight: 'normal',
-  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  color: theme.palette.text.primary,
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-}));
-
-const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
+const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
   const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
-  const theme = useTheme();
   const handlePercentClick = (percent: number) => {
-    if (savingsBalance === '...') return;
+    if (savingsBalance === '0') return;
 
     // Convert savingsBalance from string to number
     const balance = parseFloat(savingsBalance);
@@ -51,9 +36,6 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
     setButtonText('Withdraw');
   };
 
-  // const { writeContract: writeApprove } = useWriteContract();
-  // const { writeContract: writeSupply } = useWriteContract();
-
   const {
     writeContract: writeWithdraw,
     error: withdrawError,
@@ -66,28 +48,24 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
   useEffect(() => {
     if (isWithdrawSuccess) {
       setIsWithdrawed(true);
-      setButtonText('Success!');
+      dispatchSuccess('USDS withdrawn successfully!');
     }
     if (isWithdrawError) {
       console.error('Withdraw failed:', withdrawError);
-      setButtonText('ERROR');
+      dispatchError('USDS Withdraw failed');
     }
   }, [isWithdrawSuccess, isWithdrawError, withdrawError]);
 
   const handleMainButtonClick = async () => {
     if (!amount) {
       console.log('Withdraw amount is empty');
+      dispatchError('Please Set Amount');
       return;
-    } else {
-      console.log('Withdraw amount is not empty');
     }
 
     const amountInWei = parseEther(amount);
-    console.log(amountInWei.toString());
-    console.log(BigInt(amountInWei).toString());
 
     const hexAmount = `0x${amountInWei.toString(16)}`;
-    console.log(hexAmount);
 
     try {
       if (!isWithdrawed) {
@@ -102,6 +80,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '...' }) => {
       console.error('Transaction failed:', error);
       setIsWithdrawed(false);
       setButtonText('Enter Amount');
+      dispatchError('Transaction failed');
     }
   };
 
