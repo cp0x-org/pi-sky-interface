@@ -46,10 +46,27 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
         return res.json();
       })
       .then((data: DelegatesResponse) => {
-        // const aligned = data.filter((d) => d.status === 'aligned');
         console.log(data);
 
-        setDelegates(data.delegates.sort((a, b) => parseFloat(b.skyDelegated) - parseFloat(a.skyDelegated)));
+        // First sort by skyDelegated amount
+        const sortedDelegates = data.delegates
+          // Create new objects with updated name for cp0x delegate
+          .map((delegate) => {
+            if (delegate.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
+              return { ...delegate, name: 'cp0x' };
+            }
+            return delegate;
+          })
+          // Then sort with cp0x at the top
+          .sort((a, b) => {
+            // Put cp0x delegate at the top
+            if (a.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) return -1;
+            if (b.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) return 1;
+            // Sort the rest by skyDelegated amount
+            return parseFloat(b.skyDelegated) - parseFloat(a.skyDelegated);
+          });
+
+        setDelegates(sortedDelegates);
         setLoading(false);
       })
       .catch((err) => {
@@ -61,11 +78,16 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
 
   // Sync the selected state with the delegatorAddress prop
   useEffect(() => {
+    const cp0xDelegate = delegates.find((d) => d.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase());
     if (delegatorAddress) {
       const delegate = delegates.find((d) => d.voteDelegateAddress === delegatorAddress);
       if (delegate) {
         setSelected(delegate.voteDelegateAddress);
+      } else if (cp0xDelegate) {
+        setSelected(cp0xDelegate.voteDelegateAddress);
       }
+    } else if (cp0xDelegate) {
+      setSelected(cp0xDelegate.voteDelegateAddress);
     } else {
       setSelected(null);
     }
@@ -100,7 +122,9 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
             <Box>
               {delegate.name ? (
                 <>
-                  <Typography variant="h6">{delegate.name}</Typography>
+                  <Typography variant="h6">
+                    {delegate.voteDelegateAddress === apiConfig.cp0xDelegate ? apiConfig.cp0x : delegate.name}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {delegate.voteDelegateAddress}
                   </Typography>

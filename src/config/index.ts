@@ -1,12 +1,14 @@
 export const Mainnet = 1;
 export const Arbitrum = 42161;
 export const Base = 8453;
-export const AnvilTest = 1222;
+export const AnvilTest = 12222;
 export const TenderlyTest = 1999999;
 
 export const apiConfig = {
-  // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL' // TODO pagination to add shadow delegators
-  delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
+  cp0xDelegate: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5',
+  cp0x: 'cp0x',
+  delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL', // TODO pagination to add shadow delegators
+  // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
   delegatedToMainnet: 'https://vote.sky.money/api/address/%s/delegated-to?address=%s&network=mainnet',
   uniswapV2UsdsSkyPool: '0x2621cc0b3f3c079c1db0e80794aa24976f0b9e3c'
 } as const;
