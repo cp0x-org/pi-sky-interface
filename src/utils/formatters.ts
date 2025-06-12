@@ -6,7 +6,11 @@ import { formatEther } from 'viem';
  * @param decimals - Number of decimal places to display
  * @returns Formatted amount as string
  */
-export const formatTokenAmount = (amount: string, decimals: number = 4): string => {
+export const formatTokenAmount = (amount: string | undefined, decimals: number = 4): string => {
+  if (!amount) {
+    amount = '0';
+  }
+
   try {
     return (
       Number(formatEther(BigInt(amount)))

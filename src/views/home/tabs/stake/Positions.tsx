@@ -7,7 +7,7 @@ import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { Chip, Divider, Alert, CircularProgress, Paper, Button, Snackbar } from '@mui/material';
+import { Chip, Divider, Alert, CircularProgress, Paper, Button, Snackbar, Tooltip } from '@mui/material';
 import { useAccount, useWriteContract } from 'wagmi';
 import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
@@ -15,10 +15,13 @@ import { useStakingPositions } from 'hooks/useStakingPositions';
 import { ethers } from 'ethers';
 import { useStakingApr } from 'hooks/useStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
-import { formatUSDS } from 'utils/sky';
+import { formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
+import { formatTokenAmount } from 'utils/formatters';
+import useSkyPrice from 'hooks/useSkyPrice';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 interface PositionsProps {
   stakeData?: {
@@ -50,6 +53,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
   const { totalDelegators } = useSuppliersByUrns();
+  const { skyPrice } = useSkyPrice();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
@@ -206,8 +210,25 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
           Staking Summary
         </Typography>
         <Divider sx={{ mb: 2 }} />
-        {apr !== null && (
+
+        {skyPrice !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1">Sky Price</Typography>
+              <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
+                <HelpOutlineIcon sx={{ ml: 0.5, fontSize: '1rem', cursor: 'help' }} />
+              </Tooltip>
+              <Typography variant="body1">:</Typography>
+            </Box>
+
+            <Typography variant="h6" color="primary">
+              ~{formatSkyPrice(skyPrice)} USD
+            </Typography>
+          </Box>
+        )}
+
+        {apr !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Current APR:</Typography>
             <Typography variant="h6" color="primary">
               ~{apr.toFixed(2)}%
