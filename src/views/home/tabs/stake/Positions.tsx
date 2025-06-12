@@ -7,8 +7,8 @@ import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { Chip, Divider, Alert, CircularProgress, Paper, Button, Snackbar, Tooltip } from '@mui/material';
-import { useAccount, useWriteContract } from 'wagmi';
+import { Chip, Divider, Alert, CircularProgress, Paper, Button, Tooltip } from '@mui/material';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useStakingPositions } from 'hooks/useStakingPositions';
@@ -21,6 +21,7 @@ import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 
 interface PositionsProps {
   stakeData?: {
@@ -62,19 +63,30 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   // State for tracking operations
   const [withdrawing, setWithdrawing] = useState<Record<string, boolean>>({});
   const [claiming, setClaiming] = useState<Record<string, boolean>>({});
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [operationType, setOperationType] = useState<'withdraw' | 'claim' | null>(null);
 
   // Contract interaction
-  const { writeContract, isPending, isSuccess, isError, error: contractError } = useWriteContract();
+  const { writeContract, isPending, isSuccess, isError, error: contractError, data: txHash } = useWriteContract();
+  const {
+    isSuccess: isTxConfirmed,
+    isError: isTxConfirmError,
+    error: txConfirmError
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash }
+  });
 
   // Effect to handle operation success/failure notifications
   useEffect(() => {
-    if (isSuccess) {
+    // Only show success message after transaction is confirmed
+    if (isSuccess && !txHash) {
+      console.log('Transaction submitted, waiting for confirmation...');
+    } else if (isTxConfirmed) {
+      console.log('OPERATION TYPE1111111111!!!');
+      console.log(operationType);
+
       const message = operationType === 'claim' ? 'Reward claim successful!' : 'Withdraw successful!';
-      setSnackbarMessage(message);
-      setSnackbarOpen(true);
+      dispatchSuccess(message);
 
       // Reset operation states
       if (operationType === 'claim') {
@@ -82,11 +94,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       } else if (operationType === 'withdraw') {
         setWithdrawing({});
       }
-      setOperationType(null);
-    } else if (isError && contractError) {
+    } else if ((isError && contractError) || (isTxConfirmError && txConfirmError)) {
       const operationName = operationType === 'claim' ? 'Claim' : 'Withdraw';
-      setSnackbarMessage(`${operationName} error: ${contractError.message}`);
-      setSnackbarOpen(true);
+      const errorMsg = contractError?.message || txConfirmError?.message || 'Unknown error';
+      dispatchError(`${operationName} error: ${errorMsg}`);
 
       // Reset operation states
       if (operationType === 'claim') {
@@ -95,7 +106,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         setWithdrawing({});
       }
     }
-  }, [isSuccess, isError, contractError, operationType]);
+  }, [isSuccess, isError, contractError, operationType, txHash, isTxConfirmed, isTxConfirmError, txConfirmError]);
 
   // Format delegated address for display
   const shortenAddress = (address: string): string => {
@@ -106,8 +117,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const handleWithdraw = (position: StakingPosition) => {
     if (!address || !position.indexPosition || !position.wad) {
       console.error('Missing required data for withdrawal');
-      setSnackbarMessage('Missing required data for withdrawal');
-      setSnackbarOpen(true);
+      dispatchError('Missing required data for withdrawal');
       return;
     }
 
@@ -137,8 +147,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing withdraw transaction:', error);
       setWithdrawing((prev) => ({ ...prev, [position.indexPosition]: false }));
-      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setSnackbarOpen(true);
+      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setOperationType(null);
     }
   };
@@ -146,14 +155,16 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const handleClaim = (position: StakingPosition) => {
     if (!address || !position.indexPosition) {
       console.error('Missing required data for claiming rewards');
-      setSnackbarMessage('Missing required data for claiming rewards');
-      setSnackbarOpen(true);
+      dispatchError('Missing required data for claiming rewards');
       return;
     }
 
     try {
       // Set operation type
       setOperationType('claim');
+
+      console.log('OPERATION TYPE!!!');
+      console.log(operationType);
 
       // Mark this position as claiming
       setClaiming((prev) => ({ ...prev, [position.indexPosition]: true }));
@@ -170,16 +181,12 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing claim transaction:', error);
       setClaiming((prev) => ({ ...prev, [position.indexPosition]: false }));
-      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setSnackbarOpen(true);
+      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setOperationType(null);
     }
   };
 
-  // Handle snackbar close
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  // Using dispatchSuccess/dispatchError instead of snackbar
 
   if (isLoading) {
     return (
@@ -443,9 +450,11 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             ethers.getBigInt(position.wad) <= 0n
                           }
                         >
-                          {claiming[position.indexPosition]
-                            ? 'Claiming...'
-                            : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
+                          {claiming[position.indexPosition] && !txHash
+                            ? 'Preparing transaction...'
+                            : claiming[position.indexPosition] && txHash && !isTxConfirmed
+                              ? 'Confirming transaction...'
+                              : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
                         </Button>
 
                         <Button
@@ -460,7 +469,11 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             ethers.getBigInt(position.wad) <= 0n
                           }
                         >
-                          {withdrawing[position.indexPosition] ? 'Withdrawing...' : 'Withdraw Position'}
+                          {withdrawing[position.indexPosition] && !txHash
+                            ? 'Preparing transaction...'
+                            : withdrawing[position.indexPosition] && txHash && !isTxConfirmed
+                              ? 'Confirming transaction...'
+                              : 'Withdraw Position'}
                         </Button>
                       </Box>
                     </CardContent>
@@ -472,8 +485,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         </>
       )}
 
-      {/* Snackbar for notifications */}
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbarMessage} />
+      {/* Notifications are now handled by dispatchSuccess/dispatchError */}
     </Box>
   );
 };
