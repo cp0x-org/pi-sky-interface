@@ -1,6 +1,5 @@
-import { FC } from 'react';
+import { FC, useState, useCallback } from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import { useEffect, useState, useCallback } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
@@ -21,131 +20,124 @@ interface Props {
 // Transaction states
 type TxState = 'idle' | 'submitting' | 'submitted' | 'confirmed' | 'error';
 
+// Custom hook for transaction management
+const useTransaction = () => {
+  const [txState, setTxState] = useState<TxState>('idle');
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  const { writeContract, error: txError, isError: isTxError, isSuccess: isTxSubmitted, data: txHash } = useWriteContract();
+
+  const {
+    isSuccess: isTxConfirmed,
+    isError: isTxConfirmError,
+    error: txConfirmError
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash }
+  });
+
+  // Reset the transaction state
+  const resetTx = useCallback(() => {
+    if (txState === 'error') {
+      setTxState('idle');
+    }
+  }, [txState]);
+
+  // Process transaction status changes
+  const processTxState = useCallback(() => {
+    if (isTxSubmitted && txState === 'idle') {
+      setTxState('submitted');
+      console.log('Transaction submitted:', txHash);
+    } else if (isTxConfirmed && txState === 'submitted') {
+      setTxState('confirmed');
+      setIsCompleted(true);
+      console.log('Transaction confirmed!');
+    } else if ((isTxError || isTxConfirmError) && txState !== 'error') {
+      setTxState('error');
+      console.error('Transaction failed:', txError || txConfirmError);
+    }
+  }, [isTxSubmitted, isTxConfirmed, isTxError, isTxConfirmError, txState, txHash, txError, txConfirmError]);
+
+  return {
+    writeContract,
+    txState,
+    txHash,
+    isCompleted,
+    isTxConfirmed,
+    resetTx,
+    processTxState
+  };
+};
+
 const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
   const [amount, setAmount] = useState<string>('');
-
-  // Track transaction states
-  const [approveState, setApproveState] = useState<TxState>('idle');
-  const [stakeState, setStakeState] = useState<TxState>('idle');
-
-  // Track whether each transaction step is completed
-  const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [isDeposited, setIsDeposited] = useState<boolean>(false);
-
   const { config: skyConfig } = useConfigChainId();
 
-  // Approve transaction hooks
-  const {
-    writeContract: writeApprove,
-    error: approveError,
-    isError: isApproveError,
-    isSuccess: isApproveSubmitted,
-    data: approveTxHash
-  } = useWriteContract();
+  // Use custom transaction hooks
+  const approveTx = useTransaction();
+  const stakeTx = useTransaction();
 
-  // Monitor approve transaction receipt
-  const {
-    isSuccess: isApproveConfirmed,
-    isError: isApproveConfirmError,
-    error: approveConfirmError
-  } = useWaitForTransactionReceipt({
-    hash: approveTxHash,
-    query: { enabled: !!approveTxHash }
-  });
-
-  // Stake transaction hooks
-  const {
-    writeContract: writeDeposit,
-    error: depositError,
-    isError: isDepositError,
-    isSuccess: isDepositSubmitted,
-    data: depositTxHash
-  } = useWriteContract();
-
-  // Monitor stake transaction receipt
-  const {
-    isSuccess: isDepositConfirmed,
-    isError: isDepositConfirmError,
-    error: depositConfirmError
-  } = useWaitForTransactionReceipt({
-    hash: depositTxHash,
-    query: { enabled: !!depositTxHash }
-  });
+  // Track process completion
+  const [isApproved, setIsApproved] = useState(false);
+  const [isDeposited, setIsDeposited] = useState(false);
 
   // Handle percentage button clicks
-  const handlePercentClick = (percent: number) => {
-    if (!userBalance) return;
-    const value = (Number(formatEther(BigInt(userBalance))) * percent) / 100;
-    setAmount(value.toString());
-  };
+  const handlePercentClick = useCallback(
+    (percent: number) => {
+      if (!userBalance) return;
+      const value = (Number(formatEther(BigInt(userBalance))) * percent) / 100;
+      setAmount(value.toString());
+    },
+    [userBalance]
+  );
 
-  // Handle approve submission
-  useEffect(() => {
-    if (isApproveSubmitted && !approveTxHash) return;
+  // Process transaction states
+  useCallback(() => {
+    approveTx.processTxState();
+    stakeTx.processTxState();
 
-    if (isApproveSubmitted) {
-      setApproveState('submitted');
-      console.log('Approve transaction submitted:', approveTxHash);
+    // Update approval status when confirmed
+    if (approveTx.txState === 'confirmed' && !isApproved) {
+      setIsApproved(true);
+      dispatchSuccess('USDS Approved Successfully!');
     }
-  }, [isApproveSubmitted, approveTxHash]);
 
-  // Handle approve confirmation
-  useEffect(() => {
-    if (!approveTxHash || !isApproveConfirmed) return;
+    // Update deposit status when confirmed
+    if (stakeTx.txState === 'confirmed' && !isDeposited) {
+      setIsDeposited(true);
+      dispatchSuccess('USDS deposited successfully!');
+    }
 
-    console.log('Approve transaction confirmed!');
-    setApproveState('confirmed');
-    setIsApproved(true);
-    dispatchSuccess('USDS Approved Successfully!');
-  }, [approveTxHash, isApproveConfirmed]);
-
-  // Handle approve errors
-  useEffect(() => {
-    if (isApproveError || isApproveConfirmError) {
-      setApproveState('error');
-      console.error('Approval failed:', approveError || approveConfirmError);
+    // Handle errors
+    if (approveTx.txState === 'error') {
       dispatchError('USDS Approve Failed!');
     }
-  }, [isApproveError, isApproveConfirmError, approveError, approveConfirmError]);
 
-  // Handle deposit submission
-  useEffect(() => {
-    if (isDepositSubmitted && !depositTxHash) return;
-
-    if (isDepositSubmitted) {
-      setStakeState('submitted');
-      console.log('Deposit transaction submitted:', depositTxHash);
-    }
-  }, [isDepositSubmitted, depositTxHash]);
-
-  // Handle deposit confirmation
-  useEffect(() => {
-    if (!depositTxHash || !isDepositConfirmed) return;
-
-    console.log('Deposit transaction confirmed!');
-    setStakeState('confirmed');
-    setIsDeposited(true);
-    dispatchSuccess('USDS deposited successfully!');
-  }, [depositTxHash, isDepositConfirmed]);
-
-  // Handle deposit errors
-  useEffect(() => {
-    if (isDepositError || isDepositConfirmError) {
-      setStakeState('error');
-      console.error('Deposit failed:', depositError || depositConfirmError);
+    if (stakeTx.txState === 'error') {
       dispatchError('Deposit failed');
     }
-  }, [isDepositError, isDepositConfirmError, depositError, depositConfirmError]);
+  }, [approveTx.txState, stakeTx.txState, isApproved, isDeposited, approveTx.processTxState, stakeTx.processTxState])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
-    if (approveState === 'error') {
-      setApproveState('idle');
-    }
-    if (stakeState === 'error') {
-      setStakeState('idle');
-    }
-  }, [approveState, stakeState]);
+    approveTx.resetTx();
+    stakeTx.resetTx();
+  }, [approveTx, stakeTx]);
+
+  // Handle amount change
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value === '' || Number(value) >= 0) {
+        setAmount(value);
+        // Reset error states when amount changes
+        if (approveTx.txState === 'error' || stakeTx.txState === 'error') {
+          resetTransactionStates();
+        }
+      }
+    },
+    [approveTx.txState, stakeTx.txState, resetTransactionStates]
+  );
 
   // Handle main button click
   const handleMainButtonClick = useCallback(async () => {
@@ -159,106 +151,94 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
 
     const amountInWei = parseEther(amount);
     console.log('Attempting transaction with amount:', amount, 'Wei:', amountInWei.toString());
-    console.log('Current states - Approved:', isApproved, 'ApproveState:', approveState, 'DepositState:', stakeState);
+    console.log('Current states - Approved:', isApproved);
 
     try {
       // Step 1: Approve tokens if not already approved
       if (!isApproved) {
         console.log('Initiating approve transaction...');
-        setApproveState('submitting');
-        writeApprove({
+        approveTx.writeContract({
           ...usdsContractConfig,
           address: skyConfig.contracts.USDS,
           functionName: 'approve',
           args: [rewardAddress as `0x${string}`, BigInt(amountInWei)]
         });
-        console.log('Approve transaction submitted');
       }
       // Step 2: Stake tokens if approved but not yet deposited
       else if (isApproved && !isDeposited) {
         console.log('Initiating stake transaction...');
-        setStakeState('submitting');
-        writeDeposit({
+        stakeTx.writeContract({
           ...stakingRewardContractConfig,
           address: rewardAddress as `0x${string}`,
           functionName: 'stake',
           args: [BigInt(amountInWei), 1]
         });
-        console.log('Stake transaction submitted');
       }
     } catch (error) {
       console.error('Transaction failed:', error);
       if (!isApproved) {
-        setApproveState('error');
         dispatchError('Failed to approve USDS');
       } else {
-        setStakeState('error');
         dispatchError('Failed to stake USDS');
       }
     }
-  }, [
-    amount,
-    isApproved,
-    isDeposited,
-    approveState,
-    stakeState,
-    writeApprove,
-    writeDeposit,
-    rewardAddress,
-    skyConfig.contracts.USDS,
-    resetTransactionStates
-  ]);
-
-  // Force update isApproved state when approveState changes to confirmed
-  useEffect(() => {
-    if (approveState === 'confirmed' && !isApproved) {
-      console.log('Setting isApproved to true because approveState is confirmed');
-      setIsApproved(true);
-    }
-  }, [approveState, isApproved]);
+  }, [amount, isApproved, isDeposited, approveTx, stakeTx, rewardAddress, skyConfig.contracts.USDS, resetTransactionStates]);
 
   // Compute button text based on transaction states
-  const getButtonText = () => {
+  const getButtonText = useCallback(() => {
     if (!amount) {
       return 'Enter Amount';
     }
 
     if (!isApproved) {
-      if (approveTxHash && !isApproveConfirmed) {
+      if (approveTx.txHash && !approveTx.isTxConfirmed) {
         return 'Approving USDS...';
       }
-      if (approveState === 'error') {
+      if (approveTx.txState === 'error') {
         return 'Approval Failed - Try again';
       }
       return 'Approve USDS';
     }
 
     if (!isDeposited) {
-      if (depositTxHash && !isDepositConfirmed) {
+      if (stakeTx.txHash && !stakeTx.isTxConfirmed) {
         return 'Staking USDS...';
       }
-      if (stakeState === 'error') {
+      if (stakeTx.txState === 'error') {
         return 'Staking Failed - Try again';
       }
       return 'Stake USDS';
     }
 
     return 'Success!';
-  };
+  }, [
+    amount,
+    isApproved,
+    isDeposited,
+    approveTx.txHash,
+    approveTx.isTxConfirmed,
+    approveTx.txState,
+    stakeTx.txHash,
+    stakeTx.isTxConfirmed,
+    stakeTx.txState
+  ]);
 
   // Determine if button should be disabled
-  const isButtonDisabled = () => {
+  const isButtonDisabled = useCallback(() => {
     if (!amount) return true;
 
     // Disable during transactions
-    if (approveTxHash && !isApproveConfirmed) return true;
-    if (depositTxHash && !isDepositConfirmed) return true;
+    if (approveTx.txHash && !approveTx.isTxConfirmed) return true;
+    if (stakeTx.txHash && !stakeTx.isTxConfirmed) return true;
 
     // Disable when completed
     if (isDeposited) return true;
 
     return false;
-  };
+  }, [amount, approveTx.txHash, approveTx.isTxConfirmed, stakeTx.txHash, stakeTx.isTxConfirmed, isDeposited]);
+
+  // Determine if input and percentage buttons should be disabled
+  const isInputDisabled = isDeposited || approveTx.txState === 'submitted' || stakeTx.txState === 'submitted';
 
   return (
     <StyledCard>
@@ -279,18 +259,8 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
             type="number"
             placeholder="Enter amount"
             value={amount}
-            disabled={isDeposited || approveState === 'submitted' || stakeState === 'submitted'}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === '' || Number(value) >= 0) {
-                setAmount(value);
-                // Reset states if user changes amount
-                if (approveState === 'error' || stakeState === 'error') {
-                  setApproveState('idle');
-                  setStakeState('idle');
-                }
-              }
-            }}
+            disabled={isInputDisabled}
+            onChange={handleAmountChange}
           />
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -316,22 +286,13 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
               gap: 1
             }}
           >
-            <PercentButton
-              onClick={() => handlePercentClick(25)}
-              disabled={isDeposited || approveState === 'submitted' || stakeState === 'submitted'}
-            >
+            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled}>
               25%
             </PercentButton>
-            <PercentButton
-              onClick={() => handlePercentClick(50)}
-              disabled={isDeposited || approveState === 'submitted' || stakeState === 'submitted'}
-            >
+            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled}>
               50%
             </PercentButton>
-            <PercentButton
-              onClick={() => handlePercentClick(100)}
-              disabled={isDeposited || approveState === 'submitted' || stakeState === 'submitted'}
-            >
+            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled}>
               100%
             </PercentButton>
           </Box>
