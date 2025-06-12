@@ -577,12 +577,6 @@ export default function HandlePosition({ editMode = false, positionData = null }
                   </Alert>
                 )}
 
-                {activeStep === steps.length - 1 && confirmError && (
-                  <Alert severity="error" sx={{ mt: 2 }}>
-                    Error: {confirmError.message}
-                  </Alert>
-                )}
-
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                   <Button disabled={activeStep === 0} onClick={handleBack}>
                     Back

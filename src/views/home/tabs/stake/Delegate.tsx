@@ -1,8 +1,7 @@
 import { FC, useEffect, useState } from 'react';
-import { Card, CardActionArea, Typography, Box, CircularProgress, Alert } from '@mui/material';
-import { apiConfig } from 'config/index';
+import { Card, CardActionArea, Typography, Box, CircularProgress, Alert, Pagination, Stack } from '@mui/material';
+import { apiConfig, appConfig } from 'config/index';
 import { formatSkyPrice } from 'utils/sky';
-import { formatTokenAmount } from 'utils/formatters';
 
 type DelegatesResponse = {
   delegates: Delegate[];
@@ -38,6 +37,8 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const delegatesPerPage = appConfig.delegatesPerPage;
 
   useEffect(() => {
     fetch(apiConfig.delegatesInfoMainnet)
@@ -105,12 +106,22 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
     onChange(newSelected || '0x0');
   };
 
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setCurrentPage(value);
+  };
+
+  // Get current delegates for display
+  const indexOfLastDelegate = currentPage * delegatesPerPage;
+  const indexOfFirstDelegate = indexOfLastDelegate - delegatesPerPage;
+  const currentDelegates = delegates.slice(indexOfFirstDelegate, indexOfLastDelegate);
+  const totalPages = Math.ceil(delegates.length / delegatesPerPage);
+
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      {delegates.map((delegate) => (
+      {currentDelegates.map((delegate) => (
         <Card
           key={delegate.voteDelegateAddress}
           sx={{
@@ -141,6 +152,12 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
           </CardActionArea>
         </Card>
       ))}
+
+      {delegates.length > 0 && (
+        <Stack spacing={2} direction="row" justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
+          <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" siblingCount={1} size="large" />
+        </Stack>
+      )}
     </Box>
   );
 };

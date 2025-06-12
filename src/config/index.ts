@@ -4,6 +4,10 @@ export const Base = 8453;
 export const AnvilTest = 12222;
 export const TenderlyTest = 1999999;
 
+export const appConfig = {
+  delegatesPerPage: 7
+};
+
 export const apiConfig = {
   cp0xDelegate: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5',
   cp0x: 'cp0x',
