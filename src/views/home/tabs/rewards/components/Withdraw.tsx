@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
 import { FC, useEffect, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useWriteContract } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { StyledCard } from 'components/StyledCard';
@@ -46,7 +46,16 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
     // status: supplyStatus
   } = useWriteContract();
 
-  const { writeContract: writeClaim, isError: isClaimError, isSuccess: isClaimSuccess } = useWriteContract();
+  const { writeContract: writeClaim, isError: isClaimError, isSuccess: isClaimSubmitted, data: claimTxHash } = useWriteContract();
+
+  const {
+    isSuccess: isClaimConfirmed,
+    isError: isClaimConfirmError,
+    error: claimConfirmError
+  } = useWaitForTransactionReceipt({
+    hash: claimTxHash,
+    query: { enabled: !!claimTxHash }
+  });
 
   useEffect(() => {
     if (isWithdrawSuccess) {
@@ -58,13 +67,27 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
       setButtonText('ERROR');
       dispatchError('USDS Withdraw failed');
     }
-    if (isClaimSuccess) {
+    if (isClaimConfirmed) {
+      setIsClaimed(true);
       dispatchSuccess(`SKY claimed successfully!`);
     }
     if (isClaimError) {
-      dispatchError('Failed to claim SKY');
+      dispatchError('Failed to submit claim transaction');
     }
-  }, [isWithdrawSuccess, isWithdrawError, withdrawError, isClaimSuccess, isClaimError]);
+    if (isClaimConfirmError && claimConfirmError) {
+      console.error('Claim confirmation failed:', claimConfirmError);
+      dispatchError('Failed to confirm SKY claim transaction');
+    }
+  }, [
+    isWithdrawSuccess,
+    isWithdrawError,
+    withdrawError,
+    isClaimSubmitted,
+    isClaimError,
+    isClaimConfirmed,
+    isClaimConfirmError,
+    claimConfirmError
+  ]);
 
   const handleMainButtonClick = async () => {
     if (!amount) {
@@ -94,7 +117,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
 
   const handleClaimButtonClick = async () => {
     try {
-      if (!isClaimed) {
+      if (!isClaimed && !claimTxHash) {
         writeClaim({
           ...stakingRewardContractConfig,
           address: rewardAddress as `0x${string}`,
@@ -168,8 +191,15 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
       </StyledCard>
 
       {rewardBalance != 0n && (
-        <Button variant="outlined" color="secondary" fullWidth sx={{ mt: 2 }} onClick={() => handleClaimButtonClick()}>
-          Claim {formatTokenAmount(rewardBalance.toString(), 4)} SKY
+        <Button
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          sx={{ mt: 2 }}
+          disabled={!!claimTxHash && !isClaimConfirmed}
+          onClick={() => handleClaimButtonClick()}
+        >
+          {claimTxHash && !isClaimConfirmed ? 'Claiming SKY...' : `Claim ${formatTokenAmount(rewardBalance.toString(), 4)} SKY`}
         </Button>
       )}
     </>
