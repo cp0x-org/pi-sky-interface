@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
+import { FC, useCallback, useState } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { daiUsdsConverterConfig } from 'config/abi/DaiUsdsConverter';
@@ -16,86 +16,174 @@ interface Props {
   usdsUserBalance?: bigint;
 }
 
+// Transaction states
+type TxState = 'idle' | 'submitting' | 'submitted' | 'confirmed' | 'error';
+
+// Custom hook for transaction management
+const useTransaction = () => {
+  const [txState, setTxState] = useState<TxState>('idle');
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  const { writeContract, error: txError, isError: isTxError, isSuccess: isTxSubmitted, data: txHash } = useWriteContract();
+
+  const {
+    isSuccess: isTxConfirmed,
+    isError: isTxConfirmError,
+    error: txConfirmError
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash }
+  });
+
+  // Reset the transaction state
+  const resetTx = useCallback(() => {
+    if (txState === 'error') {
+      setTxState('idle');
+    }
+  }, [txState]);
+
+  // Process transaction status changes
+  const processTxState = useCallback(() => {
+    if (isTxSubmitted && txState === 'idle') {
+      setTxState('submitted');
+      console.log('Transaction submitted:', txHash);
+    } else if (isTxConfirmed && txState === 'submitted') {
+      setTxState('confirmed');
+      setIsCompleted(true);
+      console.log('Transaction confirmed!');
+    } else if ((isTxError || isTxConfirmError) && txState !== 'error') {
+      setTxState('error');
+      console.error('Transaction failed:', txError || txConfirmError);
+    }
+  }, [isTxSubmitted, isTxConfirmed, isTxError, isTxConfirmError, txState, txHash, txError, txConfirmError]);
+
+  return {
+    writeContract,
+    txState,
+    txHash,
+    isCompleted,
+    isTxConfirmed,
+    resetTx,
+    processTxState
+  };
+};
+
 const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
-  const [buttonText, setButtonText] = useState<string>('Enter Amount');
-
-  const [isApproved, setIsApproved] = useState<boolean>(false);
-  const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
 
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
-  const handlePercentClick = (percent: number) => {
-    if (!usdsUserBalance) return;
 
-    // Calculate the amount based on the percentage
-    const value = (Number(formatEther(usdsUserBalance)) * percent) / 100;
+  // Use custom transaction hooks
+  const approveTx = useTransaction();
+  const revertTx = useTransaction();
 
-    // Set the amount and update button text
-    setAmount(value.toString());
-    setButtonText('Approve');
-    setIsApproved(false);
-    setIsConfirmed(false);
-  };
+  // Track process completion
+  const [isApproved, setIsApproved] = useState(false);
+  const [isReverted, setIsReverted] = useState(false);
 
-  const {
-    writeContract: writeApprove,
-    isSuccess: isApproveSuccess,
-    error: approveError,
-    isError: isApproveError
-    // data: approveData,
-    // status: approveStatus
-  } = useWriteContract();
+  // Handle percentage button clicks
+  const handlePercentClick = useCallback(
+    (percent: number) => {
+      if (!usdsUserBalance) return;
 
-  const {
-    writeContract: writeConfirm,
-    error: confirmError,
-    isError: isConfirmError,
-    isSuccess: isConfirmSuccess
-    // data: supplyData,
-    // status: supplyStatus
-  } = useWriteContract();
+      // Calculate the amount based on the percentage
+      const value = (Number(formatEther(usdsUserBalance)) * percent) / 100;
 
-  useEffect(() => {
-    if (isConfirmSuccess) {
-      setIsConfirmed(true);
-      dispatchSuccess('USDS reverted successfully!');
-    }
-    if (isConfirmError) {
-      console.error('Deposit failed:', confirmError);
-      dispatchError('USDS revert failed!');
-    }
-    if (isApproveSuccess) {
+      // Set the amount
+      setAmount(value.toString());
+
+      // Reset transaction states when changing amount
+      if (approveTx.txState === 'error' || revertTx.txState === 'error' || isApproved || isReverted) {
+        resetTransactionStates();
+      }
+    },
+    [usdsUserBalance, approveTx.txState, revertTx.txState, isApproved, isReverted]
+  );
+
+  // Process transaction states
+  useCallback(() => {
+    approveTx.processTxState();
+    revertTx.processTxState();
+
+    // Update approval status when confirmed
+    if (approveTx.txState === 'confirmed' && !isApproved) {
       setIsApproved(true);
-      setButtonText('Revert USDS -> DAI');
       dispatchSuccess('USDS Approved Successfully!');
     }
-    if (isApproveError) {
-      console.error('Approval failed:', approveError);
-      setButtonText('Enter Amount');
+
+    // Update revert status when confirmed
+    if (revertTx.txState === 'confirmed' && !isReverted) {
+      setIsReverted(true);
+      dispatchSuccess('USDS reverted to DAI successfully!');
+    }
+
+    // Handle errors
+    if (approveTx.txState === 'error') {
       dispatchError('USDS Approve Failed!');
     }
-  }, [isApproveSuccess, isApproveError, approveError, isConfirmSuccess, isConfirmError, confirmError]);
 
-  const handleMainButtonClick = async () => {
+    if (revertTx.txState === 'error') {
+      dispatchError('USDS revert failed!');
+    }
+  }, [approveTx, revertTx, isApproved, isReverted])();
+
+  // Reset transaction states
+  const resetTransactionStates = useCallback(() => {
+    approveTx.resetTx();
+    revertTx.resetTx();
+    setIsApproved(false);
+    setIsReverted(false);
+  }, [approveTx, revertTx]);
+
+  // Handle amount change
+  const handleAmountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      if (value === '' || Number(value) >= 0) {
+        setAmount(value);
+
+        // Reset states when amount changes
+        if (approveTx.txState === 'error' || revertTx.txState === 'error' || isApproved || isReverted) {
+          resetTransactionStates();
+        }
+      }
+    },
+    [approveTx.txState, revertTx.txState, isApproved, isReverted, resetTransactionStates]
+  );
+
+  // Handle main button click
+  const handleMainButtonClick = useCallback(async () => {
     if (!amount) {
-      console.log('Supply amount is empty');
+      console.log('Amount is empty');
       return;
     }
 
+    // Reset error states if trying again
+    if (approveTx.txState === 'error' || revertTx.txState === 'error') {
+      resetTransactionStates();
+    }
+
     const amountInWei = parseEther(amount);
+    console.log('Attempting transaction with amount:', amount, 'Wei:', amountInWei.toString());
+    console.log('Current states - Approved:', isApproved);
 
     try {
+      // Step 1: Approve tokens if not already approved
       if (!isApproved) {
-        writeApprove({
+        console.log('Initiating approve transaction...');
+        approveTx.writeContract({
           ...usdsContractConfig,
           address: skyConfig.contracts.USDS,
           functionName: 'approve',
           args: [skyConfig.contracts.DAIUSDSConverter, BigInt(amountInWei)]
         });
-      } else if (!isConfirmed) {
-        writeConfirm({
+      }
+      // Step 2: Revert tokens if approved but not yet reverted
+      else if (isApproved && !isReverted) {
+        console.log('Initiating revert transaction...');
+        revertTx.writeContract({
           ...daiUsdsConverterConfig,
           address: skyConfig.contracts.DAIUSDSConverter,
           functionName: 'usdsToDai',
@@ -104,11 +192,77 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
       }
     } catch (error) {
       console.error('Transaction failed:', error);
-      setIsApproved(false);
-      setIsConfirmed(false);
-      setButtonText('Enter Amount');
+      if (!isApproved) {
+        dispatchError('Failed to approve USDS');
+      } else {
+        dispatchError('Failed to revert USDS to DAI');
+      }
     }
-  };
+  }, [
+    amount,
+    isApproved,
+    isReverted,
+    approveTx,
+    revertTx,
+    address,
+    skyConfig.contracts.USDS,
+    skyConfig.contracts.DAIUSDSConverter,
+    resetTransactionStates
+  ]);
+
+  // Compute button text based on transaction states
+  const getButtonText = useCallback(() => {
+    if (!amount) {
+      return 'Enter Amount';
+    }
+
+    if (!isApproved) {
+      if (approveTx.txHash && !approveTx.isTxConfirmed) {
+        return 'Approving USDS...';
+      }
+      if (approveTx.txState === 'error') {
+        return 'Approval Failed - Try again';
+      }
+      return 'Approve USDS';
+    }
+
+    if (!isReverted) {
+      if (revertTx.txHash && !revertTx.isTxConfirmed) {
+        return 'Reverting USDS to DAI...';
+      }
+      if (revertTx.txState === 'error') {
+        return 'Revert Failed - Try again';
+      }
+      return 'Revert USDS to DAI';
+    }
+
+    return 'Success!';
+  }, [
+    amount,
+    isApproved,
+    isReverted,
+    approveTx.txHash,
+    approveTx.isTxConfirmed,
+    approveTx.txState,
+    revertTx.txHash,
+    revertTx.isTxConfirmed,
+    revertTx.txState
+  ]);
+
+  // Determine if button should be disabled
+  const isButtonDisabled = useCallback(() => {
+    if (!amount) return true;
+
+    // Disable during transactions
+    if (approveTx.txHash && !approveTx.isTxConfirmed) return true;
+    if (revertTx.txHash && !revertTx.isTxConfirmed) return true;
+
+    // Disable when completed
+    return isReverted;
+  }, [amount, approveTx.txHash, approveTx.isTxConfirmed, revertTx.txHash, revertTx.isTxConfirmed, isReverted]);
+
+  // Determine if input and percentage buttons should be disabled
+  const isInputDisabled = isReverted || approveTx.txState === 'submitted' || revertTx.txState === 'submitted';
 
   return (
     <StyledCard>
@@ -127,12 +281,8 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
             type="number"
             placeholder="Enter amount"
             value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              setButtonText(e.target.value ? `Revert` : 'Enter Amount');
-              setIsApproved(false);
-              setIsConfirmed(false);
-            }}
+            disabled={isInputDisabled}
+            onChange={handleAmountChange}
           />
 
           <Box
@@ -161,15 +311,21 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled}>
+              25%
+            </PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled}>
+              50%
+            </PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled}>
+              100%
+            </PercentButton>
           </Box>
         </Box>
       </Box>
       <Box>
-        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={() => handleMainButtonClick()}>
-          {buttonText}
+        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={isButtonDisabled()} onClick={handleMainButtonClick}>
+          {getButtonText()}
         </Button>
       </Box>
     </StyledCard>
