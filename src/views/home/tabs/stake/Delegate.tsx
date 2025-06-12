@@ -1,7 +1,8 @@
 import { FC, useEffect, useState } from 'react';
-import { Card, CardActionArea, Typography, Box, CircularProgress, Alert, Pagination, Stack } from '@mui/material';
+import { Card, CardActionArea, Typography, Box, CircularProgress, Alert, Pagination, Stack, TextField } from '@mui/material';
 import { apiConfig, appConfig } from 'config/index';
 import { formatSkyPrice } from 'utils/sky';
+import { isAddress } from 'viem';
 
 type DelegatesResponse = {
   delegates: Delegate[];
@@ -35,9 +36,12 @@ interface Props {
 const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [customAddress, setCustomAddress] = useState<string>('');
+  const [addressError, setAddressError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [defaultApplied, setDefaultApplied] = useState<boolean>(false);
   const delegatesPerPage = appConfig.delegatesPerPage;
 
   useEffect(() => {
@@ -79,31 +83,91 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
       });
   }, []);
 
-  // Sync the selected state with the delegatorAddress prop
+  // Apply the initial selection once when delegates are loaded
   useEffect(() => {
+    if (delegates.length === 0 || loading || defaultApplied) {
+      return;
+    }
+
     const cp0xDelegate = delegates.find((d) => d.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase());
+
     if (delegatorAddress) {
-      const delegate = delegates.find((d) => d.voteDelegateAddress === delegatorAddress);
-      if (delegate) {
-        setSelected(delegate.voteDelegateAddress);
-        onChange(delegate.voteDelegateAddress);
+      // If we have a delegatorAddress from props, use it
+      const delegateFromProps = delegates.find((d) => d.voteDelegateAddress.toLowerCase() === delegatorAddress.toLowerCase());
+
+      if (delegateFromProps) {
+        setSelected(delegateFromProps.voteDelegateAddress);
+      } else if (isAddress(delegatorAddress)) {
+        // If it's a valid custom address but not in our list
+        setSelected(delegatorAddress);
+        setCustomAddress(delegatorAddress);
       } else if (cp0xDelegate) {
+        // Default to cp0x if the address is not found and not a valid custom address
         setSelected(cp0xDelegate.voteDelegateAddress);
         onChange(cp0xDelegate.voteDelegateAddress);
       }
     } else if (cp0xDelegate) {
+      // If no delegatorAddress is provided, default to cp0x
       setSelected(cp0xDelegate.voteDelegateAddress);
       onChange(cp0xDelegate.voteDelegateAddress);
-    } else {
-      setSelected(null);
-      onChange('0x0');
     }
-  }, [delegatorAddress, delegates]);
+
+    // Mark that we've applied the default selection
+    setDefaultApplied(true);
+  }, [delegates, loading, delegatorAddress, onChange, defaultApplied]);
+
+  // This effect syncs the selected state when delegatorAddress changes externally
+  useEffect(() => {
+    if (delegates.length === 0 || loading || !defaultApplied || customAddress) {
+      return;
+    }
+
+    // Only update if delegatorAddress changes and it's different from the current selection
+    if (delegatorAddress && delegatorAddress !== selected && delegatorAddress !== '0x0') {
+      const delegateFromProps = delegates.find((d) => d.voteDelegateAddress.toLowerCase() === delegatorAddress.toLowerCase());
+
+      if (delegateFromProps) {
+        setSelected(delegateFromProps.voteDelegateAddress);
+      } else if (isAddress(delegatorAddress)) {
+        setSelected(delegatorAddress);
+      }
+    }
+  }, [delegatorAddress, delegates, loading, selected, defaultApplied, customAddress]);
 
   const handleSelect = (address: string) => {
+    // Clear custom address when selecting from list
+    setCustomAddress('');
+
+    // Toggle selection if clicking the same address
     const newSelected = address === selected ? null : address;
+
+    // Update local state first
     setSelected(newSelected);
+
+    // Then notify parent component with the new value or 0x0 if nothing selected
     onChange(newSelected || '0x0');
+  };
+
+  const handleCustomAddressChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const address = event.target.value;
+    setCustomAddress(address);
+
+    if (!address) {
+      setAddressError('');
+      // Only update once
+      setSelected(null);
+      onChange('0x0');
+      return;
+    }
+
+    if (!isAddress(address)) {
+      setAddressError('Invalid Ethereum address');
+      // Don't update selected or call onChange for invalid addresses
+    } else {
+      setAddressError('');
+      setSelected(address);
+      onChange(address);
+    }
   };
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
@@ -121,6 +185,17 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
+      <TextField
+        fullWidth
+        label="Custom Delegate Address"
+        value={customAddress}
+        onChange={handleCustomAddressChange}
+        error={!!addressError}
+        helperText={addressError || 'Enter any Ethereum address or select from the list below (click again to deselect)'}
+        placeholder="0x..."
+        sx={{ mb: 2 }}
+      />
+
       {currentDelegates.map((delegate) => (
         <Card
           key={delegate.voteDelegateAddress}

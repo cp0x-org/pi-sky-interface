@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -115,67 +115,68 @@ export default function HandlePosition({ editMode = false, positionData = null }
   const callDataArray = useMemo(() => {
     if (!address || (!editMode && !stakeData.amount) || !stakeData.rewardAddress) return [];
 
-    let dataArray = [];
+    let dataArray: string[] = [];
 
-    if (editMode && positionId !== null) {
-      // In edit mode, we only update the delegate and reward settings
-      const positionIdBigInt = BigInt(positionId);
+    try {
+      if (editMode && positionId !== null) {
+        // In edit mode, we only update the delegate and reward settings
+        const positionIdBigInt = BigInt(positionId);
 
-      // Add delegate selection if provided
-      if (stakeData.delegatorAddress != positionData?.delegateID) {
-        let newDelegatorAddress = stakeData.delegatorAddress;
-        if (!newDelegatorAddress) {
-          newDelegatorAddress = `0`;
-        } else {
-          newDelegatorAddress = stakeData.delegatorAddress;
+        // Add delegate selection if provided
+        if (stakeData.delegatorAddress !== positionData?.delegateID) {
+          let newDelegatorAddress = stakeData.delegatorAddress || '0';
+
+          dataArray.push(
+            encodeFunctionData({
+              abi: lockStakeContractConfig.abi,
+              functionName: 'selectVoteDelegate',
+              args: [address, positionIdBigInt, newDelegatorAddress as `0x${string}`]
+            })
+          );
         }
 
-        dataArray.push(
+        // Add the farm selection
+        if (stakeData.amount) {
+          dataArray.push(
+            encodeFunctionData({
+              abi: lockStakeContractConfig.abi,
+              functionName: 'lock',
+              args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
+            })
+          );
+        }
+      } else if (stakeData.amount) {
+        // Standard new position flow
+        dataArray = [
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
-            functionName: 'selectVoteDelegate',
-            args: [address, positionIdBigInt, newDelegatorAddress as `0x${string}`]
-          })
-        );
-      }
-
-      // Add the farm selection
-      dataArray.push(
-        encodeFunctionData({
-          abi: lockStakeContractConfig.abi,
-          functionName: 'lock',
-          args: [address, positionIdBigInt, parseEther(stakeData.amount), 1]
-        })
-      );
-    } else {
-      // Standard new position flow
-      dataArray = [
-        encodeFunctionData({
-          abi: lockStakeContractConfig.abi,
-          functionName: 'open',
-          args: [nextUrnIdx]
-        }),
-        encodeFunctionData({
-          abi: lockStakeContractConfig.abi,
-          functionName: 'lock',
-          args: [address, nextUrnIdx, parseEther(stakeData.amount), 1]
-        }),
-        encodeFunctionData({
-          abi: lockStakeContractConfig.abi,
-          functionName: 'selectFarm',
-          args: [address, nextUrnIdx, skyConfig.contracts.USDSStakingRewards, 1]
-        })
-      ];
-
-      if (stakeData.delegatorAddress) {
-        dataArray.push(
+            functionName: 'open',
+            args: [nextUrnIdx]
+          }),
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
-            functionName: 'selectVoteDelegate',
-            args: [address, nextUrnIdx, stakeData.delegatorAddress as `0x`]
+            functionName: 'lock',
+            args: [address, nextUrnIdx, parseEther(stakeData.amount), 1]
+          }),
+          encodeFunctionData({
+            abi: lockStakeContractConfig.abi,
+            functionName: 'selectFarm',
+            args: [address, nextUrnIdx, skyConfig.contracts.USDSStakingRewards, 1]
           })
-        );
+        ];
+
+        if (stakeData.delegatorAddress && stakeData.delegatorAddress != '0x0') {
+          dataArray.push(
+            encodeFunctionData({
+              abi: lockStakeContractConfig.abi,
+              functionName: 'selectVoteDelegate',
+              args: [address, nextUrnIdx, stakeData.delegatorAddress as `0x${string}`]
+            })
+          );
+        }
       }
+    } catch (error) {
+      console.error('Error generating call data array:', error);
     }
 
     return dataArray;
@@ -207,31 +208,54 @@ export default function HandlePosition({ editMode = false, positionData = null }
   });
 
   // Effect to check if approval is needed when amount changes or allowance updates
+  // Set position ID once at the beginning if in edit mode
   useEffect(() => {
-    if (editMode) {
-      if (positionData) {
-        setPositionId(positionData.indexPosition);
-      }
+    if (editMode && positionData) {
+      setPositionId(positionData.indexPosition);
     }
+  }, [editMode, positionData]);
 
+  // Check if approval is needed
+  useEffect(() => {
     if (address && stakeData.amount && allowanceData) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
-        if (allowanceData >= amountBigInt) {
-          // Already approved enough tokens
-          setIsApproved(true);
-          setConfirmButtonText('Confirm Staking');
-          // Run simulation for confirmation since we're skipping approval
-          refetchConfirmSimulation();
-        } else {
-          setIsApproved(false);
-          setConfirmButtonText('Approve SKY');
+        const shouldBeApproved = allowanceData >= amountBigInt;
+
+        // Only update state if it's different to avoid unnecessary re-renders
+        if (shouldBeApproved !== isApproved) {
+          setIsApproved(shouldBeApproved);
+          setConfirmButtonText(shouldBeApproved ? 'Confirm Staking' : 'Approve SKY');
         }
       } catch (error) {
         console.error('Error checking allowance:', error);
       }
     }
-  }, [address, stakeData.amount, allowanceData, refetchConfirmSimulation, editMode, positionData]);
+  }, [address, stakeData.amount, allowanceData, isApproved]);
+
+  // Use a ref to track if we've already run the simulation
+  const hasRunSimulation = useRef<boolean>(false);
+
+  // Separate effect for simulation to avoid circular dependencies
+  useEffect(() => {
+    // Only run simulation when approval state changes to true and we haven't run it yet
+    if (isApproved && callDataArray.length > 0 && !isStaked && !hasRunSimulation.current) {
+      // Mark that we've run the simulation
+      hasRunSimulation.current = true;
+
+      // Use setTimeout to break the potential update cycle
+      const timer = setTimeout(() => {
+        refetchConfirmSimulation();
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Reset the ref when approval changes to false
+    if (!isApproved) {
+      hasRunSimulation.current = false;
+    }
+  }, [isApproved, callDataArray.length, isStaked]);
 
   const { writeContract: writeConfirm, isSuccess: isConfirmSuccess, isPending: isConfirmPending, error: confirmError } = useWriteContract();
 
@@ -243,83 +267,88 @@ export default function HandlePosition({ editMode = false, positionData = null }
     isError: isApproveError
   } = useWriteContract();
 
-  useEffect(() => {
-    console.log('Transaction status changed:', {
-      isApproveSuccess,
-      isApproveError,
-      isConfirmSuccess,
-      hasApproveError: !!approveError,
-      hasConfirmError: !!confirmError
-    });
+  // Separated effects for different transaction states to avoid cascading updates
 
-    if (isConfirmSuccess) {
+  // Handle confirmation success
+  useEffect(() => {
+    if (isConfirmSuccess && !isStaked) {
       console.log(editMode ? 'Position updated successfully!' : 'Staking confirmed successfully!');
       setIsStaked(true);
-      setConfirmButtonText('Staked');
       dispatchSuccess('Staking confirmed successfully!');
     }
+  }, [isConfirmSuccess, isStaked, editMode]);
+
+  // Handle confirmation error
+  useEffect(() => {
     if (confirmError) {
       console.error('Staking failed:', confirmError);
       dispatchError('Staking confirmation failed!');
     }
+  }, [confirmError]);
 
-    if (isApproveSuccess) {
+  // Handle approval success
+  useEffect(() => {
+    if (isApproveSuccess && !isApproved) {
       console.log('Approval successful!');
       setIsApproved(true);
-      setConfirmButtonText('Confirm Staking');
 
       if (!isStaked) {
         dispatchSuccess('SKY approved successfully!');
       }
-      // After successful approval, run simulation for the confirm transaction
-      if (refetchConfirmSimulation) {
-        console.log('Fetching confirmation simulation...');
-        refetchConfirmSimulation();
-      }
-      // Also refresh allowance
-      if (refetchAllowance) {
-        console.log('Refreshing allowance...');
-        refetchAllowance();
-      }
+
+      // Refresh allowance after approval
+      const timer = setTimeout(() => {
+        if (refetchAllowance) {
+          console.log('Refreshing allowance...');
+          refetchAllowance();
+        }
+      }, 0);
+
+      return () => clearTimeout(timer);
     }
+  }, [isApproveSuccess, isApproved, isStaked, refetchAllowance]);
+
+  // Handle approval error
+  useEffect(() => {
     if (isApproveError) {
       console.error('Approval failed:', approveError);
-      setConfirmButtonText('Approve SKY');
       dispatchError('SKY approve failed!');
     }
-  }, [
-    isApproveSuccess,
-    isApproveError,
-    approveError,
-    isConfirmSuccess,
-    confirmError,
-    refetchConfirmSimulation,
-    refetchAllowance,
-    editMode
-  ]);
+  }, [isApproveError, approveError]);
 
   // Effect to update button text based on simulation status
   useEffect(() => {
-    if (!isApproved && simulationInProgress) {
-      setConfirmButtonText('Simulating...');
-    } else if (!isApproved && !simulationInProgress) {
-      setConfirmButtonText('Approve SKY');
+    let newButtonText = confirmButtonText;
+
+    if (simulationInProgress) {
+      newButtonText = 'Simulating...';
+    } else if (!isApproved) {
+      newButtonText = 'Approve SKY';
+    } else if (isApproved && !isStaked) {
+      newButtonText = 'Confirm Staking';
+    } else if (isStaked) {
+      newButtonText = 'Staked';
     }
 
-    // Debug logging
-    console.log('Button state updated:', {
-      isApproved,
-      simulationInProgress,
-      confirmButtonText,
-      allowance: allowanceData ? allowanceData.toString() : 'unknown'
-    });
-  }, [isApproved, simulationInProgress, allowanceData, confirmButtonText]);
+    // Only update if text has changed to avoid unnecessary re-renders
+    if (newButtonText !== confirmButtonText) {
+      setConfirmButtonText(newButtonText);
+    }
+
+    // Remove debug logging to avoid unnecessary re-renders
+  }, [isApproved, simulationInProgress, isStaked, confirmButtonText]);
 
   const isValidEthereumAddress = (address: string): boolean => {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
   };
 
   const handleChange = (field: keyof typeof stakeData, value: string) => {
+    // Return early if the value hasn't changed to prevent unnecessary updates
+    if (stakeData[field] === value) {
+      return;
+    }
+
+    // Validate amount
     if (field === 'amount') {
       if (!value || isNaN(Number(value))) {
         return;
@@ -329,25 +358,29 @@ export default function HandlePosition({ editMode = false, positionData = null }
       if (address && value) {
         refetchAllowance();
       }
-
-      // Note: We accept values that exceed balance, but StakeAndBorrow will show an error
-      // The Next button will still be enabled, but we'll guide users with validation UI
     }
 
+    // Validate Ethereum addresses
     if ((field === 'rewardAddress' || field === 'delegatorAddress') && value) {
-      if (!isValidEthereumAddress(value)) {
+      // Skip validation for the 0x0 special case
+      if (value !== '0x0' && !isValidEthereumAddress(value)) {
         return;
       }
 
       // Make sure addresses always start with 0x for delegator/reward addresses
-      if (field === 'delegatorAddress' || field === 'rewardAddress') {
-        if (value && !value.startsWith('0x')) {
-          value = `0x${value}`;
-        }
+      if ((field === 'delegatorAddress' || field === 'rewardAddress') && value && !value.startsWith('0x')) {
+        value = `0x${value}`;
       }
     }
 
-    setStakeData((prev) => ({ ...prev, [field]: value }));
+    // Update the state
+    setStakeData((prev) => {
+      // Only update if the value is actually different
+      if (prev[field] === value) {
+        return prev;
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handleNext = () => {
@@ -505,8 +538,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
     return false;
   };
 
-  const getStepComponent = () => {
-    console.log('Rendering step component:', activeStep);
+  const getStepComponent = useMemo(() => {
     switch (activeStep) {
       case 0:
         return (
@@ -535,7 +567,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
       default:
         return null;
     }
-  };
+  }, [activeStep, userBalance, stakeData, handleChange, positionData, isApproved, isStaked, allowanceData, editMode]);
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -556,7 +588,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
                 ))}
               </Stepper>
 
-              <Box sx={{ mt: 4 }}>{getStepComponent()}</Box>
+              <Box sx={{ mt: 4 }}>{getStepComponent}</Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {activeStep === steps.length - 1 && isSimulateApproveError && !isApproved && (
