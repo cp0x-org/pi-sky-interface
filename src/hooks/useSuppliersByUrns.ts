@@ -123,11 +123,10 @@ export const useSuppliersByUrns = (): UseDelegatorsSumResult => {
   }, []);
 
   // Combine loading and error states from both hooks
-  const combinedIsLoading = isLoading;
   return {
     totalDelegators, // unique delegators
     totalPositions, // total staking positions
-    isLoading: combinedIsLoading,
+    isLoading: isLoading,
     error: error
   };
 };

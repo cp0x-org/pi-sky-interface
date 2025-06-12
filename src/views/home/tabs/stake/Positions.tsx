@@ -45,7 +45,7 @@ const PositionCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
+const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
@@ -318,7 +318,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
                 </Typography>
               </Box>
             ) : (
-              positions.map((position, index) => (
+              positions.map((position) => (
                 <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                   <PositionCard>
                     <CardContent>

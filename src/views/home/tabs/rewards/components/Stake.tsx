@@ -116,7 +116,7 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     if (stakeTx.txState === 'error') {
       dispatchError('Deposit failed');
     }
-  }, [approveTx.txState, stakeTx.txState, isApproved, isDeposited, approveTx.processTxState, stakeTx.processTxState])();
+  }, [approveTx, stakeTx, isApproved, isDeposited])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
@@ -232,9 +232,7 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     if (stakeTx.txHash && !stakeTx.isTxConfirmed) return true;
 
     // Disable when completed
-    if (isDeposited) return true;
-
-    return false;
+    return isDeposited;
   }, [amount, approveTx.txHash, approveTx.isTxConfirmed, stakeTx.txHash, stakeTx.isTxConfirmed, isDeposited]);
 
   // Determine if input and percentage buttons should be disabled
