@@ -215,7 +215,7 @@ export default function StakingSummary() {
               }}
             >
               <Typography color="text.secondary" variant="body2">
-                Total Unique Delegators
+                Total Unique Suppliers
               </Typography>
               <Typography variant="h6">{totalDelegators}</Typography>
             </Box>

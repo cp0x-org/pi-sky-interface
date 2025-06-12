@@ -237,7 +237,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Total Unique Delegators:</Typography>
+            <Typography variant="body1">Total Unique Suppliers:</Typography>
             <Typography variant="h6" color="primary">
               {totalDelegators}
             </Typography>
