@@ -242,6 +242,11 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           {/* Amount input field */}
           <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
             <StyledTextField
+              slotProps={{
+                input: {
+                  lang: 'en'
+                }
+              }}
               fullWidth
               type="number"
               placeholder="Enter amount"

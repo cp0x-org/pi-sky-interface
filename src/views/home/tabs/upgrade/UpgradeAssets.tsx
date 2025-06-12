@@ -240,6 +240,11 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <StyledTextField
+            slotProps={{
+              input: {
+                lang: 'en'
+              }
+            }}
             fullWidth
             type="number"
             placeholder="Enter amount"

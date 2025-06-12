@@ -101,6 +101,11 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
           }}
         >
           <StyledTextField
+            slotProps={{
+              input: {
+                lang: 'en'
+              }
+            }}
             fullWidth
             type="number"
             placeholder="Enter amount"
