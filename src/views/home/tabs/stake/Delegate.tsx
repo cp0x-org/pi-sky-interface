@@ -1,6 +1,8 @@
 import { FC, useEffect, useState } from 'react';
 import { Card, CardActionArea, Typography, Box, CircularProgress, Alert } from '@mui/material';
 import { apiConfig } from 'config/index';
+import { formatSkyPrice } from 'utils/sky';
+import { formatTokenAmount } from 'utils/formatters';
 
 type DelegatesResponse = {
   delegates: Delegate[];
@@ -83,13 +85,17 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
       const delegate = delegates.find((d) => d.voteDelegateAddress === delegatorAddress);
       if (delegate) {
         setSelected(delegate.voteDelegateAddress);
+        onChange(delegate.voteDelegateAddress);
       } else if (cp0xDelegate) {
         setSelected(cp0xDelegate.voteDelegateAddress);
+        onChange(cp0xDelegate.voteDelegateAddress);
       }
     } else if (cp0xDelegate) {
       setSelected(cp0xDelegate.voteDelegateAddress);
+      onChange(cp0xDelegate.voteDelegateAddress);
     } else {
       setSelected(null);
+      onChange('0x0');
     }
   }, [delegatorAddress, delegates]);
 
@@ -122,9 +128,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
             <Box>
               {delegate.name ? (
                 <>
-                  <Typography variant="h6">
-                    {delegate.voteDelegateAddress === apiConfig.cp0xDelegate ? apiConfig.cp0x : delegate.name}
-                  </Typography>
+                  <Typography variant="h6">{delegate.name}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     {delegate.voteDelegateAddress}
                   </Typography>
@@ -132,7 +136,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
               ) : (
                 <Typography variant="h6">{delegate.voteDelegateAddress}</Typography>
               )}
-              <Typography variant="h6">Total SKY delegated: {delegate.skyDelegated}</Typography>
+              <Typography variant="h6">Total SKY delegated: {formatSkyPrice(delegate.skyDelegated)}</Typography>
             </Box>
           </CardActionArea>
         </Card>
