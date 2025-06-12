@@ -19,7 +19,6 @@ import { formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
-import { formatTokenAmount } from 'utils/formatters';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
@@ -52,7 +51,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
-  const { totalDelegators } = useSuppliersByUrns();
+  const { totalDelegators, totalPositions } = useSuppliersByUrns();
   const { skyPrice } = useSkyPrice();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
@@ -238,9 +237,18 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Staking Positions:</Typography>
+            <Typography variant="body1">Total Unique Delegators:</Typography>
             <Typography variant="h6" color="primary">
               {totalDelegators}
+            </Typography>
+          </Box>
+        )}
+
+        {totalDelegators !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+            <Typography variant="body1">Total Staking Positions:</Typography>
+            <Typography variant="h6" color="primary">
+              {totalPositions}
             </Typography>
           </Box>
         )}

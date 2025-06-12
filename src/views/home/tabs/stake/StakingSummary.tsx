@@ -24,7 +24,7 @@ export default function StakingSummary() {
   const { isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
   const { skyPrice } = useSkyPrice();
-  const { totalDelegators } = useSuppliersByUrns();
+  const { totalDelegators, totalPositions } = useSuppliersByUrns();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
@@ -215,9 +215,28 @@ export default function StakingSummary() {
               }}
             >
               <Typography color="text.secondary" variant="body2">
-                Total Staking Positions
+                Total Unique Delegators
               </Typography>
               <Typography variant="h6">{totalDelegators}</Typography>
+            </Box>
+          )}
+
+          {totalPositions !== null && (
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                pb: 1
+              }}
+            >
+              <Typography color="text.secondary" variant="body2">
+                Total Staking Positions
+              </Typography>
+              <Typography variant="h6">{totalPositions}</Typography>
             </Box>
           )}
 
