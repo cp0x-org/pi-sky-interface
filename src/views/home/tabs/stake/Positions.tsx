@@ -76,14 +76,17 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     query: { enabled: !!txHash }
   });
 
-  // Effect to handle operation success/failure notifications
+  // Effect to handle transaction submission
   useEffect(() => {
-    // Only show success message after transaction is confirmed
-    if (isSuccess && !txHash) {
-      console.log('Transaction submitted, waiting for confirmation...');
-    } else if (isTxConfirmed) {
-      console.log('OPERATION TYPE1111111111!!!');
-      console.log(operationType);
+    if (isSuccess && txHash) {
+      console.log('Transaction submitted, waiting for confirmation...', txHash);
+    }
+  }, [isSuccess, txHash]);
+
+  // Effect to handle operation success after confirmation
+  useEffect(() => {
+    if (isTxConfirmed && operationType) {
+      console.log('Transaction confirmed for operation:', operationType);
 
       const message = operationType === 'claim' ? 'Reward claim successful!' : 'Withdraw successful!';
       dispatchSuccess(message);
@@ -94,7 +97,15 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       } else if (operationType === 'withdraw') {
         setWithdrawing({});
       }
-    } else if ((isError && contractError) || (isTxConfirmError && txConfirmError)) {
+
+      // Reset operation type
+      setOperationType(null);
+    }
+  }, [isTxConfirmed, operationType]);
+
+  // Effect to handle operation failure
+  useEffect(() => {
+    if (((isError && contractError) || (isTxConfirmError && txConfirmError)) && operationType) {
       const operationName = operationType === 'claim' ? 'Claim' : 'Withdraw';
       const errorMsg = contractError?.message || txConfirmError?.message || 'Unknown error';
       dispatchError(`${operationName} error: ${errorMsg}`);
@@ -105,8 +116,11 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       } else if (operationType === 'withdraw') {
         setWithdrawing({});
       }
+
+      // Reset operation type
+      setOperationType(null);
     }
-  }, [isSuccess, isError, contractError, operationType, txHash, isTxConfirmed, isTxConfirmError, txConfirmError]);
+  }, [isError, contractError, isTxConfirmError, txConfirmError, operationType]);
 
   // Format delegated address for display
   const shortenAddress = (address: string): string => {
