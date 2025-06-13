@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
+import { Alert } from '@mui/material';
 
 export default function SavingsTab() {
   const [operationType, setOperationType] = useState(0);
@@ -58,10 +59,16 @@ export default function SavingsTab() {
       <Typography variant="h2" gutterBottom>
         Sky Savings Rate
       </Typography>
+
       <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         The Sky Savings Rate is an automated token-accumulation mechanism for eligible users of the Sky Protocol. It takes into account the
         effect of accumulated USDS compounded in real time.
       </Typography>
+      {!address && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Please connect your wallet to continue.
+        </Alert>
+      )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Savings'}></CardHeader>

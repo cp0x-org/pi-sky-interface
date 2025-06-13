@@ -14,6 +14,7 @@ import { daiContractConfig } from 'config/abi/Dai';
 import { mkrContractConfig } from 'config/abi/Mkr';
 import Info from './upgrade/Info';
 import CardHeader from '@mui/material/CardHeader';
+import { Alert } from '@mui/material';
 
 export default function UpgradeTab() {
   const [operationType, setOperationType] = useState(0);
@@ -63,6 +64,11 @@ export default function UpgradeTab() {
       <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         Easily upgrade MKR to SKY, or swap DAI in both directions with USDS.
       </Typography>
+      {!address && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Please connect your wallet to continue.
+        </Alert>
+      )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Upgrade'}></CardHeader>

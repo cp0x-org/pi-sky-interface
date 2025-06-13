@@ -17,6 +17,7 @@ import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
+import { Alert } from '@mui/material';
 
 export default function ChronicleTab() {
   const [operationType, setOperationType] = useState(0);
@@ -81,6 +82,11 @@ export default function ChronicleTab() {
         Chronicle Points allow you to earn rewards by staking your USDS tokens in the Sky Protocol ecosystem. The system tracks your
         contributions and rewards you accordingly.
       </Typography>
+      {!address && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Please connect your wallet to continue.
+        </Alert>
+      )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Chronicle Points'}></CardHeader>
