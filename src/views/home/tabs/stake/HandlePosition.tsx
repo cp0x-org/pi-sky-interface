@@ -21,7 +21,7 @@ import StakingSummary from './StakingSummary';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useTheme } from '@mui/material/styles';
 
-const steps = ['Stake', 'Select reward', 'Select a delegate', 'Confirm'];
+const steps = ['Stake', 'Reward', 'Delegate', 'Confirm'];
 
 type SkyConfig = {
   readonly contracts: SkyContracts;
@@ -684,7 +684,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Staking Process'}></CardHeader>
-          <Card sx={{ borderRadius: '20px', mb: 3 }}>
+          <Card sx={{ borderRadius: '20px' }}>
             <Box sx={{ p: 3 }}>
               <Stepper activeStep={activeStep}>
                 {steps.map((label) => (

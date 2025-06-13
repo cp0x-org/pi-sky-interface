@@ -1,8 +1,22 @@
 import { FC, useEffect, useState } from 'react';
-import { Card, CardActionArea, Typography, Box, CircularProgress, Alert, Pagination, Stack, TextField } from '@mui/material';
+import {
+  Card,
+  CardActionArea,
+  Typography,
+  Box,
+  CircularProgress,
+  Alert,
+  Pagination,
+  Stack,
+  TextField,
+  Tooltip,
+  IconButton
+} from '@mui/material';
 import { apiConfig, appConfig } from 'config/index';
-import { formatSkyPrice } from 'utils/sky';
+import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { isAddress } from 'viem';
+import { shortenAddress } from 'utils/formatters';
+import { IconCopy } from '@tabler/icons-react';
 
 type DelegatesResponse = {
   delegates: Delegate[];
@@ -42,7 +56,19 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [defaultApplied, setDefaultApplied] = useState<boolean>(false);
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const delegatesPerPage = appConfig.delegatesPerPage;
+
+  const copyToClipboard = (e: React.MouseEvent, address: string) => {
+    e.stopPropagation(); // Prevent card selection when clicking copy button
+    navigator.clipboard
+      .writeText(address)
+      .then(() => {
+        setCopiedAddress(address);
+        setTimeout(() => setCopiedAddress(null), 2000); // Reset copied state after 2 seconds
+      })
+      .catch((err) => console.error('Failed to copy address: ', err));
+  };
 
   useEffect(() => {
     fetch(apiConfig.delegatesInfoMainnet)
@@ -191,9 +217,8 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
         value={customAddress}
         onChange={handleCustomAddressChange}
         error={!!addressError}
-        helperText={addressError || 'Enter any Ethereum address or select from the list below (click again to deselect)'}
+        // helperText={addressError || 'Enter any Ethereum address or select from the list below (click again to deselect)'}
         placeholder="0x..."
-        sx={{ mb: 2 }}
       />
 
       {currentDelegates.map((delegate) => (
@@ -201,7 +226,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
           key={delegate.voteDelegateAddress}
           sx={{
             borderRadius: '20px',
-            border: '2px solid',
+            border: '1px solid',
             borderColor: selected === delegate.voteDelegateAddress ? 'primary.main' : 'transparent',
             backgroundColor: selected === delegate.voteDelegateAddress ? 'primary.light' : 'background.paper',
             transition: '0.3s',
@@ -210,27 +235,64 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
           }}
           onClick={() => handleSelect(delegate.voteDelegateAddress)}
         >
-          <CardActionArea sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box>
-              {delegate.name ? (
-                <>
-                  <Typography variant="h6">{delegate.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {delegate.voteDelegateAddress}
-                  </Typography>
-                </>
-              ) : (
-                <Typography variant="h6">{delegate.voteDelegateAddress}</Typography>
-              )}
-              <Typography variant="h6">Total SKY delegated: {formatSkyPrice(delegate.skyDelegated)}</Typography>
+          <CardActionArea sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {delegate.name ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="h6">
+                      {delegate.name}{' '}
+                      <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                        ({shortenAddress(delegate.voteDelegateAddress)})
+                      </Typography>
+                    </Typography>
+                    <Tooltip title={copiedAddress === delegate.voteDelegateAddress ? 'Copied!' : 'Copy address'}>
+                      <Box
+                        sx={{
+                          ml: 0.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          color: copiedAddress === delegate.voteDelegateAddress ? 'success.main' : 'text.secondary',
+                          '&:hover': {
+                            color: 'text.primary'
+                          }
+                        }}
+                        onClick={(e) => copyToClipboard(e, delegate.voteDelegateAddress)}
+                      >
+                        <IconCopy size={16} />
+                      </Box>
+                    </Tooltip>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="h6">{shortenAddress(delegate.voteDelegateAddress)}</Typography>
+                    <Tooltip title={copiedAddress === delegate.voteDelegateAddress ? 'Copied!' : 'Copy address'}>
+                      <IconButton
+                        size="small"
+                        sx={{ ml: 0.5 }}
+                        onClick={(e) => copyToClipboard(e, delegate.voteDelegateAddress)}
+                        color={copiedAddress === delegate.voteDelegateAddress ? 'success' : 'default'}
+                      >
+                        <IconCopy size={16} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
+                  {formatShortUSDS(delegate.skyDelegated)} SKY
+                </Typography>
+              </Box>
             </Box>
           </CardActionArea>
         </Card>
       ))}
 
       {delegates.length > 0 && (
-        <Stack spacing={2} direction="row" justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
-          <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" siblingCount={1} size="large" />
+        <Stack direction="row" justifyContent="center" alignItems="center">
+          <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" siblingCount={1} size="small" />
         </Stack>
       )}
     </Box>

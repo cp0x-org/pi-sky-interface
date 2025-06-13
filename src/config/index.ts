@@ -5,7 +5,7 @@ export const AnvilTest = 12222;
 export const TenderlyTest = 1999999;
 
 export const appConfig = {
-  delegatesPerPage: 7
+  delegatesPerPage: 5
 };
 
 export const apiConfig = {
