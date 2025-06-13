@@ -173,10 +173,12 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
     // Handle errors
     if (approveTx.txState === 'error') {
       dispatchError('USDS Approve Failed!');
+      setIsApproved(false);
     }
 
     if (depositTx.txState === 'error') {
       dispatchError('Deposit failed');
+      setIsDeposited(false);
     }
   }, [approveTx, depositTx, isApproved, isDeposited])();
 

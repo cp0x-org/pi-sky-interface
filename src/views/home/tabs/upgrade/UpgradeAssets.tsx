@@ -20,6 +20,7 @@ import { StyledTextField } from 'components/StyledTextField';
 import { StyledSelect } from 'components/StyledSelect';
 import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import { useDebounce } from 'hooks/useDebounce';
 
 interface Props {
   daiUserBalance?: bigint;
@@ -60,6 +61,11 @@ const useTransaction = () => {
     }
   }, [txState]);
 
+  // Reset the transaction state
+  const setTxIdle = useCallback(() => {
+    setTxState('idle');
+  }, []);
+
   // Process transaction status changes
   const processTxState = useCallback(() => {
     if (isTxSubmitted && txState === 'idle') {
@@ -82,18 +88,24 @@ const useTransaction = () => {
     isCompleted,
     isTxConfirmed,
     resetTx,
-    processTxState
+    processTxState,
+    setTxIdle
   };
 };
 
 const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
   const [expectedOutput, setExpectedOutput] = useState<string>('0');
+  // Create a debounced version of amount that updates 500ms after amount changes
+  const debouncedAmount = useDebounce(amount, 500);
 
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
   const [tokenValue, setTokenValue] = useState(tokenOptions[0].value);
+
+  // Track when allowance checking is in progress (during debounce)
+  const [allowanceChecking, setAllowanceChecking] = useState(false);
 
   // Use custom transaction hooks
   const approveTx = useTransaction();
@@ -109,6 +121,71 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     address: skyConfig.contracts.MKRSKYConverter,
     functionName: 'rate'
   });
+
+  // Check allowance to determine if approval is needed
+  const { data: daiAllowanceData, refetch: refetchDaiAllowance } = useReadContract({
+    ...daiContractConfig,
+    address: skyConfig.contracts.DAI,
+    functionName: 'allowance',
+    args: address ? [address, skyConfig.contracts.DAIUSDSConverter] : undefined,
+    query: {
+      enabled: !!address && tokenValue === TOKEN_DAI
+    }
+  });
+
+  const { data: mkrAllowanceData, refetch: refetchMkrAllowance } = useReadContract({
+    ...mkrContractConfig,
+    address: skyConfig.contracts.MKR,
+    functionName: 'allowance',
+    args: address ? [address, skyConfig.contracts.MKRSKYConverter] : undefined,
+    query: {
+      enabled: !!address && tokenValue === TOKEN_MKR
+    }
+  });
+
+  // Use debounced amount to validate and trigger refetchAllowance
+  useEffect(() => {
+    if (debouncedAmount) {
+      setAllowanceChecking(false); // Clear checking state when debounced value is processed
+      if (tokenValue === TOKEN_DAI && refetchDaiAllowance) {
+        refetchDaiAllowance();
+      } else if (tokenValue === TOKEN_MKR && refetchMkrAllowance) {
+        refetchMkrAllowance();
+      }
+    }
+  }, [debouncedAmount, tokenValue]);
+
+  // Track when amount is changing but debounced value hasn't updated yet
+  useEffect(() => {
+    setAllowanceChecking(amount !== debouncedAmount && amount !== '');
+  }, [amount, debouncedAmount]);
+
+  // Check if approval is needed
+  useEffect(() => {
+    if (!address || !debouncedAmount) return;
+
+    try {
+      const amountBigInt = parseEther(debouncedAmount);
+      let currentAllowance;
+
+      if (tokenValue === TOKEN_DAI && daiAllowanceData) {
+        currentAllowance = daiAllowanceData;
+      } else if (tokenValue === TOKEN_MKR && mkrAllowanceData) {
+        currentAllowance = mkrAllowanceData;
+      } else {
+        return;
+      }
+
+      const shouldBeApproved = currentAllowance >= amountBigInt;
+
+      // Only update state if it's different to avoid unnecessary re-renders
+      if (shouldBeApproved !== isApproved) {
+        setIsApproved(shouldBeApproved);
+      }
+    } catch (error) {
+      console.error('Error checking allowance:', error);
+    }
+  }, [address, debouncedAmount, tokenValue, isApproved, daiAllowanceData, mkrAllowanceData]);
 
   // Calculate the expected SKY output based on MKR input
   const calculateExpectedSky = useCallback(
@@ -145,7 +222,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     } else {
       setExpectedOutput('0');
     }
-  }, [amount, calculateExpectedSky, tokenValue]);
+  }, [amount, tokenValue]);
 
   // Process transaction states
   useCallback(() => {
@@ -154,7 +231,12 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
 
     // Update approval status when confirmed
     if (approveTx.txState === 'confirmed' && !isApproved) {
-      setIsApproved(true);
+      // Refetch allowance data after approval
+      if (tokenValue === TOKEN_DAI && refetchDaiAllowance) {
+        refetchDaiAllowance();
+      } else if (tokenValue === TOKEN_MKR && refetchMkrAllowance) {
+        refetchMkrAllowance();
+      }
       dispatchSuccess(`${tokenValue.toUpperCase()} Approved Successfully!`);
     }
 
@@ -172,7 +254,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     if (upgradeTx.txState === 'error') {
       dispatchError(`${tokenValue.toUpperCase()} Upgrade failed!`);
     }
-  }, [approveTx, upgradeTx, isApproved, isUpgraded, tokenValue])();
+  }, [approveTx, upgradeTx, isApproved, isUpgraded, tokenValue, refetchDaiAllowance, refetchMkrAllowance])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
@@ -196,7 +278,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
       // Calculate the amount based on the percentage
       const value = (Number(formatEther(currentBalance)) * percent) / 100;
 
-      // Set the amount
+      // Set the amount - allowance checking will be triggered by the amount change effect
       setAmount(value.toString());
 
       // Reset transaction states if changing amount
@@ -328,6 +410,11 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
+    // Show checking status when amount is being debounced
+    if (allowanceChecking) {
+      return 'Checking allowance...';
+    }
+
     if (!amount) {
       return 'Enter Amount';
     }
@@ -357,6 +444,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     amount,
     isApproved,
     isUpgraded,
+    allowanceChecking,
     tokenValue,
     approveTx.txHash,
     approveTx.isTxConfirmed,
@@ -370,13 +458,16 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
   const isButtonDisabled = useCallback(() => {
     if (!amount) return true;
 
+    // Disable during allowance checking (debounce period)
+    if (allowanceChecking) return true;
+
     // Disable during transactions
     if (approveTx.txHash && !approveTx.isTxConfirmed) return true;
     if (upgradeTx.txHash && !upgradeTx.isTxConfirmed) return true;
 
     // Disable when completed
     return isUpgraded;
-  }, [amount, approveTx.txHash, approveTx.isTxConfirmed, upgradeTx.txHash, upgradeTx.isTxConfirmed, isUpgraded]);
+  }, [amount, allowanceChecking, approveTx.txHash, approveTx.isTxConfirmed, upgradeTx.txHash, upgradeTx.isTxConfirmed, isUpgraded]);
 
   // Determine if input, token selector, and percentage buttons should be disabled
   const isInputDisabled = isUpgraded || approveTx.txState === 'submitted' || upgradeTx.txState === 'submitted';
