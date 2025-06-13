@@ -57,7 +57,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [defaultApplied, setDefaultApplied] = useState<boolean>(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-  const delegatesPerPage = appConfig.delegatesPerPage;
+  const [delegatesPerPage, setDelegatesPerPage] = useState<number>(appConfig.delegatesPerPage);
 
   const copyToClipboard = (e: React.MouseEvent, address: string) => {
     e.stopPropagation(); // Prevent card selection when clicking copy button
@@ -200,6 +200,11 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
     setCurrentPage(value);
   };
 
+  // Reset to page 1 when changing the number of delegates per page
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [delegatesPerPage]);
+
   // Get current delegates for display
   const indexOfLastDelegate = currentPage * delegatesPerPage;
   const indexOfFirstDelegate = indexOfLastDelegate - delegatesPerPage;
@@ -291,7 +296,28 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
       ))}
 
       {delegates.length > 0 && (
-        <Stack direction="row" justifyContent="center" alignItems="center">
+        <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="body2" sx={{ mr: 1 }}>
+              Show:
+            </Typography>
+            <TextField
+              select
+              value={delegatesPerPage}
+              onChange={(e) => setDelegatesPerPage(Number(e.target.value))}
+              size="small"
+              sx={{ width: '80px' }}
+              SelectProps={{
+                native: true
+              }}
+            >
+              {[5, 10, 15, 20, 25].map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </TextField>
+          </Box>
           <Pagination count={totalPages} page={currentPage} onChange={handlePageChange} color="primary" siblingCount={1} size="small" />
         </Stack>
       )}
