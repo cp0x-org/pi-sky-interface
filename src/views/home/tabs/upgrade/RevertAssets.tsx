@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
-import { FC, useCallback, useState } from 'react';
+import { FC, useCallback, useState, useEffect } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { daiUsdsConverterConfig } from 'config/abi/DaiUsdsConverter';
@@ -11,6 +11,7 @@ import { StyledCard } from 'components/StyledCard';
 import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import { useDebounce } from 'hooks/useDebounce';
 
 interface Props {
   usdsUserBalance?: bigint;
@@ -70,10 +71,15 @@ const useTransaction = () => {
 
 const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const [amount, setAmount] = useState<string>('');
+  // Create a debounced version of amount that updates 500ms after amount changes
+  const debouncedAmount = useDebounce(amount, 500);
 
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
+
+  // Track when allowance checking is in progress (during debounce)
+  const [allowanceChecking, setAllowanceChecking] = useState(false);
 
   // Use custom transaction hooks
   const approveTx = useTransaction();
@@ -83,6 +89,49 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const [isApproved, setIsApproved] = useState(false);
   const [isReverted, setIsReverted] = useState(false);
 
+  // Check allowance to determine if approval is needed
+  const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
+    ...usdsContractConfig,
+    address: skyConfig.contracts.USDS,
+    functionName: 'allowance',
+    args: address ? [address, skyConfig.contracts.DAIUSDSConverter] : undefined,
+    query: {
+      enabled: !!address
+    }
+  });
+
+  // Use debounced amount to validate and trigger refetchAllowance
+  useEffect(() => {
+    if (debouncedAmount && refetchAllowance) {
+      setAllowanceChecking(false); // Clear checking state when debounced value is processed
+      refetchAllowance();
+    }
+  }, [debouncedAmount, refetchAllowance]);
+
+  // Track when amount is changing but debounced value hasn't updated yet
+  useEffect(() => {
+    if (amount !== debouncedAmount && amount) {
+      setAllowanceChecking(true); // Set checking state when amount changes
+    }
+  }, [amount, debouncedAmount]);
+
+  // Check if approval is needed
+  useEffect(() => {
+    if (address && debouncedAmount && allowanceData) {
+      try {
+        const amountBigInt = parseEther(debouncedAmount);
+        const shouldBeApproved = allowanceData >= amountBigInt;
+
+        // Only update state if it's different to avoid unnecessary re-renders
+        if (shouldBeApproved !== isApproved) {
+          setIsApproved(shouldBeApproved);
+        }
+      } catch (error) {
+        console.error('Error checking allowance:', error);
+      }
+    }
+  }, [address, debouncedAmount, allowanceData, isApproved]);
+
   // Handle percentage button clicks
   const handlePercentClick = useCallback(
     (percent: number) => {
@@ -91,15 +140,18 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
       // Calculate the amount based on the percentage
       const value = (Number(formatEther(usdsUserBalance)) * percent) / 100;
 
-      // Set the amount
+      // Set the amount and indicate allowance is being checked
       setAmount(value.toString());
+      if (amount !== debouncedAmount) {
+        setAllowanceChecking(true);
+      }
 
       // Reset transaction states when changing amount
-      if (approveTx.txState === 'error' || revertTx.txState === 'error' || isApproved || isReverted) {
+      if (approveTx.txState === 'error' || revertTx.txState === 'error' || isReverted) {
         resetTransactionStates();
       }
     },
-    [usdsUserBalance, approveTx.txState, revertTx.txState, isApproved, isReverted]
+    [usdsUserBalance, amount, debouncedAmount, approveTx.txState, revertTx.txState, isReverted]
   );
 
   // Process transaction states
@@ -109,7 +161,9 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
 
     // Update approval status when confirmed
     if (approveTx.txState === 'confirmed' && !isApproved) {
-      setIsApproved(true);
+      if (refetchAllowance) {
+        refetchAllowance();
+      }
       dispatchSuccess('USDS Approved Successfully!');
     }
 
@@ -122,18 +176,18 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     // Handle errors
     if (approveTx.txState === 'error') {
       dispatchError('USDS Approve Failed!');
+      setIsApproved(false);
     }
 
     if (revertTx.txState === 'error') {
       dispatchError('USDS revert failed!');
     }
-  }, [approveTx, revertTx, isApproved, isReverted])();
+  }, [approveTx, revertTx, isApproved, isReverted, refetchAllowance])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
     approveTx.resetTx();
     revertTx.resetTx();
-    setIsApproved(false);
     setIsReverted(false);
   }, [approveTx, revertTx]);
 
@@ -144,13 +198,20 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
       if (value === '' || Number(value) >= 0) {
         setAmount(value);
 
+        // Set allowance checking state if there's a value
+        if (value) {
+          setAllowanceChecking(true);
+        } else {
+          setAllowanceChecking(false);
+        }
+
         // Reset states when amount changes
-        if (approveTx.txState === 'error' || revertTx.txState === 'error' || isApproved || isReverted) {
+        if (approveTx.txState === 'error' || revertTx.txState === 'error' || isReverted) {
           resetTransactionStates();
         }
       }
     },
-    [approveTx.txState, revertTx.txState, isApproved, isReverted, resetTransactionStates]
+    [approveTx.txState, revertTx.txState, isReverted, resetTransactionStates]
   );
 
   // Handle main button click
@@ -161,9 +222,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     }
 
     // Reset error states if trying again
-    if (approveTx.txState === 'error' || revertTx.txState === 'error') {
-      resetTransactionStates();
-    }
+    resetTransactionStates();
 
     const amountInWei = parseEther(amount);
     console.log('Attempting transaction with amount:', amount, 'Wei:', amountInWei.toString());
@@ -212,6 +271,11 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
+    // Show checking status when amount is being debounced
+    if (allowanceChecking) {
+      return 'Checking allowance...';
+    }
+
     if (!amount) {
       return 'Enter Amount';
     }
@@ -241,6 +305,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     amount,
     isApproved,
     isReverted,
+    allowanceChecking,
     approveTx.txHash,
     approveTx.isTxConfirmed,
     approveTx.txState,
@@ -253,13 +318,16 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const isButtonDisabled = useCallback(() => {
     if (!amount) return true;
 
+    // Disable during allowance checking (debounce period)
+    if (allowanceChecking) return true;
+
     // Disable during transactions
     if (approveTx.txHash && !approveTx.isTxConfirmed) return true;
     if (revertTx.txHash && !revertTx.isTxConfirmed) return true;
 
     // Disable when completed
     return isReverted;
-  }, [amount, approveTx.txHash, approveTx.isTxConfirmed, revertTx.txHash, revertTx.isTxConfirmed, isReverted]);
+  }, [amount, allowanceChecking, approveTx.txHash, approveTx.isTxConfirmed, revertTx.txHash, revertTx.isTxConfirmed, isReverted]);
 
   // Determine if input and percentage buttons should be disabled
   const isInputDisabled = isReverted || approveTx.txState === 'submitted' || revertTx.txState === 'submitted';
