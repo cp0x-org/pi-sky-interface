@@ -25,7 +25,7 @@ interface ConfirmProps {
   originalAmount?: string | null;
 }
 
-const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAmount, allowanceData }) => {
+const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAmount }) => {
   const { config: skyConfig } = useConfigChainId();
   const contractAddress = skyConfig.contracts.LockStakeEngine;
   const theme = useTheme();

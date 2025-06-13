@@ -12,7 +12,7 @@ import { formatEther } from 'viem';
 import { useStakingPositions } from 'hooks/useStakingPositions';
 import { useStakingApr } from 'hooks/useStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
-import { formatSkyPrice, formatUSDS } from 'utils/sky';
+import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -255,7 +255,7 @@ export default function StakingSummary() {
               <Typography color="text.secondary" variant="body2">
                 Total SKY Staked
               </Typography>
-              <Typography variant="h6">{formatUSDS(totalSky)}</Typography>
+              <Typography variant="h6">{formatShortUSDS(totalSky)}</Typography>
             </Box>
           )}
 
@@ -274,7 +274,7 @@ export default function StakingSummary() {
               <Typography color="text.secondary" variant="body2">
                 TVL
               </Typography>
-              <Typography variant="h6">{formatUSDS(tvl)} USDS</Typography>
+              <Typography variant="h6">{formatShortUSDS(tvl)} USDS</Typography>
             </Box>
           )}
 

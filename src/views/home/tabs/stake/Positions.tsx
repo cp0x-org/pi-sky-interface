@@ -15,7 +15,7 @@ import { useStakingPositions } from 'hooks/useStakingPositions';
 import { ethers } from 'ethers';
 import { useStakingApr } from 'hooks/useStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
-import { formatSkyPrice, formatUSDS } from 'utils/sky';
+import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
@@ -278,7 +278,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total SKY Staked:</Typography>
             <Typography variant="h6" color="primary">
-              {formatUSDS(totalSky)}
+              {formatShortUSDS(totalSky)}
             </Typography>
           </Box>
         )}
@@ -287,7 +287,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">TVL:</Typography>
             <Typography variant="h6" color="primary">
-              {formatUSDS(tvl)} USDS
+              {formatShortUSDS(tvl)} USDS
             </Typography>
           </Box>
         )}

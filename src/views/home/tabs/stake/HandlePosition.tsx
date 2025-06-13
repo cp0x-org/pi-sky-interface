@@ -324,15 +324,6 @@ export default function HandlePosition({ editMode = false, positionData = null }
 
       dispatchSuccess('SKY approved successfully!');
       refetchAllowance();
-      // Refresh allowance after approval
-      // const timer = setTimeout(() => {
-      //   if (refetchAllowance) {
-      //     console.log('Refreshing allowance...');
-      //     refetchAllowance();
-      //   }
-      // }, 1);
-
-      // return () => clearTimeout(timer);
     }
   }, [isConfirmTxConfirmed, isStaked, isApprovalTxConfirmed, refetchAllowance]);
 
@@ -666,14 +657,13 @@ export default function HandlePosition({ editMode = false, positionData = null }
             stakeData={stakeData}
             isApproved={isApproved}
             isStaked={isStaked}
-            allowanceData={allowanceData}
             originalAmount={positionData ? formatEther(BigInt(positionData.wad)) : undefined}
           />
         );
       default:
         return null;
     }
-  }, [activeStep, userBalance, stakeData, memoizedHandleChange, positionData, isApproved, isStaked, allowanceData, editMode]);
+  }, [activeStep, userBalance, stakeData, memoizedHandleChange, positionData, isApproved, isStaked, editMode]);
 
   return (
     <Box sx={{ width: '100%' }}>

@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
-import { FC, useState, useCallback } from 'react';
+import { FC, useState, useCallback, useEffect } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { parseEther } from 'viem';
@@ -10,6 +10,7 @@ import { StyledCard } from 'components/StyledCard';
 import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import { useDebounce } from 'hooks/useDebounce';
 
 interface Props {
   userBalance?: string;
@@ -69,9 +70,14 @@ const useTransaction = () => {
 
 const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   const [amount, setAmount] = useState<string>('');
+  // Create a debounced version of amount that updates 500ms after amount changes
+  const debouncedAmount = useDebounce(amount, 500);
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
+
+  // Track when allowance checking is in progress (during debounce)
+  const [allowanceChecking, setAllowanceChecking] = useState(false);
 
   // Use custom transaction hooks
   const approveTx = useTransaction();
@@ -80,6 +86,49 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   // Track process completion
   const [isApproved, setIsApproved] = useState(false);
   const [isDeposited, setIsDeposited] = useState(false);
+
+  // Check allowance to determine if approval is needed
+  const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
+    ...usdsContractConfig,
+    address: skyConfig.contracts.USDS,
+    functionName: 'allowance',
+    args: address ? [address, skyConfig.contracts.SavingsUSDS] : undefined,
+    query: {
+      enabled: !!address
+    }
+  });
+
+  // Use debounced amount to validate and trigger refetchAllowance
+  useEffect(() => {
+    if (debouncedAmount && refetchAllowance) {
+      setAllowanceChecking(false); // Clear checking state when debounced value is processed
+      refetchAllowance();
+    }
+  }, [debouncedAmount, refetchAllowance]);
+
+  // Track when amount is changing but debounced value hasn't updated yet
+  useEffect(() => {
+    if (amount !== debouncedAmount && amount) {
+      setAllowanceChecking(true); // Set checking state when amount changes
+    }
+  }, [amount, debouncedAmount]);
+
+  // Check if approval is needed
+  useEffect(() => {
+    if (address && debouncedAmount && allowanceData) {
+      try {
+        const amountBigInt = parseEther(debouncedAmount);
+        const shouldBeApproved = allowanceData >= amountBigInt;
+
+        // Only update state if it's different to avoid unnecessary re-renders
+        if (shouldBeApproved !== isApproved) {
+          setIsApproved(shouldBeApproved);
+        }
+      } catch (error) {
+        console.error('Error checking allowance:', error);
+      }
+    }
+  }, [address, debouncedAmount, allowanceData, isApproved]);
 
   // Handle percentage button clicks
   const handlePercentClick = useCallback(
@@ -93,10 +142,13 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
       // Calculate the amount based on the percentage
       const value = (balance * percent) / 100;
 
-      // Set the amount
+      // Set the amount and indicate allowance is being checked
       setAmount(value.toString());
+      if (amount !== debouncedAmount) {
+        setAllowanceChecking(true);
+      }
     },
-    [userBalance]
+    [userBalance, amount, debouncedAmount]
   );
 
   // Process transaction states
@@ -106,7 +158,9 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
 
     // Update approval status when confirmed
     if (approveTx.txState === 'confirmed' && !isApproved) {
-      setIsApproved(true);
+      if (refetchAllowance) {
+        refetchAllowance();
+      }
       dispatchSuccess('USDS Approved Successfully!');
     }
 
@@ -138,6 +192,14 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
       const value = e.target.value;
       if (value === '' || Number(value) >= 0) {
         setAmount(value);
+
+        // Set allowance checking state if there's a value
+        if (value) {
+          setAllowanceChecking(true);
+        } else {
+          setAllowanceChecking(false);
+        }
+
         // Reset error states when amount changes
         if (approveTx.txState === 'error' || depositTx.txState === 'error') {
           resetTransactionStates();
@@ -204,6 +266,11 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
+    // Show checking status when amount is being debounced
+    if (allowanceChecking) {
+      return 'Checking allowance...';
+    }
+
     if (!amount) {
       return 'Enter Amount';
     }
@@ -233,6 +300,7 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
     amount,
     isApproved,
     isDeposited,
+    allowanceChecking,
     approveTx.txHash,
     approveTx.isTxConfirmed,
     approveTx.txState,
@@ -245,13 +313,16 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
   const isButtonDisabled = useCallback(() => {
     if (!amount) return true;
 
+    // Disable during allowance checking (debounce period)
+    if (allowanceChecking) return true;
+
     // Disable during transactions
     if (approveTx.txHash && !approveTx.isTxConfirmed) return true;
     if (depositTx.txHash && !depositTx.isTxConfirmed) return true;
 
     // Disable when completed
     return isDeposited;
-  }, [amount, approveTx.txHash, approveTx.isTxConfirmed, depositTx.txHash, depositTx.isTxConfirmed, isDeposited]);
+  }, [amount, allowanceChecking, approveTx.txHash, approveTx.isTxConfirmed, depositTx.txHash, depositTx.isTxConfirmed, isDeposited]);
 
   // Determine if input and percentage buttons should be disabled
   const isInputDisabled = isDeposited || approveTx.txState === 'submitted' || depositTx.txState === 'submitted';
