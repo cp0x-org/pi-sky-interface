@@ -90,6 +90,11 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, o
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: error ? 'error.main' : 'divider', py: 2, gap: 2 }}>
           <StyledTextField
+            slotProps={{
+              input: {
+                lang: 'en'
+              }
+            }}
             fullWidth
             type="number"
             placeholder="Enter amount"

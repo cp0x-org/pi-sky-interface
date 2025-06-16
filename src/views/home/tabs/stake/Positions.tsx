@@ -7,18 +7,23 @@ import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { Chip, Divider, Alert, CircularProgress, Paper, Button, Snackbar } from '@mui/material';
-import { useAccount, useWriteContract } from 'wagmi';
+import { Chip, Divider, Alert, CircularProgress, Paper, Button, Tooltip } from '@mui/material';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useStakingPositions } from 'hooks/useStakingPositions';
 import { ethers } from 'ethers';
 import { useStakingApr } from 'hooks/useStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
-import { formatUSDS } from 'utils/sky';
+import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
+import useSkyPrice from 'hooks/useSkyPrice';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import { useDelegateStake } from 'hooks/useDelegateStake';
+import { VoteDelegate } from 'config/abi/VoteDelegate';
 
 interface PositionsProps {
   stakeData?: {
@@ -43,13 +48,16 @@ const PositionCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
+const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
-  const { totalDelegators } = useSuppliersByUrns();
+  const { totalDelegators, totalPositions } = useSuppliersByUrns();
+  const { skyPrice } = useSkyPrice();
+
+  const { stakeAmount: delegateStakeAmount, isDelegate, delegateAddress } = useDelegateStake();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
@@ -59,40 +67,64 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   // State for tracking operations
   const [withdrawing, setWithdrawing] = useState<Record<string, boolean>>({});
   const [claiming, setClaiming] = useState<Record<string, boolean>>({});
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [operationType, setOperationType] = useState<'withdraw' | 'claim' | null>(null);
 
   // Contract interaction
-  const { writeContract, isPending, isSuccess, isError, error: contractError } = useWriteContract();
+  const { writeContract, isPending, isSuccess, isError, error: contractError, data: txHash } = useWriteContract();
+  const {
+    isSuccess: isTxConfirmed,
+    isError: isTxConfirmError,
+    error: txConfirmError
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash }
+  });
 
-  // Effect to handle operation success/failure notifications
+  // Effect to handle transaction submission
   useEffect(() => {
-    if (isSuccess) {
-      const message = operationType === 'claim' ? 'Reward claim successful!' : 'Withdraw successful!';
-      setSnackbarMessage(message);
-      setSnackbarOpen(true);
-
-      // Reset operation states
-      if (operationType === 'claim') {
-        setClaiming({});
-      } else if (operationType === 'withdraw') {
-        setWithdrawing({});
-      }
-      setOperationType(null);
-    } else if (isError && contractError) {
-      const operationName = operationType === 'claim' ? 'Claim' : 'Withdraw';
-      setSnackbarMessage(`${operationName} error: ${contractError.message}`);
-      setSnackbarOpen(true);
-
-      // Reset operation states
-      if (operationType === 'claim') {
-        setClaiming({});
-      } else if (operationType === 'withdraw') {
-        setWithdrawing({});
-      }
+    if (isSuccess && txHash) {
+      console.log('Transaction submitted, waiting for confirmation...', txHash);
     }
-  }, [isSuccess, isError, contractError, operationType]);
+  }, [isSuccess, txHash]);
+
+  // Effect to handle operation success after confirmation
+  useEffect(() => {
+    if (isTxConfirmed && operationType) {
+      console.log('Transaction confirmed for operation:', operationType);
+
+      const message = operationType === 'claim' ? 'Reward claim successful!' : 'Withdraw successful!';
+      dispatchSuccess(message);
+
+      // Reset operation states
+      if (operationType === 'claim') {
+        setClaiming({});
+      } else if (operationType === 'withdraw') {
+        setWithdrawing({});
+      }
+
+      // Reset operation type
+      setOperationType(null);
+    }
+  }, [isTxConfirmed, operationType]);
+
+  // Effect to handle operation failure
+  useEffect(() => {
+    if (((isError && contractError) || (isTxConfirmError && txConfirmError)) && operationType) {
+      const operationName = operationType === 'claim' ? 'Claim' : 'Withdraw';
+      const errorMsg = contractError?.message || txConfirmError?.message || 'Unknown error';
+      dispatchError(`${operationName} error: ${errorMsg}`);
+
+      // Reset operation states
+      if (operationType === 'claim') {
+        setClaiming({});
+      } else if (operationType === 'withdraw') {
+        setWithdrawing({});
+      }
+
+      // Reset operation type
+      setOperationType(null);
+    }
+  }, [isError, contractError, isTxConfirmError, txConfirmError, operationType]);
 
   // Format delegated address for display
   const shortenAddress = (address: string): string => {
@@ -103,8 +135,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   const handleWithdraw = (position: StakingPosition) => {
     if (!address || !position.indexPosition || !position.wad) {
       console.error('Missing required data for withdrawal');
-      setSnackbarMessage('Missing required data for withdrawal');
-      setSnackbarOpen(true);
+      dispatchError('Missing required data for withdrawal');
       return;
     }
 
@@ -134,8 +165,39 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing withdraw transaction:', error);
       setWithdrawing((prev) => ({ ...prev, [position.indexPosition]: false }));
-      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setSnackbarOpen(true);
+      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setOperationType(null);
+    }
+  };
+
+  const handleSelfWithdraw = (amount: string) => {
+    if (!address || !amount) {
+      console.error('Missing required data for withdrawal');
+      dispatchError('Missing required data for withdrawal');
+      return;
+    }
+
+    try {
+      // Set operation type
+      setOperationType('withdraw');
+
+      // Mark this position as withdrawing
+      setWithdrawing((prev) => ({ ...prev, ['delegate']: true }));
+
+      const biginAmount = BigInt(amount);
+      // Execute the contract call
+      writeContract({
+        address: delegateAddress as `0x${string}`,
+        abi: VoteDelegate.abi,
+        functionName: 'free',
+        args: [biginAmount]
+      });
+
+      console.log('Withdraw initiated for delegate position');
+    } catch (error) {
+      console.error('Error preparing withdraw transaction:', error);
+      setWithdrawing((prev) => ({ ...prev, ['delegate']: false }));
+      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setOperationType(null);
     }
   };
@@ -143,14 +205,16 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
   const handleClaim = (position: StakingPosition) => {
     if (!address || !position.indexPosition) {
       console.error('Missing required data for claiming rewards');
-      setSnackbarMessage('Missing required data for claiming rewards');
-      setSnackbarOpen(true);
+      dispatchError('Missing required data for claiming rewards');
       return;
     }
 
     try {
       // Set operation type
       setOperationType('claim');
+
+      console.log('OPERATION TYPE!!!');
+      console.log(operationType);
 
       // Mark this position as claiming
       setClaiming((prev) => ({ ...prev, [position.indexPosition]: true }));
@@ -167,16 +231,12 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing claim transaction:', error);
       setClaiming((prev) => ({ ...prev, [position.indexPosition]: false }));
-      setSnackbarMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setSnackbarOpen(true);
+      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setOperationType(null);
     }
   };
 
-  // Handle snackbar close
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  // Using dispatchSuccess/dispatchError instead of snackbar
 
   if (isLoading) {
     return (
@@ -206,8 +266,25 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
           Staking Summary
         </Typography>
         <Divider sx={{ mb: 2 }} />
-        {apr !== null && (
+
+        {skyPrice !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="body1">Sky Price</Typography>
+              <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
+                <HelpOutlineIcon sx={{ ml: 0.5, fontSize: '1rem', cursor: 'help' }} />
+              </Tooltip>
+              <Typography variant="body1">:</Typography>
+            </Box>
+
+            <Typography variant="h6" color="primary">
+              ~{formatSkyPrice(skyPrice)} USD
+            </Typography>
+          </Box>
+        )}
+
+        {apr !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Current APR:</Typography>
             <Typography variant="h6" color="primary">
               ~{apr.toFixed(2)}%
@@ -217,9 +294,18 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Staking Positions:</Typography>
+            <Typography variant="body1">Total Unique Suppliers:</Typography>
             <Typography variant="h6" color="primary">
               {totalDelegators}
+            </Typography>
+          </Box>
+        )}
+
+        {totalDelegators !== null && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+            <Typography variant="body1">Total Staking Positions:</Typography>
+            <Typography variant="h6" color="primary">
+              {totalPositions}
             </Typography>
           </Box>
         )}
@@ -228,7 +314,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total SKY Staked:</Typography>
             <Typography variant="h6" color="primary">
-              {formatUSDS(totalSky)}
+              {formatShortUSDS(totalSky)}
             </Typography>
           </Box>
         )}
@@ -237,7 +323,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">TVL:</Typography>
             <Typography variant="h6" color="primary">
-              {formatUSDS(tvl)} USDS
+              {formatShortUSDS(tvl)} USDS
             </Typography>
           </Box>
         )}
@@ -276,11 +362,102 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
           </Typography>
         </Box>
       )}
-      {!isLoading && address && !error && positions.length > 0 && (
+
+      {!isLoading && address && !error && (positions.length > 0 || isDelegate) && (
         <>
-          <Typography variant="h5" gutterBottom>
-            Your Staking Positions
-          </Typography>
+          {isDelegate && (
+            <Box>
+              <Typography variant="h5" gutterBottom>
+                Your Delegate Position:
+              </Typography>
+            </Box>
+          )}
+
+          {isDelegate && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              <Box key="-" sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                <PositionCard>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h6">Delegate Position</Typography>
+                      <Chip label="Active" color="success" size="small" />
+                    </Box>
+
+                    <Divider sx={{ my: 2 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Locked Amount:</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
+                        <Typography>{formatUSDS(formatEther(BigInt(delegateStakeAmount)))} SKY</Typography>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Delegate:</Typography>
+
+                      <Typography>Your Delegate</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Delegate Address:</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            maxWidth: '150px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                        >
+                          {shortenAddress(delegateAddress as `0x${string}`)}
+                        </Typography>
+                        <Box
+                          component="a"
+                          href={`https://etherscan.io/address/${delegateAddress}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            ml: 1,
+                            color: 'primary.main'
+                          }}
+                        >
+                          <IconExternalLink size={16} />
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={() => handleSelfWithdraw(delegateStakeAmount.toString())}
+                        disabled={ethers.getBigInt(delegateStakeAmount.toString()) <= 0n}
+                      >
+                        {withdrawing['delegate'] && !txHash
+                          ? 'Preparing transaction...'
+                          : withdrawing['delegate'] && txHash && !isTxConfirmed
+                            ? 'Confirming transaction...'
+                            : 'Withdraw Position'}
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </PositionCard>
+              </Box>
+            </Box>
+          )}
+
+          {isDelegate && (
+            <Box>
+              <Typography variant="h5" gutterBottom>
+                Your User Staking Positions:
+              </Typography>
+            </Box>
+          )}
+
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
             {positions.length === 0 ? (
               <Box sx={{ width: '100%' }}>
@@ -289,7 +466,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
                 </Typography>
               </Box>
             ) : (
-              positions.map((position, index) => (
+              positions.map((position) => (
                 <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                   <PositionCard>
                     <CardContent>
@@ -414,9 +591,11 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
                             ethers.getBigInt(position.wad) <= 0n
                           }
                         >
-                          {claiming[position.indexPosition]
-                            ? 'Claiming...'
-                            : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
+                          {claiming[position.indexPosition] && !txHash
+                            ? 'Preparing transaction...'
+                            : claiming[position.indexPosition] && txHash && !isTxConfirmed
+                              ? 'Confirming transaction...'
+                              : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
                         </Button>
 
                         <Button
@@ -431,7 +610,11 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
                             ethers.getBigInt(position.wad) <= 0n
                           }
                         >
-                          {withdrawing[position.indexPosition] ? 'Withdrawing...' : 'Withdraw Position'}
+                          {withdrawing[position.indexPosition] && !txHash
+                            ? 'Preparing transaction...'
+                            : withdrawing[position.indexPosition] && txHash && !isTxConfirmed
+                              ? 'Confirming transaction...'
+                              : 'Withdraw Position'}
                         </Button>
                       </Box>
                     </CardContent>
@@ -443,8 +626,7 @@ const Positions: FC<PositionsProps> = ({ stakeData, onEditPosition }) => {
         </>
       )}
 
-      {/* Snackbar for notifications */}
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbarMessage} />
+      {/* Notifications are now handled by dispatchSuccess/dispatchError */}
     </Box>
   );
 };

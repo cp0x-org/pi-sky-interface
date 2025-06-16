@@ -1,7 +1,7 @@
 import { Box, Typography, Button } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
+import { FC, useState, useCallback, useEffect } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useWriteContract } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { StyledCard } from 'components/StyledCard';
@@ -16,97 +16,220 @@ interface Props {
   rewardAddress?: string;
 }
 
+// Unified transaction hook configuration
+interface TransactionConfig {
+  functionName: 'withdraw' | 'getReward';
+  args: readonly [] | readonly [bigint] | undefined;
+  successMessage: string;
+  errorSubmitMessage: string;
+  errorConfirmMessage: string;
+}
+
+// Custom hook for handling blockchain transactions
+const useContractTransaction = (rewardAddress: string) => {
+  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [txState, setTxState] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+
+  const { writeContract, error: txError, isError: isTxError, isSuccess: isTxSubmitted, data: txHash } = useWriteContract();
+
+  const {
+    isSuccess: isTxConfirmed,
+    isError: isTxConfirmError,
+    error: txConfirmError
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash }
+  });
+
+  // Handle transaction state updates
+  useEffect(() => {
+    if (isTxSubmitted && txState === 'idle') {
+      setTxState('processing');
+    } else if (isTxConfirmed && txState === 'processing') {
+      setIsCompleted(true);
+      setTxState('success');
+    } else if (isTxError && txState !== 'error') {
+      console.error('Transaction submission failed:', txError);
+      setTxState('error');
+    } else if (isTxConfirmError && txConfirmError && txState !== 'error') {
+      console.error('Transaction confirmation failed:', txConfirmError);
+      setTxState('error');
+    }
+  }, [isTxSubmitted, isTxConfirmed, isTxError, isTxConfirmError, txError, txConfirmError, txState]);
+
+  // Execute transaction with provided configuration
+  const executeTransaction = useCallback(
+    (config: TransactionConfig) => {
+      if (isCompleted || !!txHash) return;
+
+      try {
+        writeContract({
+          ...stakingRewardContractConfig,
+          address: rewardAddress as `0x${string}`,
+          functionName: config.functionName,
+          args: config.args
+        });
+      } catch (error) {
+        console.error(`Transaction failed (${config.functionName}):`, error);
+        setTxState('error');
+        dispatchError(config.errorSubmitMessage);
+      }
+    },
+    [isCompleted, txHash, writeContract, rewardAddress]
+  );
+
+  return {
+    executeTransaction,
+    isCompleted,
+    txState,
+    txHash,
+    isTxConfirmed,
+    dispatchTxMessages: (config: Pick<TransactionConfig, 'successMessage' | 'errorSubmitMessage' | 'errorConfirmMessage'>) => {
+      if (txState === 'success') {
+        dispatchSuccess(config.successMessage);
+      } else if (isTxError) {
+        dispatchError(config.errorSubmitMessage);
+      } else if (isTxConfirmError) {
+        dispatchError(config.errorConfirmMessage);
+      }
+    }
+  };
+};
+
 const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAddress = '' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
-  const [isWithdrawed, setIsWithdrawed] = useState<boolean>(false);
-  const [isClaimed, setIsClaimed] = useState<boolean>(false);
 
+  // Use shared transaction hooks
+  const withdrawTx = useContractTransaction(rewardAddress);
+  const claimTx = useContractTransaction(rewardAddress);
+
+  // Transaction configurations
+  const withdrawConfig: TransactionConfig = {
+    functionName: 'withdraw',
+    args: [],
+    successMessage: 'USDS withdrawn successfully!',
+    errorSubmitMessage: 'USDS withdraw transaction failed to submit',
+    errorConfirmMessage: 'USDS withdraw transaction failed to confirm'
+  };
+
+  const claimConfig: TransactionConfig = {
+    functionName: 'getReward',
+    args: [],
+    successMessage: 'SKY claimed successfully!',
+    errorSubmitMessage: 'Failed to submit claim transaction',
+    errorConfirmMessage: 'Failed to confirm SKY claim transaction'
+  };
+
+  // Dispatch transaction messages when transaction state changes
+  useEffect(() => {
+    withdrawTx.dispatchTxMessages(withdrawConfig);
+  }, [withdrawConfig]);
+
+  useEffect(() => {
+    claimTx.dispatchTxMessages(claimConfig);
+  }, [claimTx.txState]);
+
+  // Handle percentage button clicks
   const handlePercentClick = (percent: number) => {
     if (stakedBalance === '0') return;
 
-    // Convert stakedBalance from string to number
     const balance = parseFloat(stakedBalance);
     if (isNaN(balance)) return;
 
-    // Calculate the amount based on the percentage
     const value = (balance * percent) / 100;
-
-    // Set the amount and update button text
     setAmount(value.toString());
     setButtonText('Withdraw');
   };
 
-  const {
-    writeContract: writeWithdraw,
-    error: withdrawError,
-    isError: isWithdrawError,
-    isSuccess: isWithdrawSuccess
-    // data: supplyData,
-    // status: supplyStatus
-  } = useWriteContract();
+  // Handle amount input change
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value);
+    setButtonText(e.target.value ? 'Withdraw' : 'Enter Amount');
+  };
 
-  const { writeContract: writeClaim, isError: isClaimError, isSuccess: isClaimSuccess } = useWriteContract();
+  // Handle withdraw button click
+  const handleWithdrawClick = () => {
+    if (!amount) return;
+
+    try {
+      const amountInWei = parseEther(amount);
+      withdrawTx.executeTransaction({
+        ...withdrawConfig,
+        args: [BigInt(amountInWei)] as readonly [bigint]
+      });
+    } catch (error) {
+      console.error('Error preparing withdrawal:', error);
+      dispatchError('Failed to process withdrawal amount');
+    }
+  };
+
+  // Handle claim button click
+  const handleClaimClick = () => {
+    claimTx.executeTransaction(claimConfig);
+  };
+
+  // Compute withdraw button text based on state
+  const getWithdrawButtonText = () => {
+    if (withdrawTx.txHash && !withdrawTx.isTxConfirmed) {
+      return 'Processing withdrawal...';
+    }
+
+    if (withdrawTx.txState === 'success') {
+      return 'Withdrawn';
+    }
+
+    return buttonText;
+  };
+
+  // Determine if withdraw button should be disabled
+  const isWithdrawButtonDisabled = useCallback(() => {
+    if (!amount) return true;
+
+    // Disable during processing
+    if (withdrawTx.txHash && !withdrawTx.isTxConfirmed) return true;
+
+    // Disable when completed
+    if (withdrawTx.isCompleted) return true;
+
+    // Disable if staked balance is zero
+    if (parseFloat(stakedBalance) <= 0) return true;
+
+    return false;
+  }, [amount, withdrawTx.txHash, withdrawTx.isTxConfirmed, withdrawTx.isCompleted, stakedBalance]);
+
+  // Determine if claim button should be disabled
+  const isClaimButtonDisabled = useCallback(() => {
+    // Disable during processing
+    if (claimTx.txHash && !claimTx.isTxConfirmed) return true;
+
+    // Disable when completed
+    if (claimTx.isCompleted) return true;
+
+    // Disable if no rewards
+    if (rewardBalance <= 0n) return true;
+
+    return false;
+  }, [claimTx.txHash, claimTx.isTxConfirmed, claimTx.isCompleted, rewardBalance]);
+
+  // Monitor transaction states (for debugging)
+  useEffect(() => {
+    console.log('Withdraw Transaction State:', {
+      txState: withdrawTx.txState,
+      isCompleted: withdrawTx.isCompleted,
+      hash: withdrawTx.txHash ? `${withdrawTx.txHash.slice(0, 6)}...` : null,
+      confirmed: withdrawTx.isTxConfirmed
+    });
+  }, [withdrawTx.txState, withdrawTx.isCompleted, withdrawTx.txHash, withdrawTx.isTxConfirmed]);
 
   useEffect(() => {
-    if (isWithdrawSuccess) {
-      setIsWithdrawed(true);
-      dispatchSuccess('USDS withdrawn successfully!');
-    }
-    if (isWithdrawError) {
-      console.error('Withdraw failed:', withdrawError);
-      setButtonText('ERROR');
-      dispatchError('USDS Withdraw failed');
-    }
-    if (isClaimSuccess) {
-      dispatchSuccess(`SKY claimed successfully!`);
-    }
-    if (isClaimError) {
-      dispatchError('Failed to claim SKY');
-    }
-  }, [isWithdrawSuccess, isWithdrawError, withdrawError, isClaimSuccess, isClaimError]);
-
-  const handleMainButtonClick = async () => {
-    if (!amount) {
-      console.log('Withdraw amount is empty');
-      return;
-    } else {
-      console.log('Withdraw amount is not empty');
-    }
-
-    const amountInWei = parseEther(amount);
-
-    try {
-      if (!isWithdrawed) {
-        writeWithdraw({
-          ...stakingRewardContractConfig,
-          address: rewardAddress as `0x${string}`,
-          functionName: 'withdraw',
-          args: [BigInt(amountInWei)]
-        });
-      }
-    } catch (error) {
-      console.error('Transaction failed:', error);
-      setIsWithdrawed(false);
-      setButtonText('Enter Amount');
-    }
-  };
-
-  const handleClaimButtonClick = async () => {
-    try {
-      if (!isClaimed) {
-        writeClaim({
-          ...stakingRewardContractConfig,
-          address: rewardAddress as `0x${string}`,
-          functionName: 'getReward',
-          args: []
-        });
-      }
-    } catch (error) {
-      console.error('Transaction failed:', error);
-      setIsClaimed(false);
-    }
-  };
+    console.log('Claim Transaction State:', {
+      txState: claimTx.txState,
+      isCompleted: claimTx.isCompleted,
+      hash: claimTx.txHash ? `${claimTx.txHash.slice(0, 6)}...` : null,
+      confirmed: claimTx.isTxConfirmed
+    });
+  }, [claimTx.txState, claimTx.isCompleted, claimTx.txHash, claimTx.isTxConfirmed]);
 
   return (
     <>
@@ -115,29 +238,30 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           <Typography variant="body2" sx={{ mb: 2 }}>
             How much USDS would you like to withdraw?
           </Typography>
+
+          {/* Amount input field */}
           <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
             <StyledTextField
+              slotProps={{
+                input: {
+                  lang: 'en'
+                }
+              }}
               fullWidth
               type="number"
               placeholder="Enter amount"
               value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                setButtonText(e.target.value ? `Withdraw` : 'Enter Amount');
-              }}
+              onChange={handleAmountChange}
+              disabled={withdrawTx.txState === 'processing' || withdrawTx.isCompleted}
             />
 
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 1,
-                alignItems: 'center'
-              }}
-            >
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <UsdsLogo width="24" height="24" />
               <Typography>USDS</Typography>
             </Box>
           </Box>
+
+          {/* Balance and percentage buttons */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2" color="textPrimary">
@@ -160,16 +284,25 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           </Box>
         </Box>
 
+        {/* Withdraw button */}
         <Box>
-          <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={() => handleMainButtonClick()}>
-            {buttonText}
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 2 }}
+            disabled={isWithdrawButtonDisabled()}
+            onClick={handleWithdrawClick}
+          >
+            {getWithdrawButtonText()}
           </Button>
         </Box>
       </StyledCard>
 
+      {/* Claim button - only shown if rewards are available */}
       {rewardBalance != 0n && (
-        <Button variant="outlined" color="secondary" fullWidth sx={{ mt: 2 }} onClick={() => handleClaimButtonClick()}>
-          Claim {formatTokenAmount(rewardBalance.toString(), 4)} SKY
+        <Button variant="outlined" color="secondary" fullWidth sx={{ mt: 2 }} disabled={isClaimButtonDisabled()} onClick={handleClaimClick}>
+          {claimTx.txHash && !claimTx.isTxConfirmed ? 'Claiming SKY...' : `Claim ${formatTokenAmount(rewardBalance.toString(), 4)} SKY`}
         </Button>
       )}
     </>

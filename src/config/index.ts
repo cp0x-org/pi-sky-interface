@@ -1,12 +1,18 @@
 export const Mainnet = 1;
 export const Arbitrum = 42161;
 export const Base = 8453;
-export const AnvilTest = 1222;
+export const AnvilTest = 12222;
 export const TenderlyTest = 1999999;
 
+export const appConfig = {
+  delegatesPerPage: 5
+};
+
 export const apiConfig = {
-  // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL' // TODO pagination to add shadow delegators
-  delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
+  cp0xDelegate: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5',
+  cp0x: 'cp0x',
+  delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL', // TODO pagination to add shadow delegators
+  // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
   delegatedToMainnet: 'https://vote.sky.money/api/address/%s/delegated-to?address=%s&network=mainnet',
   uniswapV2UsdsSkyPool: '0x2621cc0b3f3c079c1db0e80794aa24976f0b9e3c'
 } as const;
@@ -24,7 +30,8 @@ export const skyConfig = {
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
-      LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3'
+      LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
+      VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
     icons: {
@@ -46,7 +53,8 @@ export const skyConfig = {
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
-      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865'
+      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
     icons: {
@@ -68,7 +76,8 @@ export const skyConfig = {
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
-      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865'
+      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
     icons: {
@@ -90,7 +99,8 @@ export const skyConfig = {
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
-      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865'
+      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
     icons: {
@@ -112,7 +122,8 @@ export const skyConfig = {
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
-      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865'
+      USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
     icons: {

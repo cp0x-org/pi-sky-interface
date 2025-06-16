@@ -17,6 +17,7 @@ import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
+import { Alert } from '@mui/material';
 
 export default function USDSSkyTab() {
   const [operationType, setOperationType] = useState(0);
@@ -81,6 +82,11 @@ export default function USDSSkyTab() {
         Stake your USDS tokens to earn SKY rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
         rewards proportional to your contribution.
       </Typography>
+      {!address && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Please connect your wallet to continue.
+        </Alert>
+      )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Staking'}></CardHeader>

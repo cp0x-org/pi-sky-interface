@@ -8,6 +8,7 @@ import { useConfigChainId } from 'hooks/useConfigChainId';
 import { Chip, Divider, Alert } from '@mui/material';
 import { shortenAddress } from 'utils/formatters';
 import { formatUSDS } from 'utils/sky';
+import { useTheme } from '@mui/material/styles';
 
 interface ConfirmProps {
   stakeData: {
@@ -24,10 +25,10 @@ interface ConfirmProps {
   originalAmount?: string | null;
 }
 
-const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAmount, allowanceData }) => {
+const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAmount }) => {
   const { config: skyConfig } = useConfigChainId();
   const contractAddress = skyConfig.contracts.LockStakeEngine;
-
+  const theme = useTheme();
   return (
     <>
       <Card sx={{ borderRadius: '20px', my: 2 }}>
@@ -163,7 +164,11 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
 
       {isApproved && !isStaked && (stakeData.amount == '' || stakeData.amount == '0') && <Alert severity="info">No amount changes.</Alert>}
 
-      {isStaked && <Alert severity="success">Congratulations! Your staking position has been successfully created.</Alert>}
+      {isStaked && (
+        <Alert severity="success" sx={{ color: theme.palette.success.main }}>
+          Congratulations! Your staking position has been successfully created.
+        </Alert>
+      )}
     </>
   );
 };

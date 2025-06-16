@@ -6,14 +6,16 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
-import { Alert, CircularProgress } from '@mui/material';
+import { Alert, CircularProgress, Tooltip } from '@mui/material';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { useStakingPositions } from 'hooks/useStakingPositions';
 import { useStakingApr } from 'hooks/useStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
-import { formatUSDS } from 'utils/sky';
+import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
+import useSkyPrice from 'hooks/useSkyPrice';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 export default function StakingSummary() {
   const { config: skyConfig } = useConfigChainId();
@@ -21,7 +23,8 @@ export default function StakingSummary() {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
-  const { totalDelegators } = useSuppliersByUrns();
+  const { skyPrice } = useSkyPrice();
+  const { totalDelegators, totalPositions } = useSuppliersByUrns();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
@@ -155,6 +158,31 @@ export default function StakingSummary() {
             <IconExternalLink size={14} />
           </Box>
 
+          {skyPrice !== null && (
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                pb: 1
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography color="text.secondary" variant="body2">
+                  Sky Price
+                </Typography>
+                <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
+                  <HelpOutlineIcon sx={{ ml: 0.5, fontSize: '1rem', cursor: 'help' }} />
+                </Tooltip>
+              </Box>
+
+              <Typography variant="h6">~{formatSkyPrice(skyPrice)} USD</Typography>
+            </Box>
+          )}
+
           {apr !== null && (
             <Box
               sx={{
@@ -187,9 +215,28 @@ export default function StakingSummary() {
               }}
             >
               <Typography color="text.secondary" variant="body2">
-                Total Staking Positions
+                Total Unique Suppliers
               </Typography>
               <Typography variant="h6">{totalDelegators}</Typography>
+            </Box>
+          )}
+
+          {totalPositions !== null && (
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                pb: 1
+              }}
+            >
+              <Typography color="text.secondary" variant="body2">
+                Total Staking Positions
+              </Typography>
+              <Typography variant="h6">{totalPositions}</Typography>
             </Box>
           )}
 
@@ -208,7 +255,7 @@ export default function StakingSummary() {
               <Typography color="text.secondary" variant="body2">
                 Total SKY Staked
               </Typography>
-              <Typography variant="h6">{formatUSDS(totalSky)}</Typography>
+              <Typography variant="h6">{formatShortUSDS(totalSky)}</Typography>
             </Box>
           )}
 
@@ -227,7 +274,7 @@ export default function StakingSummary() {
               <Typography color="text.secondary" variant="body2">
                 TVL
               </Typography>
-              <Typography variant="h6">{formatUSDS(tvl)} USDS</Typography>
+              <Typography variant="h6">{formatShortUSDS(tvl)} USDS</Typography>
             </Box>
           )}
 

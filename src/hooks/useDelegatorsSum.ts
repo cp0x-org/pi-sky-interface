@@ -52,7 +52,7 @@ export const useDelegatorsSum = (): UseDelegatorsSumResult => {
 
       try {
         // Get all delegate addresses from the frontend data
-        const delegateAddresses = frontendDelegates.map((delegate) => delegate.voteDelegateAddress.toLowerCase());
+        // const delegateAddresses = frontendDelegates.map((delegate) => delegate.voteDelegateAddress.toLowerCase());
 
         const query = `
           {

@@ -4,9 +4,13 @@ import { styled } from '@mui/material/styles';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import { useNavigate } from 'react-router-dom';
+import { Alert } from '@mui/material';
+import { useAccount } from 'wagmi';
 
 export default function RewardTab() {
   const navigate = useNavigate();
+  const account = useAccount();
+  const address = account.address as `0x${string}` | undefined;
 
   const RewardCard = styled(Paper)(({ theme }) => ({
     ...theme.typography.body2,
@@ -36,6 +40,11 @@ export default function RewardTab() {
       <Typography variant="h2" gutterBottom>
         Sky Token Rewards
       </Typography>
+      {!address && (
+        <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
+          Please connect your wallet to continue.
+        </Alert>
+      )}
       <Grid container rowSpacing={2} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
         <Grid size={{ xs: 12, md: 6 }}>
           <RewardCard onClick={handleNavigateToUSDSSky}>
