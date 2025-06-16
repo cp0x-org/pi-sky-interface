@@ -22,6 +22,8 @@ import { StakingPosition } from 'types/staking';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import { useDelegateStake } from 'hooks/useDelegateStake';
+import { VoteDelegate } from 'config/abi/VoteDelegate';
 
 interface PositionsProps {
   stakeData?: {
@@ -54,6 +56,8 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { apr } = useStakingApr();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
   const { skyPrice } = useSkyPrice();
+
+  const { stakeAmount: delegateStakeAmount, isDelegate, delegateAddress } = useDelegateStake();
 
   const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
 
@@ -161,6 +165,38 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing withdraw transaction:', error);
       setWithdrawing((prev) => ({ ...prev, [position.indexPosition]: false }));
+      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setOperationType(null);
+    }
+  };
+
+  const handleSelfWithdraw = (amount: string) => {
+    if (!address || !amount) {
+      console.error('Missing required data for withdrawal');
+      dispatchError('Missing required data for withdrawal');
+      return;
+    }
+
+    try {
+      // Set operation type
+      setOperationType('withdraw');
+
+      // Mark this position as withdrawing
+      setWithdrawing((prev) => ({ ...prev, ['delegate']: true }));
+
+      const biginAmount = BigInt(amount);
+      // Execute the contract call
+      writeContract({
+        address: delegateAddress as `0x${string}`,
+        abi: VoteDelegate.abi,
+        functionName: 'free',
+        args: [biginAmount]
+      });
+
+      console.log('Withdraw initiated for delegate position');
+    } catch (error) {
+      console.error('Error preparing withdraw transaction:', error);
+      setWithdrawing((prev) => ({ ...prev, ['delegate']: false }));
       dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setOperationType(null);
     }
@@ -326,11 +362,102 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           </Typography>
         </Box>
       )}
-      {!isLoading && address && !error && positions.length > 0 && (
+
+      {!isLoading && address && !error && (positions.length > 0 || isDelegate) && (
         <>
-          <Typography variant="h5" gutterBottom>
-            Your Staking Positions
-          </Typography>
+          {isDelegate && (
+            <Box>
+              <Typography variant="h5" gutterBottom>
+                Your Delegate Position:
+              </Typography>
+            </Box>
+          )}
+
+          {isDelegate && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+              <Box key="-" sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                <PositionCard>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h6">Delegate Position</Typography>
+                      <Chip label="Active" color="success" size="small" />
+                    </Box>
+
+                    <Divider sx={{ my: 2 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Locked Amount:</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
+                        <Typography>{formatUSDS(formatEther(BigInt(delegateStakeAmount)))} SKY</Typography>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Delegate:</Typography>
+
+                      <Typography>Your Delegate</Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography color="text.secondary">Delegate Address:</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            maxWidth: '150px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                        >
+                          {shortenAddress(delegateAddress as `0x${string}`)}
+                        </Typography>
+                        <Box
+                          component="a"
+                          href={`https://etherscan.io/address/${delegateAddress}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            ml: 1,
+                            color: 'primary.main'
+                          }}
+                        >
+                          <IconExternalLink size={16} />
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Divider sx={{ my: 2 }} />
+
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={() => handleSelfWithdraw(delegateStakeAmount.toString())}
+                        disabled={ethers.getBigInt(delegateStakeAmount.toString()) <= 0n}
+                      >
+                        {withdrawing['delegate'] && !txHash
+                          ? 'Preparing transaction...'
+                          : withdrawing['delegate'] && txHash && !isTxConfirmed
+                            ? 'Confirming transaction...'
+                            : 'Withdraw Position'}
+                      </Button>
+                    </Box>
+                  </CardContent>
+                </PositionCard>
+              </Box>
+            </Box>
+          )}
+
+          {isDelegate && (
+            <Box>
+              <Typography variant="h5" gutterBottom>
+                Your User Staking Positions:
+              </Typography>
+            </Box>
+          )}
+
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
             {positions.length === 0 ? (
               <Box sx={{ width: '100%' }}>
