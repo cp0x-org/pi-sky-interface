@@ -35,19 +35,19 @@ const mainTest: Chain = {
 };
 
 const mainAnvil: Chain = {
-  id: 1222,
+  id: 12222,
   name: 'Anvil',
   nativeCurrency: {
-    name: 'aEth',
-    symbol: 'MTK',
+    name: 'ANV',
+    symbol: 'ANV',
     decimals: 18
   },
   rpcUrls: {
     default: {
-      http: ['http://127.0.0.1:8545']
+      http: ['http://127.0.0.1:9545']
     },
     public: {
-      http: ['http://127.0.0.1:8545']
+      http: ['http://127.0.0.1:9545']
     }
   },
   blockExplorers: {
@@ -61,7 +61,7 @@ const mainAnvil: Chain = {
 
 export const config = getDefaultConfig({
   appName: 'Sky Interface',
-  projectId: '4b1f5d2b6f0a3368aba6cf7556fb00e2',
+  projectId: '7849e5f74edaf36dd455bc07ced4f166', // sky project(!!!)
   // chains: [mainnet, sepolia, mainTest],
   chains: [mainnet],
   // chains: [mainnet, mainAnvil, mainTest],

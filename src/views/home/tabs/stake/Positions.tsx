@@ -368,7 +368,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           {isDelegate && (
             <Box>
               <Typography variant="h5" gutterBottom>
-                Your Delegate Position:
+                Self Delegate Position:
               </Typography>
             </Box>
           )}
@@ -450,7 +450,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
             </Box>
           )}
 
-          {isDelegate && (
+          {positions.length > 0 && (
             <Box>
               <Typography variant="h5" gutterBottom>
                 Your User Staking Positions:
