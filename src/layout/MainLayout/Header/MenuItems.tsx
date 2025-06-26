@@ -38,7 +38,7 @@ const MenuItems = () => {
         </Button>
 
         <Button href="https://cp0x.com" target="_blank" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
-          Referalls Project
+          cp0x Referrals
         </Button>
       </Stack>
     </Box>

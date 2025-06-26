@@ -32,7 +32,7 @@ const MobileMenu = () => {
       isExternal: false
     },
     {
-      title: 'Referalls Project',
+      title: 'cp0x Referrals',
       path: 'https://cp0x.com',
       isExternal: true
     }
