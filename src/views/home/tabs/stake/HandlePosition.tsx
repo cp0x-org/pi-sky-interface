@@ -125,7 +125,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
         const positionIdBigInt = BigInt(positionId);
 
         // Add delegate selection if provided
-        if (stakeData.delegatorAddress !== positionData?.delegateID) {
+        if (stakeData.delegatorAddress.toLowerCase() !== positionData?.delegateID.toLowerCase()) {
           let newDelegatorAddress = stakeData.delegatorAddress || '0';
 
           dataArray.push(

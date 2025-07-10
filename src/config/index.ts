@@ -9,7 +9,9 @@ export const appConfig = {
 };
 
 export const apiConfig = {
-  cp0xDelegate: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5',
+  // cp0xDelegate: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5', // old
+  cp0xDelegate: '0x2C89024c13A80bC1B662A3dB990524652C15221C', //new
+  cp0xDelegateOld: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5', //old
   cp0x: 'cp0x',
   delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL', // TODO pagination to add shadow delegators
   // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',

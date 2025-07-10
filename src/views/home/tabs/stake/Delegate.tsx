@@ -86,6 +86,8 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
           // Create new objects with updated name for cp0x delegate
           .map((delegate) => {
             if (delegate.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
+              return { ...delegate, name: 'cp0x (aligned)' };
+            } else if (delegate.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()) {
               return { ...delegate, name: 'cp0x' };
             }
             return delegate;
