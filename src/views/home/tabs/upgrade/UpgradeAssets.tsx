@@ -204,7 +204,8 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
 
         // Calculate gross SKY amount using the rate from the contract
         const rate = Number(mkrToSkyRate);
-        const grossSky = mkrAmountFloat * rate;
+        // Use Math.floor to round down to ensure users don't see higher amounts than they'll receive
+        const grossSky = Math.floor(mkrAmountFloat * rate * 100) / 100;
 
         setExpectedOutput(formatUSDS(grossSky));
       } catch (error) {
@@ -275,8 +276,17 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
 
       if (!currentBalance) return;
 
-      // Calculate the amount based on the percentage
-      const value = (Number(formatEther(currentBalance)) * percent) / 100;
+      // Calculate the amount based on the percentage and ensure it's rounded down
+      // Use appropriate precision: 6 decimal places for safe rounding
+      const balanceNumber = Number(formatEther(currentBalance));
+      const percentValue = (balanceNumber * percent) / 100;
+
+      // Round down to ensure we never exceed the actual balance
+      // For MKR (which is more valuable), use 6 decimal places
+      // For DAI, 2 decimal places is sufficient
+      const decimalPlaces = tokenValue === TOKEN_MKR ? 6 : 2;
+      const multiplier = Math.pow(10, decimalPlaces);
+      const value = Math.floor(percentValue * multiplier) / multiplier;
 
       // Set the amount - allowance checking will be triggered by the amount change effect
       setAmount(value.toString());
@@ -353,8 +363,17 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     // Reset error states if trying again
     resetTransactionStates();
 
-    const amountInWei = parseEther(amount);
-    console.log('Attempting transaction with amount:', amount, 'Wei:', amountInWei.toString());
+    // Round down the amount to ensure we don't try to use more tokens than available
+    // Use different precision for different tokens
+    const amountFloat = parseFloat(amount);
+    const decimalPlaces = tokenValue === TOKEN_MKR ? 6 : 2;
+    const multiplier = Math.pow(10, decimalPlaces);
+    const roundedAmount = Math.floor(amountFloat * multiplier) / multiplier;
+
+    // Convert to Wei for blockchain transaction
+    const amountInWei = parseEther(roundedAmount.toString());
+
+    console.log('Attempting transaction with amount:', roundedAmount, 'Wei:', amountInWei.toString());
     console.log('Current states - Approved:', isApproved, 'Token:', tokenValue);
 
     try {
