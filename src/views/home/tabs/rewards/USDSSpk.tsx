@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -7,19 +7,18 @@ import TabPanel from 'ui-component/TabPanel';
 import Info from './components/Info';
 import Stake from './components/Stake';
 import Withdraw from './components/Withdraw';
-import { useAccount, useConfig, useReadContract } from 'wagmi';
-import { usdsContractConfig } from 'config/abi/Usds';
+import { useAccount, useReadContract } from 'wagmi';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { useNavigate } from 'react-router-dom';
-import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { formatEther } from 'viem';
 import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
+import { usdsSpkRewardContractConfig } from 'config/abi/UsdsSpkReward';
 
-export default function USDSSkyTab() {
+export default function USDSSpkTab() {
   const [operationType, setOperationType] = useState(0);
   const navigate = useNavigate();
   const account = useAccount();
@@ -35,8 +34,8 @@ export default function USDSSkyTab() {
   };
 
   const { data: userRewardBalance } = useReadContract({
-    ...stakingRewardContractConfig,
-    address: skyConfig.contracts.StakingRewards,
+    ...usdsSpkRewardContractConfig,
+    address: skyConfig.contracts.UsdsSpkRewards,
     functionName: 'earned',
     args: address ? [address] : undefined,
     query: {
@@ -45,7 +44,7 @@ export default function USDSSkyTab() {
   });
 
   const { data: userBalance } = useReadContract({
-    ...usdsContractConfig,
+    ...usdsSpkRewardContractConfig,
     address: skyConfig.contracts.USDS,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
@@ -55,8 +54,8 @@ export default function USDSSkyTab() {
   });
 
   const { data: stakedBalance } = useReadContract({
-    ...stakingRewardContractConfig,
-    address: skyConfig.contracts.StakingRewards,
+    ...usdsSpkRewardContractConfig,
+    address: skyConfig.contracts.UsdsSpkRewards,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -65,8 +64,8 @@ export default function USDSSkyTab() {
   });
 
   const { data: totalSupply } = useReadContract({
-    ...stakingRewardContractConfig,
-    address: skyConfig.contracts.StakingRewards,
+    ...usdsSpkRewardContractConfig,
+    address: skyConfig.contracts.UsdsSpkRewards,
     functionName: 'totalSupply'
   });
 
@@ -76,10 +75,10 @@ export default function USDSSkyTab() {
         Back to Rewards
       </Button>
       <Typography variant="h2" gutterBottom>
-        With: USDS Get: SKY
+        With: USDS Get: Spk
       </Typography>
       <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Stake your USDS tokens to earn SKY rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
+        Stake your USDS tokens to earn SPK rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
         rewards proportional to your contribution.
       </Typography>
       {!address && (
@@ -97,14 +96,14 @@ export default function USDSSkyTab() {
             </Tabs>
 
             <TabPanel value={operationType} index={0}>
-              <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.StakingRewards} />
+              <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.UsdsSpkRewards} />
             </TabPanel>
             <TabPanel value={operationType} index={1}>
               <Withdraw
                 stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'}
                 rewardBalance={userRewardBalance}
-                rewardAddress={skyConfig.contracts.StakingRewards}
-                tokenSymbol={'SKY'}
+                rewardAddress={skyConfig.contracts.UsdsSpkRewards}
+                tokenSymbol={'SPK'}
               />
             </TabPanel>
           </Box>
@@ -112,7 +111,7 @@ export default function USDSSkyTab() {
         <Grid size={{ xs: 12, md: 5 }}>
           <Box sx={{ width: '100%', display: 'flex' }}>
             <Info
-              contractAddress={skyConfig.contracts.StakingRewards}
+              contractAddress={skyConfig.contracts.UsdsSpkRewards}
               balance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
               tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
             />

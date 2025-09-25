@@ -104,6 +104,7 @@ export default function ChronicleTab() {
                 stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
                 rewardBalance={userRewardBalance}
                 rewardAddress={skyConfig.contracts.ChroniclePoints}
+                tokenSymbol={'CLE'}
               />
             </TabPanel>
           </Box>

@@ -14,6 +14,7 @@ interface Props {
   stakedBalance?: string;
   rewardBalance?: bigint;
   rewardAddress?: string;
+  tokenSymbol: string;
 }
 
 // Unified transaction hook configuration
@@ -96,7 +97,7 @@ const useContractTransaction = (rewardAddress: string) => {
   };
 };
 
-const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAddress = '' }) => {
+const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAddress = '', tokenSymbol = '' }) => {
   const [amount, setAmount] = useState<string>('');
   const [buttonText, setButtonText] = useState<string>('Enter Amount');
 
@@ -116,9 +117,9 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
   const claimConfig: TransactionConfig = {
     functionName: 'getReward',
     args: [],
-    successMessage: 'SKY claimed successfully!',
+    successMessage: ' claimed successfully!',
     errorSubmitMessage: 'Failed to submit claim transaction',
-    errorConfirmMessage: 'Failed to confirm SKY claim transaction'
+    errorConfirmMessage: 'Failed to confirm ' + tokenSymbol + ' claim transaction'
   };
 
   // Dispatch transaction messages when transaction state changes
@@ -302,7 +303,9 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
       {/* Claim button - only shown if rewards are available */}
       {rewardBalance != 0n && (
         <Button variant="outlined" color="secondary" fullWidth sx={{ mt: 2 }} disabled={isClaimButtonDisabled()} onClick={handleClaimClick}>
-          {claimTx.txHash && !claimTx.isTxConfirmed ? 'Claiming SKY...' : `Claim ${formatTokenAmount(rewardBalance.toString(), 4)} SKY`}
+          {claimTx.txHash && !claimTx.isTxConfirmed
+            ? 'Claiming ' + tokenSymbol + '...'
+            : `Claim ${formatTokenAmount(rewardBalance.toString(), 4)} ${tokenSymbol}`}
         </Button>
       )}
     </>
