@@ -1,7 +1,7 @@
 import { FC, useState, useCallback, useEffect } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
-import { useWriteContract, useWaitForTransactionReceipt, useReadContract, useAccount } from 'wagmi';
+import { useReadContract, useAccount } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
@@ -12,63 +12,12 @@ import { StyledCard } from 'components/StyledCard';
 import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
 import { useDebounce } from 'hooks/useDebounce';
+import { useWriteTransaction } from 'hooks/useWriteTransaction';
 
 interface Props {
   userBalance?: bigint;
   rewardAddress?: string;
 }
-
-// Transaction states
-type TxState = 'idle' | 'submitting' | 'submitted' | 'confirmed' | 'error';
-
-// Custom hook for transaction management
-const useTransaction = () => {
-  const [txState, setTxState] = useState<TxState>('idle');
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  const { writeContract, error: txError, isError: isTxError, isSuccess: isTxSubmitted, data: txHash } = useWriteContract();
-
-  const {
-    isSuccess: isTxConfirmed,
-    isError: isTxConfirmError,
-    error: txConfirmError
-  } = useWaitForTransactionReceipt({
-    hash: txHash,
-    query: { enabled: !!txHash }
-  });
-
-  // Reset the transaction state
-  const resetTx = useCallback(() => {
-    if (txState === 'error') {
-      setTxState('idle');
-    }
-  }, [txState]);
-
-  // Process transaction status changes
-  const processTxState = useCallback(() => {
-    if (isTxSubmitted && txState === 'idle') {
-      setTxState('submitted');
-      console.log('Transaction submitted:', txHash);
-    } else if (isTxConfirmed && txState === 'submitted') {
-      setTxState('confirmed');
-      setIsCompleted(true);
-      console.log('Transaction confirmed!');
-    } else if ((isTxError || isTxConfirmError) && txState !== 'error') {
-      setTxState('error');
-      console.error('Transaction failed:', txError || txConfirmError);
-    }
-  }, [isTxSubmitted, isTxConfirmed, isTxError, isTxConfirmError, txState, txHash, txError, txConfirmError]);
-
-  return {
-    writeContract,
-    txState,
-    txHash,
-    isCompleted,
-    isTxConfirmed,
-    resetTx,
-    processTxState
-  };
-};
 
 const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
   const [amount, setAmount] = useState<string>('');
@@ -82,8 +31,8 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
   const [allowanceChecking, setAllowanceChecking] = useState(false);
 
   // Use custom transaction hooks
-  const approveTx = useTransaction();
-  const stakeTx = useTransaction();
+  const approveTx = useWriteTransaction();
+  const stakeTx = useWriteTransaction();
 
   // Track process completion
   const [isApproved, setIsApproved] = useState(false);

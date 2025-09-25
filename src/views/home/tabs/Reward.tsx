@@ -35,6 +35,10 @@ export default function RewardTab() {
     navigate('/rewards/chronicle');
   };
 
+  const handleNavigateToUSDSSpk = () => {
+    navigate('/rewards/usdsgetspk');
+  };
+
   return (
     <Box sx={{ width: '100%' }} alignContent={'center'} margin={'auto'}>
       <Typography variant="h2" gutterBottom>
@@ -62,6 +66,16 @@ export default function RewardTab() {
               <Typography variant="h4">Chronicle Points</Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
                 Click to learn more about Chronicle Points
+              </Typography>
+            </Box>
+          </RewardCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <RewardCard onClick={handleNavigateToUSDSSpk}>
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h4">With: USDS Get: SPK</Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Click to learn more about USDS and SPK rewards
               </Typography>
             </Box>
           </RewardCard>

@@ -30,8 +30,9 @@ export const skyConfig = {
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
+      UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
-      MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
+      MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
@@ -52,8 +53,9 @@ export const skyConfig = {
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
+      UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
-      MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
+      MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
@@ -75,8 +77,9 @@ export const skyConfig = {
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
+      UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
-      MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
+      MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
@@ -98,8 +101,9 @@ export const skyConfig = {
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
+      UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
-      MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
+      MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
@@ -121,8 +125,9 @@ export const skyConfig = {
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
+      UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
-      MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b',
+      MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
@@ -145,9 +150,10 @@ export type SkyContracts = {
   readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
   readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
   readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
+  readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
   readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
   readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
-  readonly MKRSKYConverter: '0xbdcfca946b6cdd965f99a839e4435bcdc1bc470b';
+  readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
   readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
 };
 

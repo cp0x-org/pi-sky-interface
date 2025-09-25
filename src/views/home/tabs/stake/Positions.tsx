@@ -8,7 +8,7 @@ import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
 import { Chip, Divider, Alert, CircularProgress, Paper, Button, Tooltip } from '@mui/material';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useStakingPositions } from 'hooks/useStakingPositions';
@@ -24,6 +24,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
+import { usdsContractConfig } from 'config/abi/Usds';
 
 interface PositionsProps {
   stakeData?: {
@@ -78,6 +79,17 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   } = useWaitForTransactionReceipt({
     hash: txHash,
     query: { enabled: !!txHash }
+  });
+
+  // Get user balance
+  const { data: userBalance } = useReadContract({
+    ...usdsContractConfig,
+    address: skyConfig.contracts.SKY,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address
+    }
   });
 
   // Effect to handle transaction submission
@@ -338,6 +350,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           <Typography variant="body1">Your Number of Positions:</Typography>
           <Typography variant="h6" color="primary">
             {positions.length}
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+          <Typography variant="body1">Your SKY Balance:</Typography>
+          <Typography variant="h6" color="primary">
+            {userBalance ? formatUSDS(formatEther(userBalance)) : '0'}
           </Typography>
         </Box>
       </Paper>

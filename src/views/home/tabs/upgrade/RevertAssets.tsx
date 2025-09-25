@@ -137,8 +137,8 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     (percent: number) => {
       if (!usdsUserBalance) return;
 
-      // Calculate the amount based on the percentage
-      const value = (Number(formatEther(usdsUserBalance)) * percent) / 100;
+      // Calculate the amount based on the percentage and round down to ensure we don't exceed balance
+      const value = Math.floor(((Number(formatEther(usdsUserBalance)) * percent) / 100) * 100) / 100;
 
       // Set the amount and indicate allowance is being checked
       setAmount(value.toString());
@@ -195,8 +195,24 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
   const handleAmountChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
+
       if (value === '' || Number(value) >= 0) {
-        setAmount(value);
+        // Ensure we never exceed the actual balance with precise rounding
+        if (value && usdsUserBalance) {
+          const numValue = Number(value);
+          const maxBalance = Number(formatEther(usdsUserBalance));
+
+          // If the entered amount exceeds balance, cap it at the balance
+          if (numValue > maxBalance) {
+            // Round down to 2 decimal places to ensure we don't exceed balance due to floating point errors
+            const roundedValue = Math.floor(maxBalance * 100) / 100;
+            setAmount(roundedValue.toString());
+          } else {
+            setAmount(value);
+          }
+        } else {
+          setAmount(value);
+        }
 
         // Set allowance checking state if there's a value
         if (value) {
@@ -211,7 +227,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
         }
       }
     },
-    [approveTx.txState, revertTx.txState, isReverted, resetTransactionStates]
+    [approveTx.txState, revertTx.txState, isReverted, resetTransactionStates, usdsUserBalance]
   );
 
   // Handle main button click
@@ -224,8 +240,12 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     // Reset error states if trying again
     resetTransactionStates();
 
-    const amountInWei = parseEther(amount);
-    console.log('Attempting transaction with amount:', amount, 'Wei:', amountInWei.toString());
+    // Ensure the amount is properly rounded to avoid precision errors
+    // Round down to make sure we never exceed the actual balance
+    const roundedAmount = Math.floor(parseFloat(amount) * 1e18) / 1e18;
+    const amountInWei = parseEther(roundedAmount.toString());
+
+    console.log('Attempting transaction with amount:', roundedAmount, 'Wei:', amountInWei.toString());
     console.log('Current states - Approved:', isApproved);
 
     try {
