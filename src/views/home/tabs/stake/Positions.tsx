@@ -51,112 +51,15 @@ interface PositionsProps {
   };
   onEditPosition?: (position: StakingPosition) => void;
 }
-const getRewardSymbol = (
-  skyConfig:
-    | {
-        readonly contracts: {
-          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
-          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
-          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
-          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
-          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
-          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
-          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
-          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
-          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
-          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
-          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
-          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
-          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
-          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
-        };
-        readonly features: {};
-        readonly icons: {
-          readonly dai: '/assets/images/sky/ethereum/dai.svg';
-          readonly usds: '/assets/images/sky/ethereum/usds.svg';
-          readonly mkr: '/assets/images/sky/ethereum/mkr.svg';
-          readonly sky: '/assets/images/sky/ethereum/sky.svg';
-        };
-      }
-    | {
-        readonly contracts: {
-          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
-          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
-          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
-          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
-          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
-          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
-          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
-          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
-          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
-          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
-          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
-          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
-          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
-          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
-        };
-        readonly features: {};
-        readonly icons: {
-          readonly dai: '/assets/images/sky/arbitrum/dai.svg';
-          readonly usds: '/assets/images/sky/arbitrum/usds.svg';
-          readonly mkr: '/assets/images/sky/arbitrum/mkr.svg';
-          readonly sky: '/assets/images/sky/arbitrum/sky.svg';
-        };
-      }
-    | {
-        readonly contracts: {
-          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
-          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
-          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
-          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
-          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
-          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
-          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
-          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
-          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
-          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
-          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
-          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
-          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
-          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
-        };
-        readonly features: {};
-        readonly icons: {
-          readonly dai: '/assets/images/sky/base/dai.svg';
-          readonly usds: '/assets/images/sky/base/usds.svg';
-          readonly mkr: '/assets/images/sky/base/mkr.svg';
-          readonly sky: '/assets/images/sky/base/sky.svg';
-        };
-      }
-    | {
-        readonly contracts: {
-          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
-          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
-          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
-          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
-          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
-          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
-          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
-          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
-          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
-          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
-          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
-          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
-          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
-          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
-        };
-        readonly features: {};
-        readonly icons: {
-          readonly dai: '/assets/images/sky/ethereum/dai.svg';
-          readonly usds: '/assets/images/sky/ethereum/usds.svg';
-          readonly mkr: '/assets/images/sky/ethereum/mkr.svg';
-          readonly sky: '/assets/images/sky/ethereum/sky.svg';
-        };
-      },
-  position: any
-) => {
-  console.log('position.reward?.id?.toLowerCase()');
-  console.log(position.reward?.id?.toLowerCase());
+import { SkyContracts, SkyIcons } from 'config/index';
+
+type SkyConfig = {
+  readonly contracts: SkyContracts;
+  readonly features: {};
+  readonly icons: SkyIcons;
+};
+
+const getRewardSymbol = (skyConfig: SkyConfig, position: any): string => {
   if (position.reward?.id?.toLowerCase() === skyConfig.contracts.USDSStakingRewards.toLowerCase()) {
     return 'USDS';
   }
@@ -165,7 +68,7 @@ const getRewardSymbol = (
     return 'SPK';
   }
 
-  return ''; // fallback, если не совпало
+  return ''; // fallback if no match
 };
 
 const PositionCard = styled(Card)(({ theme }) => ({
