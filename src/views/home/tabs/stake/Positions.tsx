@@ -28,6 +28,21 @@ import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
+function cp0xDelegateName(address: string) {
+  if (address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
+    return 'cp0x (aligned)';
+  } else if (address.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()) {
+    return 'cp0x';
+  }
+  return null;
+}
+
+function isCp0xDelegate(address: string) {
+  return (
+    address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase() || address.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()
+  );
+}
+
 interface PositionsProps {
   stakeData?: {
     amount: string;
@@ -355,7 +370,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         address: skyConfig.contracts.LockStakeEngine,
         abi: lockStakeContractConfig.abi,
         functionName: 'getReward',
-        args: [address, BigInt(position.indexPosition), skyConfig.contracts.USDSStakingRewards, address]
+        args: [address, BigInt(position.indexPosition), position.reward.id as `0x{string}`, address]
       });
 
       console.log('Claim initiated for position', position.indexPosition);
@@ -642,11 +657,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
                         <Typography>
                           {position.delegateID
-                            ? delegates.find(
-                                (d) =>
-                                  position.delegateID === apiConfig.cp0xDelegate.toLowerCase() ||
-                                  d.voteDelegateAddress === position.delegateID
-                              )?.name || `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
+                            ? isCp0xDelegate(position.delegateID)
+                              ? cp0xDelegateName(position.delegateID)
+                              : delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
+                                `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
                             : '-'}
                         </Typography>
                       </Box>
