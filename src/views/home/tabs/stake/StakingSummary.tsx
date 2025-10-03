@@ -16,6 +16,7 @@ import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
 export default function StakingSummary() {
   const { config: skyConfig } = useConfigChainId();
@@ -23,10 +24,11 @@ export default function StakingSummary() {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
+  const { apr: aprSpk } = useSpkStakingApr();
   const { skyPrice } = useSkyPrice();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
 
-  const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
+  const { tvl, totalSky } = useStakingTvl();
 
   const isLoading = positionsLoading || delegatesLoading;
   const error = positionsError || delegatesError;
@@ -196,11 +198,30 @@ export default function StakingSummary() {
               }}
             >
               <Typography color="text.secondary" variant="body2">
-                Current APR
+                Current APR(USDS)
               </Typography>
               <Typography variant="h6">~{apr.toFixed(2)}%</Typography>
             </Box>
           )}
+
+          {/*{aprSpk !== null && (*/}
+          {/*  <Box*/}
+          {/*    sx={{*/}
+          {/*      width: '100%',*/}
+          {/*      display: 'flex',*/}
+          {/*      justifyContent: 'space-between',*/}
+          {/*      alignItems: 'center',*/}
+          {/*      borderBottom: '1px solid',*/}
+          {/*      borderColor: 'divider',*/}
+          {/*      pb: 1*/}
+          {/*    }}*/}
+          {/*  >*/}
+          {/*    <Typography color="text.secondary" variant="body2">*/}
+          {/*      Current APR(SPK)*/}
+          {/*    </Typography>*/}
+          {/*    <Typography variant="h6">~{aprSpk.toFixed(2)}%</Typography>*/}
+          {/*  </Box>*/}
+          {/*)}*/}
 
           {totalDelegators !== null && (
             <Box

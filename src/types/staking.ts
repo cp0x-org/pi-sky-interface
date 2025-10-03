@@ -10,7 +10,8 @@ export interface StakingPosition {
   delegateID: string;
   wad: string;
   lockTimestamp: string;
-  reward: string; // reward amounts
+  reward: { id: string }; // reward amounts
+  rewardAmount: string;
   transactions: {
     lockHash?: string;
     freeHash?: string;

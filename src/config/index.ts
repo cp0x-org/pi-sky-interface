@@ -16,7 +16,8 @@ export const apiConfig = {
   delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL', // TODO pagination to add shadow delegators
   // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
   delegatedToMainnet: 'https://vote.sky.money/api/address/%s/delegated-to?address=%s&network=mainnet',
-  uniswapV2UsdsSkyPool: '0x2621cc0b3f3c079c1db0e80794aa24976f0b9e3c'
+  uniswapV2UsdsSkyPool: '0x2621cc0b3f3c079c1db0e80794aa24976f0b9e3c',
+  uniswapV3UsdcSpkPool: '0x76665642F513aAf2A00bE05711A598F44e3970A7'
 } as const;
 
 export const skyConfig = {
@@ -27,6 +28,7 @@ export const skyConfig = {
       MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
       DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404', // for stake tab
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
@@ -58,6 +60,7 @@ export const skyConfig = {
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404', // for stake tab
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
@@ -82,6 +85,7 @@ export const skyConfig = {
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404', // for stake tab
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
@@ -106,6 +110,7 @@ export const skyConfig = {
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404', // for stake tab
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
@@ -130,6 +135,7 @@ export const skyConfig = {
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404', // for stake tab
       VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5'
     },
     features: {},
@@ -147,7 +153,8 @@ export type SkyContracts = {
   readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
   readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
   readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
-  readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
+  readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865'; // for stake tab
+  readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404'; // for stake tab
   readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
   readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
   readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';

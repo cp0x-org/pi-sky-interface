@@ -13,11 +13,17 @@ const wadToBigNumber = (wad: string): bigint => {
 };
 
 // Function to calculate positions from locks and frees
-const calculatePositions = (stakingLocks: StakingLock[], stakingFrees: StakingFree[], stakingDelegates: any[]): StakingPosition[] => {
+const calculatePositions = (
+  stakingSelectRewards: StakingRewards[],
+  stakingLocks: StakingLock[],
+  stakingFrees: StakingFree[],
+  stakingDelegates: any[]
+): StakingPosition[] => {
   // Group locks and frees by position index
   const positionMap = new Map<
     string,
     {
+      rewards: StakingRewards[];
       locks: StakingLock[];
       frees: StakingFree[];
       delegate?: string;
@@ -25,10 +31,19 @@ const calculatePositions = (stakingLocks: StakingLock[], stakingFrees: StakingFr
   >();
 
   // Add all locks to the map
+  stakingSelectRewards.forEach((reward) => {
+    const index = reward.index;
+    if (!positionMap.has(index)) {
+      positionMap.set(index, { rewards: [], locks: [], frees: [] });
+    }
+    positionMap.get(index)!.rewards.push(reward);
+  });
+
+  // Add all locks to the map
   stakingLocks.forEach((lock) => {
     const index = lock.index;
     if (!positionMap.has(index)) {
-      positionMap.set(index, { locks: [], frees: [] });
+      positionMap.set(index, { rewards: [], locks: [], frees: [] });
     }
     positionMap.get(index)!.locks.push(lock);
   });
@@ -37,7 +52,7 @@ const calculatePositions = (stakingLocks: StakingLock[], stakingFrees: StakingFr
   stakingFrees.forEach((free) => {
     const index = free.index;
     if (!positionMap.has(index)) {
-      positionMap.set(index, { locks: [], frees: [] });
+      positionMap.set(index, { rewards: [], locks: [], frees: [] });
     }
     positionMap.get(index)!.frees.push(free);
   });
@@ -74,12 +89,15 @@ const calculatePositions = (stakingLocks: StakingLock[], stakingFrees: StakingFr
         undefined as StakingFree | undefined
       );
 
+      // Get the reward from the rewards array (if available)
+      const positionReward = data.rewards.length > 0 ? data.rewards[0].reward : { id: '' };
+
       return {
         indexPosition,
         delegateID: data.delegate || '', // Use delegate ID if available
         wad: netStaked.toString(), // Convert BigNumber back to string
         lockTimestamp: mostRecentLock?.blockTimestamp || '',
-        reward: '0', // Add default reward property as string to match StakingPosition interface
+        reward: positionReward, // Include the reward object with ID
         transactions: {
           lockHash: mostRecentLock?.transactionHash,
           freeHash: mostRecentFree?.transactionHash
@@ -100,6 +118,11 @@ export interface StakingLock {
   transactionHash: string;
 }
 
+export interface StakingRewards {
+  index: string;
+  reward: { id: string };
+}
+
 export interface StakingFree {
   index: string;
   wad: string;
@@ -112,7 +135,7 @@ export interface StakingPosition {
   delegateID: string; // hash
   wad: string; // amount of tokens staked (difference between stakingLocks and stakingFrees)
   lockTimestamp: string;
-  reward?: string; // add reward property to match the interface in types/staking.ts
+  reward: { id: string }; // reward object with id property
   transactions: {
     lockHash?: string;
     freeHash?: string;
@@ -250,9 +273,15 @@ export const useStakingData = (): StakingData => {
 
           const stakingLocks = result.data.stakingLocks || [];
           const stakingFrees = result.data.stakingFrees || [];
+          const stakingSelectRewards = result.data.stakingSelectRewards || [];
 
           // Calculate positions from locks and frees
-          const positions = calculatePositions(stakingLocks, stakingFrees, result.data.stakingSelectVoteDelegates || []);
+          const positions = calculatePositions(
+            stakingSelectRewards,
+            stakingLocks,
+            stakingFrees,
+            result.data.stakingSelectVoteDelegates || []
+          );
 
           setStakingData({
             stakingLocks,

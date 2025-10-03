@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
+import { apiConfig } from 'config/index';
 import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -25,6 +26,7 @@ import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
+import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
 interface PositionsProps {
   stakeData?: {
@@ -34,6 +36,122 @@ interface PositionsProps {
   };
   onEditPosition?: (position: StakingPosition) => void;
 }
+const getRewardSymbol = (
+  skyConfig:
+    | {
+        readonly contracts: {
+          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
+          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
+          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
+          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
+          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
+          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
+          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
+          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
+          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
+          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
+          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
+          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
+          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
+          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
+        };
+        readonly features: {};
+        readonly icons: {
+          readonly dai: '/assets/images/sky/ethereum/dai.svg';
+          readonly usds: '/assets/images/sky/ethereum/usds.svg';
+          readonly mkr: '/assets/images/sky/ethereum/mkr.svg';
+          readonly sky: '/assets/images/sky/ethereum/sky.svg';
+        };
+      }
+    | {
+        readonly contracts: {
+          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
+          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
+          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
+          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
+          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
+          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
+          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
+          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
+          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
+          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
+          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
+          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
+          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
+          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
+        };
+        readonly features: {};
+        readonly icons: {
+          readonly dai: '/assets/images/sky/arbitrum/dai.svg';
+          readonly usds: '/assets/images/sky/arbitrum/usds.svg';
+          readonly mkr: '/assets/images/sky/arbitrum/mkr.svg';
+          readonly sky: '/assets/images/sky/arbitrum/sky.svg';
+        };
+      }
+    | {
+        readonly contracts: {
+          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
+          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
+          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
+          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
+          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
+          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
+          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
+          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
+          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
+          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
+          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
+          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
+          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
+          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
+        };
+        readonly features: {};
+        readonly icons: {
+          readonly dai: '/assets/images/sky/base/dai.svg';
+          readonly usds: '/assets/images/sky/base/usds.svg';
+          readonly mkr: '/assets/images/sky/base/mkr.svg';
+          readonly sky: '/assets/images/sky/base/sky.svg';
+        };
+      }
+    | {
+        readonly contracts: {
+          readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
+          readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
+          readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
+          readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
+          readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
+          readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
+          readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
+          readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
+          readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
+          readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
+          readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
+          readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865';
+          readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404';
+          readonly VoteDelegateFactory: '0x4cf3daefa2683cd18df00f7aff5169c00a9eccd5';
+        };
+        readonly features: {};
+        readonly icons: {
+          readonly dai: '/assets/images/sky/ethereum/dai.svg';
+          readonly usds: '/assets/images/sky/ethereum/usds.svg';
+          readonly mkr: '/assets/images/sky/ethereum/mkr.svg';
+          readonly sky: '/assets/images/sky/ethereum/sky.svg';
+        };
+      },
+  position: any
+) => {
+  console.log('position.reward?.id?.toLowerCase()');
+  console.log(position.reward?.id?.toLowerCase());
+  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.USDSStakingRewards.toLowerCase()) {
+    return 'USDS';
+  }
+
+  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.SPKStakingRewards.toLowerCase()) {
+    return 'SPK';
+  }
+
+  return ''; // fallback, если не совпало
+};
 
 const PositionCard = styled(Card)(({ theme }) => ({
   ...theme.typography.body2,
@@ -55,12 +173,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
+  const { apr: aprSpk } = useSpkStakingApr();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
   const { skyPrice } = useSkyPrice();
 
   const { stakeAmount: delegateStakeAmount, isDelegate, delegateAddress } = useDelegateStake();
 
-  const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
+  const { tvl, totalSky } = useStakingTvl();
 
   const isLoading = positionsLoading || delegatesLoading;
   const error = positionsError || delegatesError;
@@ -297,12 +416,21 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {apr !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Current APR:</Typography>
+            <Typography variant="body1">Current APR (USDS):</Typography>
             <Typography variant="h6" color="primary">
               ~{apr.toFixed(2)}%
             </Typography>
           </Box>
         )}
+
+        {/*{aprSpk !== null && (*/}
+        {/*  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>*/}
+        {/*    <Typography variant="body1">Current APR (SPK):</Typography>*/}
+        {/*    <Typography variant="h6" color="primary">*/}
+        {/*      ~{aprSpk.toFixed(2)}%*/}
+        {/*    </Typography>*/}
+        {/*  </Box>*/}
+        {/*)}*/}
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
@@ -514,8 +642,11 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
                         <Typography>
                           {position.delegateID
-                            ? delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
-                              `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
+                            ? delegates.find(
+                                (d) =>
+                                  position.delegateID === apiConfig.cp0xDelegate.toLowerCase() ||
+                                  d.voteDelegateAddress === position.delegateID
+                              )?.name || `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
                             : '-'}
                         </Typography>
                       </Box>
@@ -614,7 +745,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             ? 'Preparing transaction...'
                             : claiming[position.indexPosition] && txHash && !isTxConfirmed
                               ? 'Confirming transaction...'
-                              : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
+                              : `Claim ${
+                                  position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'
+                                } ${getRewardSymbol(skyConfig, position)}`}
                         </Button>
 
                         <Button
