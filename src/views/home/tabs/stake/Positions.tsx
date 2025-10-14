@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
+import { apiConfig } from 'config/index';
 import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -25,6 +26,22 @@ import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
+import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
+
+function cp0xDelegateName(address: string) {
+  if (address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
+    return 'cp0x (aligned)';
+  } else if (address.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()) {
+    return 'cp0x';
+  }
+  return null;
+}
+
+function isCp0xDelegate(address: string) {
+  return (
+    address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase() || address.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()
+  );
+}
 
 interface PositionsProps {
   stakeData?: {
@@ -34,6 +51,25 @@ interface PositionsProps {
   };
   onEditPosition?: (position: StakingPosition) => void;
 }
+import { SkyContracts, SkyIcons } from 'config/index';
+
+type SkyConfig = {
+  readonly contracts: SkyContracts;
+  readonly features: {};
+  readonly icons: SkyIcons;
+};
+
+const getRewardSymbol = (skyConfig: SkyConfig, position: any): string => {
+  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.USDSStakingRewards.toLowerCase()) {
+    return 'USDS';
+  }
+
+  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.SPKStakingRewards.toLowerCase()) {
+    return 'SPK';
+  }
+
+  return ''; // fallback if no match
+};
 
 const PositionCard = styled(Card)(({ theme }) => ({
   ...theme.typography.body2,
@@ -55,12 +91,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useStakingApr();
+  const { apr: aprSpk } = useSpkStakingApr();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
   const { skyPrice } = useSkyPrice();
 
   const { stakeAmount: delegateStakeAmount, isDelegate, delegateAddress } = useDelegateStake();
 
-  const { tvl, totalSky } = useStakingTvl(skyConfig.contracts.USDSStakingRewards);
+  const { tvl, totalSky } = useStakingTvl();
 
   const isLoading = positionsLoading || delegatesLoading;
   const error = positionsError || delegatesError;
@@ -236,7 +273,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         address: skyConfig.contracts.LockStakeEngine,
         abi: lockStakeContractConfig.abi,
         functionName: 'getReward',
-        args: [address, BigInt(position.indexPosition), skyConfig.contracts.USDSStakingRewards, address]
+        args: [address, BigInt(position.indexPosition), position.reward.id as `0x{string}`, address]
       });
 
       console.log('Claim initiated for position', position.indexPosition);
@@ -297,12 +334,21 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {apr !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Current APR:</Typography>
+            <Typography variant="body1">Current APR (USDS):</Typography>
             <Typography variant="h6" color="primary">
               ~{apr.toFixed(2)}%
             </Typography>
           </Box>
         )}
+
+        {/*{aprSpk !== null && (*/}
+        {/*  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>*/}
+        {/*    <Typography variant="body1">Current APR (SPK):</Typography>*/}
+        {/*    <Typography variant="h6" color="primary">*/}
+        {/*      ~{aprSpk.toFixed(2)}%*/}
+        {/*    </Typography>*/}
+        {/*  </Box>*/}
+        {/*)}*/}
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
@@ -514,8 +560,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
                         <Typography>
                           {position.delegateID
-                            ? delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
-                              `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
+                            ? isCp0xDelegate(position.delegateID)
+                              ? cp0xDelegateName(position.delegateID)
+                              : delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
+                                `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
                             : '-'}
                         </Typography>
                       </Box>
@@ -614,7 +662,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             ? 'Preparing transaction...'
                             : claiming[position.indexPosition] && txHash && !isTxConfirmed
                               ? 'Confirming transaction...'
-                              : `Claim ${position?.reward ? Number(formatEther(BigInt(position.reward))).toFixed(5) : '0'} USDS`}
+                              : `Claim ${
+                                  position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'
+                                } ${getRewardSymbol(skyConfig, position)}`}
                         </Button>
 
                         <Button

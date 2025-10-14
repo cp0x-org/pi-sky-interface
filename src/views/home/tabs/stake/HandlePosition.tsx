@@ -163,7 +163,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
           encodeFunctionData({
             abi: lockStakeContractConfig.abi,
             functionName: 'selectFarm',
-            args: [address, nextUrnIdx, skyConfig.contracts.USDSStakingRewards, 1]
+            args: [address, nextUrnIdx, stakeData.rewardAddress, 1]
           })
         ];
 

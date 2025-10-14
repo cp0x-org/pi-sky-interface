@@ -22,7 +22,8 @@ export const useStakingPositions = (): StakingPositionData => {
         // Ensure positions have the reward property even when no fetching is needed
         const positionsWithDefaultReward = (originalPositions || []).map((position) => ({
           ...position,
-          reward: position.reward || '0'
+          reward: { id: position.reward?.id || '' },
+          rewardAmount: '0'
         }));
         setPositionsWithRewards(positionsWithDefaultReward);
         setIsLoading(false);
@@ -48,37 +49,33 @@ export const useStakingPositions = (): StakingPositionData => {
 
               return {
                 ...position,
-                reward: reward.toString()
+                rewardAmount: reward.toString()
               };
             } catch (e) {
-              console.warn(`Ошибка при симуляции getReward для позиции ${position.indexPosition}`, e);
+              console.warn(`Error simulating getReward for position ${position.indexPosition}`, e);
               return {
                 ...position,
-                reward: '0'
+                reward: { id: '' },
+                rewardAmount: '0'
               };
             }
           })
         );
 
-        // Convert bigint rewards to strings to match the StakingPosition interface
-        const sortedPositions = updated
-          .map((position) => ({
-            ...position,
-            reward: position.reward.toString() // Convert bigint to string
-          }))
-          .sort((a, b) => Number(a.indexPosition) - Number(b.indexPosition));
-
+        // Sort positions by index
+        const sortedPositions = updated.sort((a, b) => Number(a.indexPosition) - Number(b.indexPosition));
+        console.log('sortedPositions:', sortedPositions);
         setPositionsWithRewards(sortedPositions);
         setIsLoading(false);
       } catch (e) {
-        console.error('Ошибка при получении наград:', e);
-        setError('Ошибка при получении наград');
+        console.error('Error receiving rewards:', e);
+        setError('Error receiving rewards');
         setIsLoading(false);
       }
     };
 
     fetchRewards();
-  }, [originalPositions, address, skyConfig]);
+  }, [originalPositions, address, skyConfig, config]);
 
   useEffect(() => {
     if (positionsError) {

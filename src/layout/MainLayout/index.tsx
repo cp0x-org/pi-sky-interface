@@ -25,6 +25,7 @@ import { ReactComponent as RewardSvg } from 'assets/images/sky/rewardlogo.svg';
 import { ReactComponent as SavingsSvg } from 'assets/images/sky/savings.svg';
 import { ReactComponent as UpgradeSvg } from 'assets/images/sky/upgrade.svg';
 import { ReactComponent as StakeSvg } from 'assets/images/sky/stake.svg';
+import { ReactComponent as ExpertSvg } from 'assets/images/sky/expertlogo.svg';
 import MainCard from '../../ui-component/cards/MainCard';
 
 // ==============================|| MAIN LAYOUT ||============================== //
@@ -41,7 +42,8 @@ export default function MainLayout() {
     { label: 'Rewards', path: 'rewards', iconPosition: 'top', icon: <RewardSvg width="24" height="24" /> },
     { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" /> },
     { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" /> },
-    { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" /> }
+    { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" /> },
+    { label: 'Expert', path: 'expert', iconPosition: 'top', icon: <ExpertSvg width="24" height="24" /> }
   ];
 
   const navigate = useNavigate();
