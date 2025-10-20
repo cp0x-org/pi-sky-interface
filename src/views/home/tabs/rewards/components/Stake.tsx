@@ -85,8 +85,10 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
   const handlePercentClick = useCallback(
     (percent: number) => {
       if (!userBalance) return;
-      const value = (Number(formatEther(BigInt(userBalance))) * percent) / 100;
-      setAmount(value.toString());
+
+      const value = (userBalance * BigInt(percent)) / BigInt(100);
+
+      setAmount(formatEther(value));
 
       if (amount !== debouncedAmount) {
         setAllowanceChecking(true);
