@@ -1,15 +1,7 @@
-import { FC, SVGProps, useState, useEffect, useMemo } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { Card, CardActionArea, Typography, Box } from '@mui/material';
 
-import { ReactComponent as UsdsIcon } from 'assets/images/sky/ethereum/usds.svg';
-import { ReactComponent as SpkIcon } from 'assets/images/sky/ethereum/spk.svg';
-import { useConfigChainId } from 'hooks/useConfigChainId';
-
-interface Token {
-  label: string;
-  icon: FC<SVGProps<SVGSVGElement>>;
-  tokenAddress: string;
-}
+import { getTokens, Token } from 'config/index';
 
 interface Props {
   rewardAddress: string;
@@ -18,15 +10,7 @@ interface Props {
 
 const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
   const [selected, setSelected] = useState<string | null>(null);
-  const { config: skyConfig } = useConfigChainId();
-
-  const tokens = useMemo<Token[]>(
-    () => [
-      { label: 'USDS', icon: UsdsIcon, tokenAddress: skyConfig.contracts.USDSStakingRewards },
-      { label: 'SPK', icon: SpkIcon, tokenAddress: skyConfig.contracts.SPKStakingRewards }
-    ],
-    [skyConfig.contracts.SPKStakingRewards, skyConfig.contracts.USDSStakingRewards]
-  );
+  const tokens = getTokens();
 
   useEffect(() => {
     if (rewardAddress) {

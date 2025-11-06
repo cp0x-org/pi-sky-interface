@@ -1,9 +1,9 @@
 import { useStakingData } from './useStakingData';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
-import { simulateContract } from '@wagmi/core';
+import { readContract, simulateContract } from '@wagmi/core';
 import { useConfig } from 'wagmi';
 import { StakingPosition, StakingPositionData } from 'types/staking';
 
@@ -47,9 +47,24 @@ export const useStakingPositions = (): StakingPositionData => {
 
               const reward = BigInt(rewardResult.result);
 
+              const urnAddress = await readContract(config, {
+                abi: lockStakeContractConfig.abi,
+                address: skyConfig.contracts.LockStakeEngine,
+                functionName: 'ownerUrns',
+                args: [address, BigInt(position.indexPosition)]
+              });
+
+              const farmAddress = await readContract(config, {
+                abi: lockStakeContractConfig.abi,
+                address: skyConfig.contracts.LockStakeEngine,
+                functionName: 'urnFarms',
+                args: [urnAddress]
+              });
+
               return {
                 ...position,
-                rewardAmount: reward.toString()
+                rewardAmount: reward.toString(),
+                reward: { id: farmAddress as `0x{string}` }
               };
             } catch (e) {
               console.warn(`Error simulating getReward for position ${position.indexPosition}`, e);
