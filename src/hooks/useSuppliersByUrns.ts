@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getSubgraphUrl } from '../wagmi-config';
 
 interface StakingUrn {
   owner: string;
@@ -51,8 +52,8 @@ export const useSuppliersByUrns = (): UseDelegatorsSumResult => {
             `;
 
             console.log(`Fetching stakingUrns: skip=${skip}, limit=${GRAPHQL_LIMIT}`);
-
-            const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
+            const subgraphUrl = await getSubgraphUrl();
+            const response = await fetch(subgraphUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'

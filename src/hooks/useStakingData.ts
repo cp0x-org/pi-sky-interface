@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { ethers } from 'ethers';
+import { getSubgraphUrl } from '../wagmi-config';
 
 // Helper function to convert wad strings to ethers v6 BigNumber for accurate calculations
 const wadToBigNumber = (wad: string): bigint => {
@@ -246,7 +247,8 @@ export const useStakingData = (): StakingData => {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
-          const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
+          const subgraphUrl = await getSubgraphUrl();
+          const response = await fetch(subgraphUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

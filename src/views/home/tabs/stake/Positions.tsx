@@ -144,7 +144,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
     const posRewards: Record<string, string> = {};
 
-    positions.forEach((pos) => {
+    positions.map((pos) => {
       posRewards[pos.indexPosition] = pos.reward.id;
     });
 
@@ -598,70 +598,40 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           )}
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-            {positions.map((position) => (
-              <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
-                <PositionCard>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
-                      <Chip label="Active" color="success" size="small" />
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Locked Amount:</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
-                        <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
+            {positions.length > 0 &&
+              Object.keys(positionRewards).length > 0 &&
+              positions.map((position) => (
+                <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
+                  <PositionCard>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
+                        <Chip label="Active" color="success" size="small" />
                       </Box>
-                    </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Delegate:</Typography>
-                      <Typography>
-                        {position.delegateID
-                          ? isCp0xDelegate(position.delegateID)
-                            ? cp0xDelegateName(position.delegateID)
-                            : delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
-                              `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
-                          : '-'}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Delegate Address:</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            maxWidth: '150px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}
-                        >
-                          {shortenAddress(position.delegateID)}
-                        </Typography>
-                        {position.delegateID && (
-                          <Box
-                            component="a"
-                            href={`https://etherscan.io/address/${position.delegateID}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              ml: 1,
-                              color: 'primary.main'
-                            }}
-                          >
-                            <IconExternalLink size={16} />
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                    {position.transactions && position.transactions.lockHash && (
+                      <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography color="text.secondary">Transaction:</Typography>
+                        <Typography color="text.secondary">Locked Amount:</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
+                          <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Delegate:</Typography>
+                        <Typography>
+                          {position.delegateID
+                            ? isCp0xDelegate(position.delegateID)
+                              ? cp0xDelegateName(position.delegateID)
+                              : delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
+                                `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
+                            : '-'}
+                        </Typography>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Delegate Address:</Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Typography
                             variant="body2"
@@ -671,125 +641,157 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                               textOverflow: 'ellipsis'
                             }}
                           >
-                            {shortenAddress(position.transactions.lockHash)}
+                            {shortenAddress(position.delegateID)}
                           </Typography>
-                          <Box
-                            component="a"
-                            href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              ml: 1,
-                              color: 'primary.main'
-                            }}
-                          >
-                            <IconExternalLink size={16} />
-                          </Box>
+                          {position.delegateID && (
+                            <Box
+                              component="a"
+                              href={`https://etherscan.io/address/${position.delegateID}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                ml: 1,
+                                color: 'primary.main'
+                              }}
+                            >
+                              <IconExternalLink size={16} />
+                            </Box>
+                          )}
                         </Box>
                       </Box>
-                    )}
+                      {position.transactions && position.transactions.lockHash && (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                          <Typography color="text.secondary">Transaction:</Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                maxWidth: '150px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                            >
+                              {shortenAddress(position.transactions.lockHash)}
+                            </Typography>
+                            <Box
+                              component="a"
+                              href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                ml: 1,
+                                color: 'primary.main'
+                              }}
+                            >
+                              <IconExternalLink size={16} />
+                            </Box>
+                          </Box>
+                        </Box>
+                      )}
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Reward:</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <StyledSelect
-                          value={positionRewards[position.indexPosition]}
-                          disabled={changingReward}
-                          label="Token"
-                          onChange={(event) => handleRewardChange(position, event)}
-                          renderValue={(selected) => {
-                            const item = tokens.find((o) => {
-                              return o.tokenAddress.toLowerCase() === String(selected || '').toLowerCase();
-                            });
-                            if (!item) {
-                              return <></>;
-                            }
-                            return (
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <item.icon width={24} height={24} />
-                                {item?.label}
-                              </Box>
-                            );
-                          }}
-                        >
-                          {tokens.map((token) => (
-                            <MenuItem key={token.tokenAddress} value={token.tokenAddress}>
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <token.icon width={24} height={24} />
-                                {/*<Avatar src={token.icon.img} sx={{ width: 24, height: 24 }} />*/}
-                                {token.label}
-                              </Box>
-                            </MenuItem>
-                          ))}
-                        </StyledSelect>
-                        {positionRewards[position.indexPosition] == SkyContracts.USDSStakingRewards && (
-                          <Tooltip title="USDS was deprecated, please choose another reward." arrow>
-                            <InfoOutlinedIcon fontSize="small" sx={{ color: 'orangered', cursor: 'pointer' }} />
-                          </Tooltip>
-                        )}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Reward:</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <StyledSelect
+                            value={positionRewards[position.indexPosition]}
+                            disabled={changingReward}
+                            label="Token"
+                            onChange={(event) => handleRewardChange(position, event)}
+                            renderValue={(selected) => {
+                              const item = tokens.find((o) => {
+                                return o.tokenAddress.toLowerCase() === String(selected || '').toLowerCase();
+                              });
+                              if (!item) {
+                                return <></>;
+                              }
+                              return (
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <item.icon width={24} height={24} />
+                                  {item?.label}
+                                </Box>
+                              );
+                            }}
+                          >
+                            {tokens.map((token) => (
+                              <MenuItem key={token.tokenAddress} value={token.tokenAddress}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <token.icon width={24} height={24} />
+                                  {/*<Avatar src={token.icon.img} sx={{ width: 24, height: 24 }} />*/}
+                                  {token.label}
+                                </Box>
+                              </MenuItem>
+                            ))}
+                          </StyledSelect>
+                          {positionRewards[position.indexPosition] == SkyContracts.USDSStakingRewards && (
+                            <Tooltip title="USDS was deprecated, please choose another reward." arrow>
+                              <InfoOutlinedIcon fontSize="small" sx={{ color: 'orangered', cursor: 'pointer' }} />
+                            </Tooltip>
+                          )}
+                        </Box>
                       </Box>
-                    </Box>
 
-                    <Divider sx={{ my: 2 }} />
+                      <Divider sx={{ my: 2 }} />
 
-                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {onEditPosition && (
+                      <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {onEditPosition && (
+                          <Button
+                            variant="outlined"
+                            color="info"
+                            fullWidth
+                            onClick={() => onEditPosition(position)}
+                            disabled={withdrawing[position.indexPosition] || claiming[position.indexPosition] || isPending}
+                          >
+                            Edit Position
+                          </Button>
+                        )}
                         <Button
                           variant="outlined"
-                          color="info"
+                          color="secondary"
                           fullWidth
-                          onClick={() => onEditPosition(position)}
-                          disabled={withdrawing[position.indexPosition] || claiming[position.indexPosition] || isPending}
+                          onClick={() => handleClaim(position)}
+                          disabled={
+                            withdrawing[position.indexPosition] ||
+                            claiming[position.indexPosition] ||
+                            isPending ||
+                            ethers.getBigInt(position.wad) <= 0n
+                          }
                         >
-                          Edit Position
+                          {claiming[position.indexPosition] && !txHash
+                            ? 'Preparing transaction...'
+                            : claiming[position.indexPosition] && txHash && !isTxConfirmed
+                              ? 'Confirming transaction...'
+                              : `Claim ${
+                                  position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'
+                                } ${getRewardSymbol(skyConfig, position)}`}
                         </Button>
-                      )}
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        fullWidth
-                        onClick={() => handleClaim(position)}
-                        disabled={
-                          withdrawing[position.indexPosition] ||
-                          claiming[position.indexPosition] ||
-                          isPending ||
-                          ethers.getBigInt(position.wad) <= 0n
-                        }
-                      >
-                        {claiming[position.indexPosition] && !txHash
-                          ? 'Preparing transaction...'
-                          : claiming[position.indexPosition] && txHash && !isTxConfirmed
-                            ? 'Confirming transaction...'
-                            : `Claim ${
-                                position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'
-                              } ${getRewardSymbol(skyConfig, position)}`}
-                      </Button>
 
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        onClick={() => handleWithdraw(position)}
-                        disabled={
-                          withdrawing[position.indexPosition] ||
-                          claiming[position.indexPosition] ||
-                          isPending ||
-                          ethers.getBigInt(position.wad) <= 0n
-                        }
-                      >
-                        {withdrawing[position.indexPosition] && !txHash
-                          ? 'Preparing transaction...'
-                          : withdrawing[position.indexPosition] && txHash && !isTxConfirmed
-                            ? 'Confirming transaction...'
-                            : 'Withdraw Position'}
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </PositionCard>
-              </Box>
-            ))}
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          fullWidth
+                          onClick={() => handleWithdraw(position)}
+                          disabled={
+                            withdrawing[position.indexPosition] ||
+                            claiming[position.indexPosition] ||
+                            isPending ||
+                            ethers.getBigInt(position.wad) <= 0n
+                          }
+                        >
+                          {withdrawing[position.indexPosition] && !txHash
+                            ? 'Preparing transaction...'
+                            : withdrawing[position.indexPosition] && txHash && !isTxConfirmed
+                              ? 'Confirming transaction...'
+                              : 'Withdraw Position'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </PositionCard>
+                </Box>
+              ))}
           </Box>
         </>
       )}

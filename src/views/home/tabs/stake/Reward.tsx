@@ -1,7 +1,8 @@
 import { FC, useState, useEffect } from 'react';
 import { Card, CardActionArea, Typography, Box } from '@mui/material';
 
-import { getTokens, Token } from 'config/index';
+import { getTokens, skyConfig, SkyContracts, Token } from 'config/index';
+import { dispatchWarning } from 'utils/snackbar';
 
 interface Props {
   rewardAddress: string;
@@ -16,14 +17,19 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
     if (rewardAddress) {
       const token = tokens.find((t) => t.tokenAddress === rewardAddress);
       if (token) {
-        setSelected(token.label);
+        setSelected(token.tokenAddress);
       }
     } else {
       setSelected(null);
     }
   }, [rewardAddress, tokens]);
   const handleSelect = (token: Token) => {
-    const newSelected = token.label === selected ? null : token.label;
+    const newSelected = token.tokenAddress === selected ? null : token.tokenAddress;
+
+    if (newSelected == SkyContracts.USDSStakingRewards) {
+      dispatchWarning('USDS rewards were deprecated. Please choose other options.');
+      return;
+    }
     setSelected(newSelected);
     onChange(newSelected ? token.tokenAddress : '');
   };
@@ -32,14 +38,14 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
     <Box display="flex" flexDirection="column" gap={2}>
       {tokens.map((token) => (
         <Card
-          key={token.label}
+          key={token.tokenAddress}
           sx={{
             borderRadius: '20px',
             border: '2px solid',
-            borderColor: selected === token.label ? 'primary.main' : 'transparent',
-            backgroundColor: selected === token.label ? 'primary.light' : 'background.paper',
+            borderColor: selected === token.tokenAddress ? 'primary.main' : 'transparent',
+            backgroundColor: selected === token.tokenAddress ? 'primary.light' : 'background.paper',
             transition: '0.3s',
-            boxShadow: selected === token.label ? 4 : 1,
+            boxShadow: selected === token.tokenAddress ? 4 : 1,
             cursor: 'pointer'
           }}
           onClick={() => handleSelect(token)}
