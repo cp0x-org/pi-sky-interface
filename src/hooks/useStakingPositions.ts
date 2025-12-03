@@ -124,7 +124,7 @@ export const useStakingPositions = () => {
   return {
     positions: query.data ?? [],
     isLoading: query.isLoading,
-    error: positionsError || query.error,
+    error: positionsError || query.error?.message,
     refetch: query.refetch // ← вот оно!
   };
 };

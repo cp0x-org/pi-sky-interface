@@ -16,7 +16,6 @@ import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
 export default function StakingSummary() {
   const { config: skyConfig } = useConfigChainId();
