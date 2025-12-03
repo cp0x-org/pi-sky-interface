@@ -10,12 +10,18 @@ export interface StakingPosition {
   delegateID: string;
   wad: string;
   lockTimestamp: string;
-  reward: { id: string }; // reward amounts
-  rewardAmount: string;
+  rewards: Record<string, RewardRecord>; // Map of reward ids to reward records
+  defaultRewardId: string;
   transactions: {
     lockHash?: string;
     freeHash?: string;
   };
+}
+
+export interface RewardRecord {
+  id: string;
+  amount: string;
+  symbol: string;
 }
 
 /**

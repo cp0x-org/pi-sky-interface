@@ -19,7 +19,7 @@ const calculatePositions = (
   stakingLocks: StakingLock[],
   stakingFrees: StakingFree[],
   stakingDelegates: any[]
-): StakingPosition[] => {
+): StakingPositionRaw[] => {
   // Group locks and frees by position index
   const positionMap = new Map<
     string,
@@ -131,7 +131,7 @@ export interface StakingFree {
   transactionHash: string;
 }
 
-export interface StakingPosition {
+export interface StakingPositionRaw {
   indexPosition: string;
   delegateID: string; // hash
   wad: string; // amount of tokens staked (difference between stakingLocks and stakingFrees)
@@ -146,7 +146,7 @@ export interface StakingPosition {
 export interface StakingData {
   stakingLocks: StakingLock[];
   stakingFrees: StakingFree[];
-  positions: StakingPosition[]; // Array of calculated positions
+  positions: StakingPositionRaw[]; // Array of calculated positions
   isLoading: boolean;
   error: string | null;
 }
@@ -156,7 +156,7 @@ export const useStakingData = (): StakingData => {
   const [stakingData, setStakingData] = useState<{
     stakingLocks: StakingLock[];
     stakingFrees: StakingFree[];
-    positions: StakingPosition[];
+    positions: StakingPositionRaw[];
   }>({
     stakingLocks: [],
     stakingFrees: [],

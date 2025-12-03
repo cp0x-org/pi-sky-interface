@@ -1,11 +1,23 @@
-import { useStakingData } from './useStakingData';
-import { useAccount, useReadContract } from 'wagmi';
+import { StakingPositionRaw, useStakingData } from './useStakingData';
+import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useConfigChainId } from './useConfigChainId';
 import { readContract, simulateContract } from '@wagmi/core';
 import { useConfig } from 'wagmi';
 import { StakingPosition, StakingPositionData } from 'types/staking';
+
+function transformPosition(raw: StakingPositionRaw): StakingPosition {
+  return {
+    indexPosition: raw.indexPosition,
+    delegateID: raw.delegateID,
+    wad: raw.wad,
+    lockTimestamp: raw.lockTimestamp,
+    defaultRewardId: '',
+    rewards: {},
+    transactions: raw.transactions
+  };
+}
 
 export const useStakingPositions = (): StakingPositionData => {
   const { positions: originalPositions, error: positionsError } = useStakingData();
@@ -18,34 +30,53 @@ export const useStakingPositions = (): StakingPositionData => {
 
   useEffect(() => {
     const fetchRewards = async () => {
+      console.log('Fetching rewards for positions:', originalPositions);
       if (!originalPositions?.length || !address) {
+        console.log('No positions to fetch rewards for');
         // Ensure positions have the reward property even when no fetching is needed
         const positionsWithDefaultReward = (originalPositions || []).map((position) => ({
           ...position,
-          reward: { id: position.reward?.id || '' },
-          rewardAmount: '0'
+          rewards: {},
+          defaultRewardId: ''
         }));
         setPositionsWithRewards(positionsWithDefaultReward);
         setIsLoading(false);
         return;
       }
 
+      console.log('Fetching rewards for positions:', originalPositions);
+
       setIsLoading(true);
 
       try {
         const updated = await Promise.all(
-          originalPositions.map(async (position) => {
+          originalPositions.map(async (rawPosition) => {
+            let position: StakingPosition = transformPosition(rawPosition);
+
             try {
-              const rewardResult = await simulateContract(config, {
+              const rewardUSDSResult = await simulateContract(config, {
                 abi: lockStakeContractConfig.abi,
                 address: skyConfig.contracts.LockStakeEngine,
                 functionName: 'getReward',
-                args: [address, BigInt(position.indexPosition), skyConfig.contracts.USDSStakingRewards, address]
+                args: [address, BigInt(position.indexPosition), skyConfig.contracts.USDSStakingRewards, address] // !!!
               });
 
-              console.log('getReward result:', rewardResult);
+              const rewardSPKResult = await simulateContract(config, {
+                abi: lockStakeContractConfig.abi,
+                address: skyConfig.contracts.LockStakeEngine,
+                functionName: 'getReward',
+                args: [address, BigInt(position.indexPosition), skyConfig.contracts.SPKStakingRewards, address]
+              });
 
-              const reward = BigInt(rewardResult.result);
+              const rewardSKYResult = await simulateContract(config, {
+                abi: lockStakeContractConfig.abi,
+                address: skyConfig.contracts.LockStakeEngine,
+                functionName: 'getReward',
+                args: [address, BigInt(position.indexPosition), skyConfig.contracts.SKYStakingRewards, address]
+              });
+              const rewardUSDS = BigInt(rewardUSDSResult.result);
+              const rewardSPK = BigInt(rewardSPKResult.result);
+              const rewardSKY = BigInt(rewardSKYResult.result);
 
               const urnAddress = await readContract(config, {
                 abi: lockStakeContractConfig.abi,
@@ -61,10 +92,33 @@ export const useStakingPositions = (): StakingPositionData => {
                 args: [urnAddress]
               });
 
+              if (rewardUSDS > 0n) {
+                position.rewards[skyConfig.contracts.USDSStakingRewards] = {
+                  amount: rewardUSDS.toString(),
+                  id: skyConfig.contracts.USDSStakingRewards,
+                  symbol: 'USDS'
+                };
+              }
+
+              if (rewardSPK > 0n) {
+                position.rewards[skyConfig.contracts.SPKStakingRewards] = {
+                  amount: rewardSPK.toString(),
+                  id: skyConfig.contracts.SPKStakingRewards,
+                  symbol: 'SPK'
+                };
+              }
+
+              if (rewardSKY > 0n) {
+                position.rewards[skyConfig.contracts.SKYStakingRewards] = {
+                  amount: rewardSKY.toString(),
+                  id: skyConfig.contracts.SKYStakingRewards,
+                  symbol: 'SKY'
+                };
+              }
+
               return {
                 ...position,
-                rewardAmount: reward.toString(),
-                reward: { id: farmAddress as `0x{string}` }
+                defaultRewardId: farmAddress
               };
             } catch (e) {
               console.warn(`Error simulating getReward for position ${position.indexPosition}`, e);

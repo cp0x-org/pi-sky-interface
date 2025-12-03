@@ -24,7 +24,6 @@ export default function StakingSummary() {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useSkyStakingApr();
-  const { apr: aprSpk } = useSpkStakingApr();
   const { skyPrice } = useSkyPrice();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
 

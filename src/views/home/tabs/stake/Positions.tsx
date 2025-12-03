@@ -26,7 +26,6 @@ import { dispatchError, dispatchSuccess, dispatchWarning } from 'utils/snackbar'
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
 function cp0xDelegateName(address: string) {
   if (address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
@@ -99,7 +98,6 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useSkyStakingApr();
-  const { apr: aprSpk } = useSpkStakingApr();
   const tokens = getTokens();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
   const { skyPrice } = useSkyPrice();
@@ -118,7 +116,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const [operationType, setOperationType] = useState<'withdraw' | 'claim' | 'selectFarm' | null>(null);
 
   // Contract interaction
-  const { writeContract, isPending, isSuccess, isError, error: contractError, data: txHash } = useWriteContract();
+  const { writeContract, isPending, isError, error: contractError, data: txHash } = useWriteContract();
   const {
     isSuccess: isTxConfirmed,
     isError: isTxConfirmError,
@@ -145,7 +143,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     const posRewards: Record<string, string> = {};
 
     positions.map((pos) => {
-      posRewards[pos.indexPosition] = pos.reward.id;
+      posRewards[pos.indexPosition] = pos.defaultRewardId;
     });
 
     setPositionRewards(posRewards);
@@ -154,7 +152,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const handleRewardChange = (position: StakingPosition, event: SelectChangeEvent<unknown>) => {
     const newTokenAddress = event.target.value;
 
-    if (newTokenAddress == position.reward.id || !newTokenAddress || typeof newTokenAddress !== 'string') {
+    if (newTokenAddress == position.defaultRewardId || !newTokenAddress || typeof newTokenAddress !== 'string') {
       return;
     }
 
@@ -164,9 +162,8 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     }
 
     setChangingReward(true);
-    // setOldReward(position.reward.id);
 
-    setOldReward((prev: any) => ({ ...prev, [position.indexPosition]: position.reward.id }));
+    setOldReward((prev: any) => ({ ...prev, [position.indexPosition]: position.defaultRewardId }));
     positionRewards[position.indexPosition] = newTokenAddress;
 
     setOperationType('selectFarm');
@@ -325,7 +322,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     }
   };
 
-  const handleClaim = (position: StakingPosition) => {
+  const handleClaim = (position: StakingPosition, rewardAddress: string) => {
     if (!address || !position.indexPosition) {
       console.error('Missing required data for claiming rewards');
       dispatchError('Missing required data for claiming rewards');
@@ -336,7 +333,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       // Set operation type
       setOperationType('claim');
 
-      console.log('OPERATION TYPE!!!');
+      console.log('OPERATION TYPE');
       console.log(operationType);
 
       // Mark this position as claiming
@@ -347,7 +344,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         address: skyConfig.contracts.LockStakeEngine,
         abi: lockStakeContractConfig.abi,
         functionName: 'getReward',
-        args: [address, BigInt(position.indexPosition), position.reward.id as `0x{string}`, address]
+        args: [address, BigInt(position.indexPosition), rewardAddress as `0x{string}`, address]
       });
 
       console.log('Claim initiated for position', position.indexPosition);
@@ -748,26 +745,53 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             Edit Position
                           </Button>
                         )}
-                        <Button
-                          variant="outlined"
-                          color="secondary"
-                          fullWidth
-                          onClick={() => handleClaim(position)}
-                          disabled={
-                            withdrawing[position.indexPosition] ||
-                            claiming[position.indexPosition] ||
-                            isPending ||
-                            ethers.getBigInt(position.wad) <= 0n
-                          }
-                        >
-                          {claiming[position.indexPosition] && !txHash
-                            ? 'Preparing transaction...'
-                            : claiming[position.indexPosition] && txHash && !isTxConfirmed
-                              ? 'Confirming transaction...'
-                              : `Claim ${
-                                  position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'
-                                } ${getRewardSymbol(skyConfig, position)}`}
-                        </Button>
+                        {/*<Button*/}
+                        {/*  variant="outlined"*/}
+                        {/*  color="secondary"*/}
+                        {/*  fullWidth*/}
+                        {/*  onClick={() => handleClaim(position)}*/}
+                        {/*  disabled={*/}
+                        {/*    withdrawing[position.indexPosition] ||*/}
+                        {/*    claiming[position.indexPosition] ||*/}
+                        {/*    isPending ||*/}
+                        {/*    ethers.getBigInt(position.wad) <= 0n*/}
+                        {/*  }*/}
+                        {/*>*/}
+                        {/*  {claiming[position.indexPosition] && !txHash*/}
+                        {/*    ? 'Preparing transaction...'*/}
+                        {/*    : claiming[position.indexPosition] && txHash && !isTxConfirmed*/}
+                        {/*      ? 'Confirming transaction...'*/}
+                        {/*      : `Claim ${*/}
+                        {/*          position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'*/}
+                        {/*        } ${getRewardSymbol(skyConfig, position)}`}*/}
+                        {/*</Button>*/}
+
+                        {Object.entries(position.rewards).map(([rewardId, reward]) => {
+                          const amount = BigInt(reward.amount);
+                          const formatted = Number(formatEther(amount)).toFixed(5);
+
+                          const isClaiming = claiming[position.indexPosition];
+                          const isWithdrawing = withdrawing[position.indexPosition];
+                          const disabled = isClaiming || isWithdrawing || isPending || amount <= 0n;
+
+                          return (
+                            <Button
+                              key={rewardId}
+                              variant="outlined"
+                              color="secondary"
+                              fullWidth
+                              onClick={() => handleClaim(position, rewardId)}
+                              disabled={disabled}
+                              sx={{ mt: 1 }}
+                            >
+                              {isClaiming && !txHash
+                                ? 'Preparing transaction...'
+                                : isClaiming && txHash && !isTxConfirmed
+                                  ? 'Confirming transaction...'
+                                  : `Claim ${formatted} ${reward.symbol}`}
+                            </Button>
+                          );
+                        })}
 
                         <Button
                           variant="contained"
