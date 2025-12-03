@@ -50,33 +50,11 @@ interface PositionsProps {
   };
   onEditPosition?: (position: StakingPosition) => void;
 }
-import { SkyContracts, SkyIcons } from 'config/index';
+import { SkyContracts } from 'config/index';
 import MenuItem from '@mui/material/MenuItem';
 import { StyledSelect } from 'components/StyledSelect';
 import { SelectChangeEvent } from '@mui/material/Select';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-
-type SkyConfig = {
-  readonly contracts: SkyContracts;
-  readonly features: {};
-  readonly icons: SkyIcons;
-};
-
-const getRewardSymbol = (skyConfig: SkyConfig, position: any): string => {
-  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.USDSStakingRewards.toLowerCase()) {
-    return 'USDS';
-  }
-
-  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.SPKStakingRewards.toLowerCase()) {
-    return 'SPK';
-  }
-
-  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.SKYStakingRewards.toLowerCase()) {
-    return 'SKY';
-  }
-
-  return '';
-};
 
 const PositionCard = styled(Card)(({ theme }) => ({
   ...theme.typography.body2,
@@ -95,7 +73,7 @@ const PositionCard = styled(Card)(({ theme }) => ({
 const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
-  const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
+  const { positions, isLoading: positionsLoading, error: positionsError, refetch: refetchPositions } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
   const { apr } = useSkyStakingApr();
   const tokens = getTokens();
@@ -190,6 +168,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       let message = '';
       if (operationType === 'claim') {
         message = 'Reward claim successfully!';
+        refetchPositions();
       } else if (operationType === 'withdraw') {
         message = 'Withdraw successfully!';
       } else {
@@ -745,27 +724,6 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             Edit Position
                           </Button>
                         )}
-                        {/*<Button*/}
-                        {/*  variant="outlined"*/}
-                        {/*  color="secondary"*/}
-                        {/*  fullWidth*/}
-                        {/*  onClick={() => handleClaim(position)}*/}
-                        {/*  disabled={*/}
-                        {/*    withdrawing[position.indexPosition] ||*/}
-                        {/*    claiming[position.indexPosition] ||*/}
-                        {/*    isPending ||*/}
-                        {/*    ethers.getBigInt(position.wad) <= 0n*/}
-                        {/*  }*/}
-                        {/*>*/}
-                        {/*  {claiming[position.indexPosition] && !txHash*/}
-                        {/*    ? 'Preparing transaction...'*/}
-                        {/*    : claiming[position.indexPosition] && txHash && !isTxConfirmed*/}
-                        {/*      ? 'Confirming transaction...'*/}
-                        {/*      : `Claim ${*/}
-                        {/*          position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'*/}
-                        {/*        } ${getRewardSymbol(skyConfig, position)}`}*/}
-                        {/*</Button>*/}
-
                         {Object.entries(position.rewards).map(([rewardId, reward]) => {
                           const amount = BigInt(reward.amount);
                           const formatted = Number(formatEther(amount)).toFixed(5);
@@ -782,7 +740,6 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                               fullWidth
                               onClick={() => handleClaim(position, rewardId)}
                               disabled={disabled}
-                              sx={{ mt: 1 }}
                             >
                               {isClaiming && !txHash
                                 ? 'Preparing transaction...'
