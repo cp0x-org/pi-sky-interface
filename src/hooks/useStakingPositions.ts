@@ -20,14 +20,15 @@ function transformPosition(raw: StakingPositionRaw): StakingPosition {
 }
 
 export const useStakingPositions = () => {
-  const { positions: originalPositions, error: positionsError } = useStakingData();
+  const { positions: originalPositions, error: positionsError, refetch: originalRefetch } = useStakingData();
   const { address } = useAccount();
   const { config: skyConfig } = useConfigChainId();
   const config = useConfig();
 
   const query = useQuery({
-    queryKey: ['staking-positions', address, originalPositions],
-    enabled: Boolean(address), // запускать только если есть адрес
+    queryKey: ['staking-positions', address, originalPositions?.map((p) => p.indexPosition).join(',')],
+    enabled: Boolean(address) && Boolean(originalPositions),
+    staleTime: 0,
     queryFn: async () => {
       if (!originalPositions?.length || !address) {
         return (originalPositions || []).map((p) => ({
@@ -125,6 +126,9 @@ export const useStakingPositions = () => {
     positions: query.data ?? [],
     isLoading: query.isLoading,
     error: positionsError || query.error?.message,
-    refetch: query.refetch // ← вот оно!
+    refetch: async () => {
+      await originalRefetch();
+      await query.refetch();
+    }
   };
 };

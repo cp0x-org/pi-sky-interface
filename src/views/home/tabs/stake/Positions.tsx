@@ -121,7 +121,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     const posRewards: Record<string, string> = {};
 
     positions.map((pos) => {
-      posRewards[pos.indexPosition] = pos.defaultRewardId;
+      posRewards[pos.indexPosition] = pos.defaultRewardId.toLowerCase();
     });
 
     setPositionRewards(posRewards);
@@ -142,7 +142,12 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     setChangingReward(true);
 
     setOldReward((prev: any) => ({ ...prev, [position.indexPosition]: position.defaultRewardId }));
-    positionRewards[position.indexPosition] = newTokenAddress;
+    // positionRewards[position.indexPosition] = newTokenAddress;
+
+    setPositionRewards((prev) => ({
+      ...prev,
+      [position.indexPosition]: newTokenAddress
+    }));
 
     setOperationType('selectFarm');
     const callData = encodeFunctionData({
@@ -159,6 +164,15 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       args: [[callData] as readonly `0x${string}`[]]
     });
   };
+  useEffect(() => {
+    // полный reset при смене адреса
+    setPositionRewards({});
+    setOldReward({});
+    setWithdrawing({});
+    setClaiming({});
+    setChangingReward(false);
+    setOperationType(null);
+  }, [address]);
 
   // Effect to handle operation success after confirmation
   useEffect(() => {
