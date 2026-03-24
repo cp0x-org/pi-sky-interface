@@ -2,13 +2,14 @@ import { Box, Typography, Button } from '@mui/material';
 import { FC, useState, useCallback, useEffect } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { stakingRewardContractConfig } from 'config/abi/StakingReward';
 import { StyledCard } from 'components/StyledCard';
 import { StyledTextField } from 'components/StyledTextField';
 import { formatTokenAmount } from 'utils/formatters';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { PercentButton } from 'components/PercentButton';
+import { formatUSDS } from 'utils/sky';
 
 interface Props {
   stakedBalance?: string;
@@ -131,16 +132,20 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
     claimTx.dispatchTxMessages(claimConfig);
   }, [claimTx.txState]);
 
-  // Handle percentage button clicks
   const handlePercentClick = (percent: number) => {
     if (stakedBalance === '0') return;
 
-    const balance = parseFloat(stakedBalance);
-    if (isNaN(balance)) return;
+    try {
+      const balanceBigInt = parseEther(stakedBalance); // 18 для токенов с 18 decimals
 
-    const value = (balance * percent) / 100;
-    setAmount(value.toString());
-    setButtonText('Withdraw');
+      const valueBigInt = (balanceBigInt * BigInt(percent)) / BigInt(100);
+
+      setAmount(formatEther(valueBigInt));
+
+      setButtonText('Withdraw');
+    } catch (e) {
+      console.error('Invalid staked balance', e);
+    }
   };
 
   // Handle amount input change
@@ -266,7 +271,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2" color="textPrimary">
-                {stakedBalance} USDS
+                {formatUSDS(stakedBalance)} USDS
               </Typography>
             </Box>
             <Box

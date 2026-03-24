@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDelegateData } from './useDelegateData';
+import { getSubgraphUrl } from '../wagmi-config';
 
 interface SubgraphDelegate {
   delegators: string;
@@ -56,9 +57,9 @@ export const useDelegatorsSum = (): UseDelegatorsSumResult => {
 
         const query = `
           {
-            delegates(where: {delegators_gt: 0}, first: 300) {
+            delegates: Delegate(where: {delegators: {_gt: 0}}, limit: 300) {
               delegators
-              id
+              id: address
               totalDelegated
             }
           }
@@ -69,7 +70,8 @@ export const useDelegatorsSum = (): UseDelegatorsSumResult => {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
-          const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
+          const rpcUrl = await getSubgraphUrl();
+          const response = await fetch(rpcUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

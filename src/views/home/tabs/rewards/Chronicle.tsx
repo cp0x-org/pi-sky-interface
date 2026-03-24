@@ -101,7 +101,7 @@ export default function ChronicleTab() {
             </TabPanel>
             <TabPanel value={operationType} index={1}>
               <Withdraw
-                stakedBalance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
+                stakedBalance={stakedBalance ? formatEther(stakedBalance) : '0'}
                 rewardBalance={userRewardBalance}
                 rewardAddress={skyConfig.contracts.ChroniclePoints}
                 tokenSymbol={'CLE'}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getSubgraphUrl } from '../wagmi-config';
 
 interface StakingUrn {
   owner: string;
@@ -43,7 +44,7 @@ export const useSuppliersByUrns = (): UseDelegatorsSumResult => {
           try {
             const query = `
               {
-                    stakingUrns(first: ${GRAPHQL_LIMIT}, skip: ${skip}, where: {skyLocked_gt: "0"}) {
+                    stakingUrns: StakingUrn(limit: ${GRAPHQL_LIMIT}, offset: ${skip}, where: {skyLocked: {_gt: "0"}}) {
                       owner
                       skyLocked
                     }
@@ -51,8 +52,8 @@ export const useSuppliersByUrns = (): UseDelegatorsSumResult => {
             `;
 
             console.log(`Fetching stakingUrns: skip=${skip}, limit=${GRAPHQL_LIMIT}`);
-
-            const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
+            const subgraphUrl = await getSubgraphUrl();
+            const response = await fetch(subgraphUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'

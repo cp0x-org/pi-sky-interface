@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
-import { apiConfig } from 'config/index';
+import { apiConfig, getTokens } from 'config/index';
 import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -14,7 +14,7 @@ import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
 import { useStakingPositions } from 'hooks/useStakingPositions';
 import { ethers } from 'ethers';
-import { useStakingApr } from 'hooks/useStakingApr';
+import { useSkyStakingApr } from 'hooks/useSkyStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
 import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
@@ -22,11 +22,10 @@ import { styled } from '@mui/material/styles';
 import { StakingPosition } from 'types/staking';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import { dispatchError, dispatchSuccess, dispatchWarning } from 'utils/snackbar';
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
 function cp0xDelegateName(address: string) {
   if (address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
@@ -51,25 +50,11 @@ interface PositionsProps {
   };
   onEditPosition?: (position: StakingPosition) => void;
 }
-import { SkyContracts, SkyIcons } from 'config/index';
-
-type SkyConfig = {
-  readonly contracts: SkyContracts;
-  readonly features: {};
-  readonly icons: SkyIcons;
-};
-
-const getRewardSymbol = (skyConfig: SkyConfig, position: any): string => {
-  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.USDSStakingRewards.toLowerCase()) {
-    return 'USDS';
-  }
-
-  if (position.reward?.id?.toLowerCase() === skyConfig.contracts.SPKStakingRewards.toLowerCase()) {
-    return 'SPK';
-  }
-
-  return ''; // fallback if no match
-};
+import { SkyContracts } from 'config/index';
+import MenuItem from '@mui/material/MenuItem';
+import { StyledSelect } from 'components/StyledSelect';
+import { SelectChangeEvent } from '@mui/material/Select';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 const PositionCard = styled(Card)(({ theme }) => ({
   ...theme.typography.body2,
@@ -88,27 +73,28 @@ const PositionCard = styled(Card)(({ theme }) => ({
 const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
-  const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
+  const { positions, isLoading: positionsLoading, error: positionsError, refetch: refetchPositions } = useStakingPositions();
   const { delegates, isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
-  const { apr } = useStakingApr();
-  const { apr: aprSpk } = useSpkStakingApr();
+  const { apr } = useSkyStakingApr();
+  const tokens = getTokens();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
   const { skyPrice } = useSkyPrice();
-
   const { stakeAmount: delegateStakeAmount, isDelegate, delegateAddress } = useDelegateStake();
-
   const { tvl, totalSky } = useStakingTvl();
-
   const isLoading = positionsLoading || delegatesLoading;
   const error = positionsError || delegatesError;
-
+  // const [newReward, setNewReward] = useState<string>('');
+  const [oldReward, setOldReward] = useState<Record<string, boolean>>({});
+  const [positionRewards, setPositionRewards] = useState<Record<string, string>>({});
+  // const [oldReward, setOldReward] = useState < Record<string, string>>({});
   // State for tracking operations
   const [withdrawing, setWithdrawing] = useState<Record<string, boolean>>({});
   const [claiming, setClaiming] = useState<Record<string, boolean>>({});
-  const [operationType, setOperationType] = useState<'withdraw' | 'claim' | null>(null);
+  const [changingReward, setChangingReward] = useState<boolean>(false);
+  const [operationType, setOperationType] = useState<'withdraw' | 'claim' | 'selectFarm' | null>(null);
 
   // Contract interaction
-  const { writeContract, isPending, isSuccess, isError, error: contractError, data: txHash } = useWriteContract();
+  const { writeContract, isPending, isError, error: contractError, data: txHash } = useWriteContract();
   const {
     isSuccess: isTxConfirmed,
     isError: isTxConfirmError,
@@ -129,19 +115,81 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     }
   });
 
-  // Effect to handle transaction submission
   useEffect(() => {
-    if (isSuccess && txHash) {
-      console.log('Transaction submitted, waiting for confirmation...', txHash);
+    if (!positions?.length) return;
+
+    const posRewards: Record<string, string> = {};
+
+    positions.map((pos) => {
+      posRewards[pos.indexPosition] = pos.defaultRewardId.toLowerCase();
+    });
+
+    setPositionRewards(posRewards);
+  }, [positions]);
+
+  const handleRewardChange = (position: StakingPosition, event: SelectChangeEvent<unknown>) => {
+    const newTokenAddress = event.target.value;
+
+    if (newTokenAddress == position.defaultRewardId || !newTokenAddress || typeof newTokenAddress !== 'string') {
+      return;
     }
-  }, [isSuccess, txHash]);
+
+    if (newTokenAddress == skyConfig.contracts.USDSStakingRewards) {
+      dispatchWarning('USDS rewards were deprecated. Please choose other options.');
+      return;
+    }
+
+    setChangingReward(true);
+
+    setOldReward((prev: any) => ({ ...prev, [position.indexPosition]: position.defaultRewardId }));
+    // positionRewards[position.indexPosition] = newTokenAddress;
+
+    setPositionRewards((prev) => ({
+      ...prev,
+      [position.indexPosition]: newTokenAddress
+    }));
+
+    setOperationType('selectFarm');
+    const callData = encodeFunctionData({
+      abi: lockStakeContractConfig.abi,
+      functionName: 'selectFarm',
+      args: [address as `0x{string}`, BigInt(position.indexPosition), newTokenAddress as `0x{string}`, 1]
+    });
+
+    // Execute the contract call
+    writeContract({
+      address: skyConfig.contracts.LockStakeEngine,
+      abi: lockStakeContractConfig.abi,
+      functionName: 'multicall',
+      args: [[callData] as readonly `0x${string}`[]]
+    });
+  };
+  useEffect(() => {
+    // полный reset при смене адреса
+    setPositionRewards({});
+    setOldReward({});
+    setWithdrawing({});
+    setClaiming({});
+    setChangingReward(false);
+    setOperationType(null);
+  }, [address]);
 
   // Effect to handle operation success after confirmation
   useEffect(() => {
     if (isTxConfirmed && operationType) {
       console.log('Transaction confirmed for operation:', operationType);
 
-      const message = operationType === 'claim' ? 'Reward claim successful!' : 'Withdraw successful!';
+      let message = '';
+      if (operationType === 'claim') {
+        message = 'Reward claim successfully!';
+        refetchPositions();
+      } else if (operationType === 'withdraw') {
+        message = 'Withdraw successfully!';
+      } else {
+        setChangingReward(false);
+        message = 'Reward was changed successfully!';
+      }
+
       dispatchSuccess(message);
 
       // Reset operation states
@@ -159,8 +207,24 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   // Effect to handle operation failure
   useEffect(() => {
     if (((isError && contractError) || (isTxConfirmError && txConfirmError)) && operationType) {
-      const operationName = operationType === 'claim' ? 'Claim' : 'Withdraw';
-      const errorMsg = contractError?.message || txConfirmError?.message || 'Unknown error';
+      let operationName = '';
+      if (operationType === 'claim') {
+        operationName = 'Claim';
+      } else if (operationType === 'withdraw') {
+        operationName = 'Withdraw';
+      } else {
+        operationName = 'Select Reward';
+        setChangingReward(false);
+
+        positions.map((pos) => {
+          if (oldReward[pos.indexPosition] != undefined && positionRewards[pos.indexPosition] != undefined) {
+            positionRewards[pos.indexPosition] = String(oldReward[pos.indexPosition]); // set previous reward token
+          }
+        });
+      }
+
+      const errorMsg = txConfirmError?.message || 'Unknown error';
+
       dispatchError(`${operationName} error: ${errorMsg}`);
 
       // Reset operation states
@@ -251,7 +315,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     }
   };
 
-  const handleClaim = (position: StakingPosition) => {
+  const handleClaim = (position: StakingPosition, rewardAddress: string) => {
     if (!address || !position.indexPosition) {
       console.error('Missing required data for claiming rewards');
       dispatchError('Missing required data for claiming rewards');
@@ -262,7 +326,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       // Set operation type
       setOperationType('claim');
 
-      console.log('OPERATION TYPE!!!');
+      console.log('OPERATION TYPE');
       console.log(operationType);
 
       // Mark this position as claiming
@@ -273,7 +337,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         address: skyConfig.contracts.LockStakeEngine,
         abi: lockStakeContractConfig.abi,
         functionName: 'getReward',
-        args: [address, BigInt(position.indexPosition), position.reward.id as `0x{string}`, address]
+        args: [address, BigInt(position.indexPosition), rewardAddress as `0x{string}`, address]
       });
 
       console.log('Claim initiated for position', position.indexPosition);
@@ -334,7 +398,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {apr !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Current APR (USDS):</Typography>
+            <Typography variant="body1">Current APR (SKY):</Typography>
             <Typography variant="h6" color="primary">
               ~{apr.toFixed(2)}%
             </Typography>
@@ -524,26 +588,15 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           )}
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-            {positions.length === 0 ? (
-              <Box sx={{ width: '100%' }}>
-                <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                  No Positions
-                </Typography>
-              </Box>
-            ) : (
+            {positions.length > 0 &&
+              Object.keys(positionRewards).length > 0 &&
               positions.map((position) => (
                 <Box key={position.indexPosition} sx={{ width: { xs: '100%', md: 'calc(50% - 12px)' } }}>
                   <PositionCard>
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
-                        <Chip
-                          // label={ethers.getBigInt(position.wad) > 0n ? 'Active' : 'Zero Balance'}
-                          // color={ethers.getBigInt(position.wad) > 0n ? 'success' : 'warning'}
-                          label="Active"
-                          color="success"
-                          size="small"
-                        />
+                        <Chip label="Active" color="success" size="small" />
                       </Box>
 
                       <Divider sx={{ my: 2 }} />
@@ -557,7 +610,6 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <Typography color="text.secondary">Delegate:</Typography>
-
                         <Typography>
                           {position.delegateID
                             ? isCp0xDelegate(position.delegateID)
@@ -599,7 +651,6 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                           )}
                         </Box>
                       </Box>
-
                       {position.transactions && position.transactions.lockHash && (
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                           <Typography color="text.secondary">Transaction:</Typography>
@@ -632,6 +683,47 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                         </Box>
                       )}
 
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography color="text.secondary">Reward:</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <StyledSelect
+                            value={positionRewards[position.indexPosition]}
+                            disabled={changingReward}
+                            label="Token"
+                            onChange={(event) => handleRewardChange(position, event)}
+                            renderValue={(selected) => {
+                              const item = tokens.find((o) => {
+                                return o.tokenAddress.toLowerCase() === String(selected || '').toLowerCase();
+                              });
+                              if (!item) {
+                                return <></>;
+                              }
+                              return (
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <item.icon width={24} height={24} />
+                                  {item?.label}
+                                </Box>
+                              );
+                            }}
+                          >
+                            {tokens.map((token) => (
+                              <MenuItem key={token.tokenAddress} value={token.tokenAddress}>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <token.icon width={24} height={24} />
+                                  {/*<Avatar src={token.icon.img} sx={{ width: 24, height: 24 }} />*/}
+                                  {token.label}
+                                </Box>
+                              </MenuItem>
+                            ))}
+                          </StyledSelect>
+                          {positionRewards[position.indexPosition] == SkyContracts.USDSStakingRewards && (
+                            <Tooltip title="USDS was deprecated, please choose another reward." arrow>
+                              <InfoOutlinedIcon fontSize="small" sx={{ color: 'orangered', cursor: 'pointer' }} />
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </Box>
+
                       <Divider sx={{ my: 2 }} />
 
                       <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -646,26 +738,31 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             Edit Position
                           </Button>
                         )}
-                        <Button
-                          variant="outlined"
-                          color="secondary"
-                          fullWidth
-                          onClick={() => handleClaim(position)}
-                          disabled={
-                            withdrawing[position.indexPosition] ||
-                            claiming[position.indexPosition] ||
-                            isPending ||
-                            ethers.getBigInt(position.wad) <= 0n
-                          }
-                        >
-                          {claiming[position.indexPosition] && !txHash
-                            ? 'Preparing transaction...'
-                            : claiming[position.indexPosition] && txHash && !isTxConfirmed
-                              ? 'Confirming transaction...'
-                              : `Claim ${
-                                  position?.reward ? Number(formatEther(BigInt(position.rewardAmount))).toFixed(5) : '0'
-                                } ${getRewardSymbol(skyConfig, position)}`}
-                        </Button>
+                        {Object.entries(position.rewards).map(([rewardId, reward]) => {
+                          const amount = BigInt(reward.amount);
+                          const formatted = Number(formatEther(amount)).toFixed(5);
+
+                          const isClaiming = claiming[position.indexPosition];
+                          const isWithdrawing = withdrawing[position.indexPosition];
+                          const disabled = isClaiming || isWithdrawing || isPending || amount <= 0n;
+
+                          return (
+                            <Button
+                              key={rewardId}
+                              variant="outlined"
+                              color="secondary"
+                              fullWidth
+                              onClick={() => handleClaim(position, rewardId)}
+                              disabled={disabled}
+                            >
+                              {isClaiming && !txHash
+                                ? 'Preparing transaction...'
+                                : isClaiming && txHash && !isTxConfirmed
+                                  ? 'Confirming transaction...'
+                                  : `Claim ${formatted} ${reward.symbol}`}
+                            </Button>
+                          );
+                        })}
 
                         <Button
                           variant="contained"
@@ -689,8 +786,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                     </CardContent>
                   </PositionCard>
                 </Box>
-              ))
-            )}
+              ))}
           </Box>
         </>
       )}

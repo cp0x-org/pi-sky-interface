@@ -15,7 +15,7 @@ interface Props {
   editMode?: boolean;
 }
 
-const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount, onChange, originalAmount, editMode = false }) => {
+const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onChange, originalAmount, editMode = false }) => {
   const [error, setError] = useState<string | null>(null);
   const maxAmount = userBalance ? formatEther(userBalance) : '0';
 

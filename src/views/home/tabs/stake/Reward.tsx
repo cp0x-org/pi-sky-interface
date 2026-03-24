@@ -1,15 +1,8 @@
-import { FC, SVGProps, useState, useEffect, useMemo } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { Card, CardActionArea, Typography, Box } from '@mui/material';
 
-import { ReactComponent as UsdsIcon } from 'assets/images/sky/ethereum/usds.svg';
-import { ReactComponent as SpkIcon } from 'assets/images/sky/ethereum/spk.svg';
-import { useConfigChainId } from 'hooks/useConfigChainId';
-
-interface Token {
-  label: string;
-  icon: FC<SVGProps<SVGSVGElement>>;
-  tokenAddress: string;
-}
+import { getTokens, skyConfig, SkyContracts, Token } from 'config/index';
+import { dispatchWarning } from 'utils/snackbar';
 
 interface Props {
   rewardAddress: string;
@@ -18,28 +11,25 @@ interface Props {
 
 const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
   const [selected, setSelected] = useState<string | null>(null);
-  const { config: skyConfig } = useConfigChainId();
-
-  const tokens = useMemo<Token[]>(
-    () => [
-      { label: 'USDS', icon: UsdsIcon, tokenAddress: skyConfig.contracts.USDSStakingRewards },
-      { label: 'SPK', icon: SpkIcon, tokenAddress: skyConfig.contracts.SPKStakingRewards }
-    ],
-    [skyConfig.contracts.SPKStakingRewards, skyConfig.contracts.USDSStakingRewards]
-  );
+  const tokens = getTokens();
 
   useEffect(() => {
     if (rewardAddress) {
       const token = tokens.find((t) => t.tokenAddress === rewardAddress);
       if (token) {
-        setSelected(token.label);
+        setSelected(token.tokenAddress);
       }
     } else {
       setSelected(null);
     }
   }, [rewardAddress, tokens]);
   const handleSelect = (token: Token) => {
-    const newSelected = token.label === selected ? null : token.label;
+    const newSelected = token.tokenAddress === selected ? null : token.tokenAddress;
+
+    if (newSelected == SkyContracts.USDSStakingRewards) {
+      dispatchWarning('USDS rewards were deprecated. Please choose other options.');
+      return;
+    }
     setSelected(newSelected);
     onChange(newSelected ? token.tokenAddress : '');
   };
@@ -48,14 +38,14 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
     <Box display="flex" flexDirection="column" gap={2}>
       {tokens.map((token) => (
         <Card
-          key={token.label}
+          key={token.tokenAddress}
           sx={{
             borderRadius: '20px',
             border: '2px solid',
-            borderColor: selected === token.label ? 'primary.main' : 'transparent',
-            backgroundColor: selected === token.label ? 'primary.light' : 'background.paper',
+            borderColor: selected === token.tokenAddress ? 'primary.main' : 'transparent',
+            backgroundColor: selected === token.tokenAddress ? 'primary.light' : 'background.paper',
             transition: '0.3s',
-            boxShadow: selected === token.label ? 4 : 1,
+            boxShadow: selected === token.tokenAddress ? 4 : 1,
             cursor: 'pointer'
           }}
           onClick={() => handleSelect(token)}

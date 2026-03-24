@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { ethers } from 'ethers';
+import { getSubgraphUrl } from '../wagmi-config';
 
 // Helper function to convert wad strings to ethers v6 BigNumber for accurate calculations
 const wadToBigNumber = (wad: string): bigint => {
@@ -152,65 +153,65 @@ export const useStakingData = (): StakingData => {
       try {
         const query = `
           {
-            stakingOpens(where: {owner: "${address}"}) {
+            stakingOpens: StakingOpen(where: {owner: {_ilike: "${address}"}}) {
               index
               blockTimestamp
               transactionHash
             }
-            stakingSelectVoteDelegates(where: { urn_: {owner: "${address}"}}) {
+            stakingSelectVoteDelegates: StakingSelectVoteDelegate(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               voteDelegate {
-                id
+                id: address
               }
               blockTimestamp
               transactionHash
             }
-            stakingSelectRewards(where: { urn_: {owner: "${address}"}}) {
+            stakingSelectRewards: StakingSelectReward(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               reward {
-                id
+                id: address
               }
               blockTimestamp
               transactionHash
             }
-            stakingLocks(where: { urn_: {owner: "${address}"}}) {
+            stakingLocks: StakingLock(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingFrees(where: { urn_: {owner: "${address}"}}) {
+            stakingFrees: StakingFree(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingDraws(where: { urn_: {owner: "${address}"}}) {
+            stakingDraws: StakingDraw(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingWipes(where: { urn_: {owner: "${address}"}}) {
+            stakingWipes: StakingWipe(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingGetRewards(where: { urn_: {owner: "${address}"}}) {
+            stakingGetRewards: StakingGetReward(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               reward
               amt
               blockTimestamp
               transactionHash
             }
-            stakingOnKicks(where: { urn_: {owner: "${address}"}}) {
+            stakingOnKicks: StakingOnKick(where: {urn: {owner: {_ilike: "${address}"}}}) {
               id
               wad
               blockTimestamp
               transactionHash
               urn {
-                id
+                id: address
               }
             }
           }
@@ -221,7 +222,8 @@ export const useStakingData = (): StakingData => {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
-          const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
+          const subgraphUrl = await getSubgraphUrl();
+          const response = await fetch(subgraphUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

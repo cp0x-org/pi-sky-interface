@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { ethers } from 'ethers';
+import { getSubgraphUrl } from '../wagmi-config';
 
 // Helper function to convert wad strings to ethers v6 BigNumber for accurate calculations
 const wadToBigNumber = (wad: string): bigint => {
@@ -18,7 +19,7 @@ const calculatePositions = (
   stakingLocks: StakingLock[],
   stakingFrees: StakingFree[],
   stakingDelegates: any[]
-): StakingPosition[] => {
+): StakingPositionRaw[] => {
   // Group locks and frees by position index
   const positionMap = new Map<
     string,
@@ -130,7 +131,7 @@ export interface StakingFree {
   transactionHash: string;
 }
 
-export interface StakingPosition {
+export interface StakingPositionRaw {
   indexPosition: string;
   delegateID: string; // hash
   wad: string; // amount of tokens staked (difference between stakingLocks and stakingFrees)
@@ -145,9 +146,10 @@ export interface StakingPosition {
 export interface StakingData {
   stakingLocks: StakingLock[];
   stakingFrees: StakingFree[];
-  positions: StakingPosition[]; // Array of calculated positions
+  positions: StakingPositionRaw[]; // Array of calculated positions
   isLoading: boolean;
   error: string | null;
+  refetch: () => Promise<void>;
 }
 
 export const useStakingData = (): StakingData => {
@@ -155,7 +157,7 @@ export const useStakingData = (): StakingData => {
   const [stakingData, setStakingData] = useState<{
     stakingLocks: StakingLock[];
     stakingFrees: StakingFree[];
-    positions: StakingPosition[];
+    positions: StakingPositionRaw[];
   }>({
     stakingLocks: [],
     stakingFrees: [],
@@ -164,165 +166,164 @@ export const useStakingData = (): StakingData => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchStakingData = async () => {
-      if (!address) {
-        setIsLoading(false);
-        return;
-      }
+  const fetchStakingData = useCallback(async () => {
+    if (!address) {
+      setIsLoading(false);
+      return;
+    }
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const query = `
+    try {
+      const query = `
           {
-            stakingOpens(where: {owner: "${address}"}) {
+            stakingOpens: StakingOpen(where: {owner: {_ilike: "${address}"}}) {
               index
               blockTimestamp
               transactionHash
             }
-            stakingSelectVoteDelegates(where: { urn_: {owner: "${address}"}}) {
+            stakingSelectVoteDelegates: StakingSelectVoteDelegate(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               voteDelegate {
-                id
+                id: address
               }
               blockTimestamp
               transactionHash
             }
-            stakingSelectRewards(where: { urn_: {owner: "${address}"}}) {
+            stakingSelectRewards: StakingSelectReward(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               reward {
-                id
+                id: address
               }
               blockTimestamp
               transactionHash
             }
-            stakingLocks(where: { urn_: {owner: "${address}"}}) {
+            stakingLocks: StakingLock(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingFrees(where: { urn_: {owner: "${address}"}}) {
+            stakingFrees: StakingFree(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingDraws(where: { urn_: {owner: "${address}"}}) {
+            stakingDraws: StakingDraw(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingWipes(where: { urn_: {owner: "${address}"}}) {
+            stakingWipes: StakingWipe(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               wad
               blockTimestamp
               transactionHash
             }
-            stakingGetRewards(where: { urn_: {owner: "${address}"}}) {
+            stakingGetRewards: StakingGetReward(where: {urn: {owner: {_ilike: "${address}"}}}) {
               index
               reward
               amt
               blockTimestamp
               transactionHash
             }
-            stakingOnKicks(where: { urn_: {owner: "${address}"}}) {
+            stakingOnKicks: StakingOnKick(where: {urn: {owner: {_ilike: "${address}"}}}) {
               id
               wad
               blockTimestamp
               transactionHash
               urn {
-                id
+                id: address
               }
             }
           }
         `;
 
-        // Add a timeout to prevent hanging if the GraphQL endpoint is slow
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      // Add a timeout to prevent hanging if the GraphQL endpoint is slow
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-        try {
-          const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ query }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            throw new Error(`Error fetching staking data: ${response.statusText}`);
-          }
-
-          const result = await response.json();
-
-          if (result.errors) {
-            throw new Error(`GraphQL errors: ${result.errors.map((e: any) => e.message).join(', ')}`);
-          }
-
-          if (!result.data) {
-            throw new Error('GraphQL response missing data field');
-          }
-
-          const stakingLocks = result.data.stakingLocks || [];
-          const stakingFrees = result.data.stakingFrees || [];
-          const stakingSelectRewards = result.data.stakingSelectRewards || [];
-
-          // Calculate positions from locks and frees
-          const positions = calculatePositions(
-            stakingSelectRewards,
-            stakingLocks,
-            stakingFrees,
-            result.data.stakingSelectVoteDelegates || []
-          );
-
-          setStakingData({
-            stakingLocks,
-            stakingFrees,
-            positions
-          });
-
-          console.log('Staking data fetched successfully:', {
-            locks: stakingLocks.length || 0,
-            frees: stakingFrees.length || 0,
-            positions: positions.length || 0
-          });
-        } catch (fetchError: any) {
-          if (fetchError.name === 'AbortError') {
-            throw new Error('GraphQL request timed out');
-          }
-          throw fetchError;
-        }
-      } catch (err) {
-        console.error('Error fetching staking data:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-        // Continue with empty data rather than failing completely
-        setStakingData({
-          stakingLocks: [],
-          stakingFrees: [],
-          positions: []
+      try {
+        const subgraphUrl = await getSubgraphUrl();
+        const response = await fetch(subgraphUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ query }),
+          signal: controller.signal
         });
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchStakingData();
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`Error fetching staking data: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.errors) {
+          throw new Error(`GraphQL errors: ${result.errors.map((e: any) => e.message).join(', ')}`);
+        }
+
+        if (!result.data) {
+          throw new Error('GraphQL response missing data field');
+        }
+
+        const stakingLocks = result.data.stakingLocks || [];
+        const stakingFrees = result.data.stakingFrees || [];
+        const stakingSelectRewards = result.data.stakingSelectRewards || [];
+
+        // Calculate positions from locks and frees
+        const positions = calculatePositions(
+          stakingSelectRewards,
+          stakingLocks,
+          stakingFrees,
+          result.data.stakingSelectVoteDelegates || []
+        );
+
+        setStakingData({
+          stakingLocks,
+          stakingFrees,
+          positions
+        });
+
+        console.log('Staking data fetched successfully:', {
+          locks: stakingLocks.length || 0,
+          frees: stakingFrees.length || 0,
+          positions: positions.length || 0
+        });
+      } catch (fetchError: any) {
+        if (fetchError.name === 'AbortError') {
+          throw new Error('GraphQL request timed out');
+        }
+        throw fetchError;
+      }
+    } catch (err) {
+      console.error('Error fetching staking data:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      // Continue with empty data rather than failing completely
+      setStakingData({
+        stakingLocks: [],
+        stakingFrees: [],
+        positions: []
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [address]);
+
+  useEffect(() => {
+    fetchStakingData();
+  }, [fetchStakingData]);
 
   return {
     ...stakingData,
     isLoading,
-    error
+    error,
+    refetch: fetchStakingData
   };
 };
-
-// Note: Don't forget to add ethers dependency if not already installed:
-// yarn add ethers

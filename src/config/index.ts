@@ -1,3 +1,7 @@
+import { FC, SVGProps } from 'react';
+
+import { ReactComponent as SkyIcon } from 'assets/images/sky/ethereum/sky.svg';
+import { ReactComponent as SpkIcon } from 'assets/images/sky/ethereum/spk.svg';
 export const Mainnet = 1;
 export const Arbitrum = 42161;
 export const Base = 8453;
@@ -29,6 +33,7 @@ export const skyConfig = {
       DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
       STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9',
       USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+      SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
       SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404', // for stake tab
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
@@ -56,6 +61,7 @@ export const skyConfig = {
       STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9',
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
+      SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
@@ -81,6 +87,7 @@ export const skyConfig = {
       DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
       STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9',
       SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
+      SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
@@ -103,6 +110,7 @@ export const skyConfig = {
     contracts: {
       USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
       SKY: '0x56072C95FAA701256059aa122697B133aDEd9279',
+      SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
       MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
       DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
       STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9',
@@ -129,6 +137,7 @@ export const skyConfig = {
     contracts: {
       USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
       SKY: '0x56072C95FAA701256059aa122697B133aDEd9279',
+      SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
       MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
       DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
       STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9',
@@ -153,22 +162,25 @@ export const skyConfig = {
   }
 } as const;
 
-export type SkyContracts = {
-  readonly USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F';
-  readonly SKY: '0x56072C95FAA701256059aa122697B133aDEd9279';
-  readonly MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2';
-  readonly DAI: '0x6b175474e89094c44da98b954eedeac495271d0f';
-  readonly STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9';
-  readonly USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865'; // for stake tab
-  readonly SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404'; // for stake tab
-  readonly SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD';
-  readonly StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275';
-  readonly UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af';
-  readonly ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce';
-  readonly DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A';
-  readonly MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a';
-  readonly LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3';
-};
+export const SkyContracts = {
+  USDS: '0xdC035D45d973E3EC169d2276DDab16f1e407384F',
+  SKY: '0x56072C95FAA701256059aa122697B133aDEd9279',
+  MKR: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
+  DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
+  STUSDS: '0x99CD4Ec3f88A45940936F469E4bB72A2A701EEB9',
+  USDSStakingRewards: '0x38E4254bD82ED5Ee97CD1C4278FAae748d998865',
+  SPKStakingRewards: '0x99cbc0e4e6427f6939536ed24d1275b95ff77404',
+  SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
+  SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
+  StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
+  UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+  ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
+  DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
+  MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
+  LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3'
+} as const;
+
+export type SkyContracts = typeof SkyContracts;
 
 export type SkyIcons =
   | {
@@ -189,3 +201,15 @@ export type SkyIcons =
       readonly mkr: '/assets/images/sky/base/mkr.svg';
       readonly sky: '/assets/images/sky/base/sky.svg';
     };
+
+export interface Token {
+  label: string;
+  icon: FC<SVGProps<SVGSVGElement>>;
+  tokenAddress: string;
+}
+
+export const getTokens = (): Token[] => [
+  { label: 'SKY', icon: SkyIcon, tokenAddress: SkyContracts.SKYStakingRewards },
+  { label: 'SPK', icon: SpkIcon, tokenAddress: SkyContracts.SPKStakingRewards },
+  { label: 'USDS (deprecated)', icon: SpkIcon, tokenAddress: SkyContracts.USDSStakingRewards }
+];

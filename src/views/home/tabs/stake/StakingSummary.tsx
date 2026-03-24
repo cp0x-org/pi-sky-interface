@@ -10,21 +10,19 @@ import { Alert, CircularProgress, Tooltip } from '@mui/material';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { useStakingPositions } from 'hooks/useStakingPositions';
-import { useStakingApr } from 'hooks/useStakingApr';
+import { useSkyStakingApr } from 'hooks/useSkyStakingApr';
 import useStakingTvl from 'hooks/useStakingTvl';
 import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { useSpkStakingApr } from 'hooks/useSpkStakingApr';
 
 export default function StakingSummary() {
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
   const { isLoading: delegatesLoading, error: delegatesError } = useDelegateData();
-  const { apr } = useStakingApr();
-  const { apr: aprSpk } = useSpkStakingApr();
+  const { apr } = useSkyStakingApr();
   const { skyPrice } = useSkyPrice();
   const { totalDelegators, totalPositions } = useSuppliersByUrns();
 
@@ -198,7 +196,7 @@ export default function StakingSummary() {
               }}
             >
               <Typography color="text.secondary" variant="body2">
-                Current APR(USDS)
+                Current APR(SKY)
               </Typography>
               <Typography variant="h6">~{apr.toFixed(2)}%</Typography>
             </Box>

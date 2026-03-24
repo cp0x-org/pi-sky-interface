@@ -5,7 +5,7 @@ import { useConfigChainId } from './useConfigChainId';
 import { useSkyPrice } from './useSkyPrice';
 const SECONDS_IN_YEAR = 31_536_000n;
 
-export function useStakingApr() {
+export function useSkyStakingApr() {
   const { config: skyConfig } = useConfigChainId();
 
   const { skyPrice } = useSkyPrice();
@@ -13,17 +13,17 @@ export function useStakingApr() {
   const { data, isLoading, error } = useReadContracts({
     contracts: [
       {
-        address: skyConfig.contracts.USDSStakingRewards,
+        address: skyConfig.contracts.SKYStakingRewards,
         abi: USDSStakingReward.abi,
         functionName: 'rewardRate'
       },
       {
-        address: skyConfig.contracts.USDSStakingRewards,
+        address: skyConfig.contracts.SKYStakingRewards,
         abi: USDSStakingReward.abi,
         functionName: 'rewardsDuration'
       },
       {
-        address: skyConfig.contracts.USDSStakingRewards,
+        address: skyConfig.contracts.SKYStakingRewards,
         abi: USDSStakingReward.abi,
         functionName: 'totalSupply'
       }
@@ -40,13 +40,13 @@ export function useStakingApr() {
     if (totalSupply === 0n) return 0;
 
     // Set current SKY price in USDS manually or from an oracle
-    const stakingTokenPriceInUSDS = skyPrice ? skyPrice : 0;
+    // const stakingTokenPriceInUSDS = skyPrice ? skyPrice : 0;
 
     // Step 1: Calculate annual reward in USDS (from rewardRate in wei)
     const annualRewardUSDS = rewardRate * SECONDS_IN_YEAR; // still in wei
 
     // Step 2: Total value of staked SKY in USDS
-    const totalStakedValueUSDS = (Number(totalSupply) / 1e18) * stakingTokenPriceInUSDS;
+    const totalStakedValueUSDS = Number(totalSupply) / 1e18;
     let aprPercent;
     if (totalStakedValueUSDS) {
       // Step 3: Calculate APR
@@ -56,7 +56,7 @@ export function useStakingApr() {
     }
 
     return aprPercent;
-  }, [data, skyPrice]);
+  }, [data]);
 
   return {
     apr,

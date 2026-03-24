@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getSubgraphUrl } from '../wagmi-config';
 
 interface TotalUpgradedResponse {
   data: {
@@ -38,10 +39,10 @@ export const useTotalUpgraded = (): UseTotalUpgradedResult => {
       try {
         const query = `
           {
-            mkrTotal: total(id: "mkrUpgraded") {
+            mkrTotal: Total_by_pk(id: "1-mkrUpgraded") {
               total
             }
-            daiTotal: total(id: "daiUpgraded") {
+            daiTotal: Total_by_pk(id: "1-daiUpgraded") {
               total
             }
           }
@@ -52,7 +53,8 @@ export const useTotalUpgraded = (): UseTotalUpgradedResult => {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
-          const response = await fetch('https://query-subgraph.sky.money/subgraphs/name/jetstreamgg/sky-subgraph-mainnet', {
+          const subgraphUrl = await getSubgraphUrl();
+          const response = await fetch(subgraphUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
