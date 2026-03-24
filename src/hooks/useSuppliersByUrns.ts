@@ -44,7 +44,7 @@ export const useSuppliersByUrns = (): UseDelegatorsSumResult => {
           try {
             const query = `
               {
-                    stakingUrns(first: ${GRAPHQL_LIMIT}, skip: ${skip}, where: {skyLocked_gt: "0"}) {
+                    stakingUrns: StakingUrn(limit: ${GRAPHQL_LIMIT}, offset: ${skip}, where: {skyLocked: {_gt: "0"}}) {
                       owner
                       skyLocked
                     }

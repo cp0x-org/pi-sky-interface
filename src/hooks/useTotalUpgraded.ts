@@ -39,10 +39,10 @@ export const useTotalUpgraded = (): UseTotalUpgradedResult => {
       try {
         const query = `
           {
-            mkrTotal: total(id: "mkrUpgraded") {
+            mkrTotal: Total_by_pk(id: "1-mkrUpgraded") {
               total
             }
-            daiTotal: total(id: "daiUpgraded") {
+            daiTotal: Total_by_pk(id: "1-daiUpgraded") {
               total
             }
           }

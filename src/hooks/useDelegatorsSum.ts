@@ -57,9 +57,9 @@ export const useDelegatorsSum = (): UseDelegatorsSumResult => {
 
         const query = `
           {
-            delegates(where: {delegators_gt: 0}, first: 300) {
+            delegates: Delegate(where: {delegators: {_gt: 0}}, limit: 300) {
               delegators
-              id
+              id: address
               totalDelegated
             }
           }
