@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Alert } from '@mui/material';
 import { FC, useState, useCallback, useEffect } from 'react';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
@@ -8,6 +8,7 @@ import { StyledTextField } from 'components/StyledTextField';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { PercentButton } from 'components/PercentButton';
 import { stUsdsContractConfig } from 'config/abi/StUsds';
+import StatusLive from 'components/StatusLive';
 
 interface Props {
   maxWithdrawBalance?: string;
@@ -167,7 +168,14 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <StyledTextField
-            slotProps={{ input: { lang: 'en' } }}
+            slotProps={{
+              input: {
+                lang: 'en',
+                inputMode: 'decimal',
+                'aria-label': 'Amount of USDS to withdraw',
+                'aria-describedby': 'expert-withdraw-balance'
+              }
+            }}
             fullWidth
             type="number"
             placeholder="Enter amount"
@@ -176,25 +184,31 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
             disabled={withdrawTx.txState === 'processing' || withdrawTx.isCompleted}
           />
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <UsdsLogo width="24" height="24" />
+            <UsdsLogo width="24" height="24" aria-hidden />
             <Typography>USDS</Typography>
           </Box>
         </Box>
 
         {parseFloat(maxWithdrawBalance || '0') === 0 && (
-          <Typography variant="body1" color="orange">
+          <Alert severity="warning" sx={{ mt: 2 }}>
             Available liquidity exhausted. Withdrawals are temporarily unavailable.
-          </Typography>
+          </Alert>
         )}
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-          <Typography variant="body2" color="textPrimary">
+          <Typography variant="body2" color="textPrimary" id="expert-withdraw-balance">
             {maxWithdrawBalance} USDS
           </Typography>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(25)} aria-label="Set amount to 25% of balance">
+              25%
+            </PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)} aria-label="Set amount to 50% of balance">
+              50%
+            </PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)} aria-label="Set amount to 100% of balance">
+              100%
+            </PercentButton>
           </Box>
         </Box>
 
@@ -208,6 +222,7 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
         >
           {getWithdrawButtonText()}
         </Button>
+        <StatusLive message={getWithdrawButtonText()} />
       </Box>
     </StyledCard>
   );

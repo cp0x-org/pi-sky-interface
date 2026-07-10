@@ -20,6 +20,7 @@ import { useConfig } from 'wagmi';
 import StakingSummary from './StakingSummary';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useTheme } from '@mui/material/styles';
+import StatusLive from 'components/StatusLive';
 
 const steps = ['Stake', 'Reward', 'Delegate', 'Confirm'];
 
@@ -218,6 +219,16 @@ export default function HandlePosition({ editMode = false, positionData = null }
 
   // Check if approval is needed
   useEffect(() => {
+    // In edit mode with no new amount, nothing is locked so no SKY approval is
+    // required — treat as approved so the user can confirm delegate-only changes.
+    if (editMode && !stakeData.amount) {
+      if (!isApproved) {
+        setIsApproved(true);
+        setConfirmButtonText('Confirm Staking');
+      }
+      return;
+    }
+
     if (address && stakeData.amount && allowanceData) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
@@ -232,7 +243,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
         console.error('Error checking allowance:', error);
       }
     }
-  }, [address, stakeData.amount, allowanceData, isApproved]);
+  }, [address, stakeData.amount, allowanceData, isApproved, editMode]);
 
   // Use a ref to track if we've already run the simulation
   const hasRunSimulation = useRef<boolean>(false);
@@ -465,8 +476,15 @@ export default function HandlePosition({ editMode = false, positionData = null }
   };
 
   const handleSkip = () => {
-    // Clear delegator address and move to next step
-    setStakeData((prev) => ({ ...prev, delegatorAddress: '' }));
+    // Skip the current step. Skipping the amount step clears the amount (no extra
+    // stake), skipping the delegate step clears the delegator; the reward step just
+    // keeps its current value. This lets the user, in edit mode, change only the
+    // delegate without entering an amount or picking a reward.
+    setStakeData((prev) => ({
+      ...prev,
+      ...(activeStep === 0 ? { amount: '' } : {}),
+      ...(activeStep === 2 ? { delegatorAddress: '' } : {})
+    }));
     setActiveStep((prev) => prev + 1);
   };
 
@@ -667,7 +685,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+      <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         Stake your SKY tokens to earn rewards and participate in the Sky Protocol governance. Follow the steps below to complete your
         staking process.
       </Typography>
@@ -676,13 +694,14 @@ export default function HandlePosition({ editMode = false, positionData = null }
           <CardHeader title={'Staking Process'}></CardHeader>
           <Card sx={{ borderRadius: '20px' }}>
             <Box sx={{ p: 3 }}>
-              <Stepper activeStep={activeStep}>
-                {steps.map((label) => (
+              <Stepper activeStep={activeStep} aria-label="Staking steps">
+                {steps.map((label, index) => (
                   <Step key={label}>
-                    <StepLabel>{label}</StepLabel>
+                    <StepLabel aria-current={activeStep === index ? 'step' : undefined}>{label}</StepLabel>
                   </Step>
                 ))}
               </Stepper>
+              <StatusLive message={`Step ${activeStep + 1} of ${steps.length}: ${steps[activeStep]}`} />
 
               <Box sx={{ mt: 4 }}>{StepComponent}</Box>
 
@@ -728,21 +747,24 @@ export default function HandlePosition({ editMode = false, positionData = null }
                     Back
                   </Button>
 
-                  {activeStep === 2 ? (
+                  {activeStep === steps.length - 1 ? (
+                    <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
+                      {confirmButtonText}
+                    </Button>
+                  ) : (
                     <Stack direction="row" spacing={2}>
-                      <Button variant="outlined" onClick={handleSkip} disabled={!address}>
-                        Skip
-                      </Button>
+                      {(activeStep === 2 || editMode) && (
+                        <Button variant="text" onClick={handleSkip} disabled={!address}>
+                          Skip
+                        </Button>
+                      )}
                       <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
                         Next
                       </Button>
                     </Stack>
-                  ) : (
-                    <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
-                      {activeStep === steps.length - 1 ? confirmButtonText : 'Next'}
-                    </Button>
                   )}
                 </Box>
+                <StatusLive message={activeStep === steps.length - 1 ? confirmButtonText : ''} />
               </Box>
             </Box>
           </Card>

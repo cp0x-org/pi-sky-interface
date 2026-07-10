@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from 'ui-component/TabPanel';
+import TabPanel, { a11yTabProps } from 'ui-component/TabPanel';
 import { usdsContractConfig } from 'config/abi/Usds';
 import { savingsUsdsContractConfig } from 'config/abi/SavingsUsds';
 import { formatEther } from 'viem';
@@ -56,11 +56,11 @@ export default function SavingsTab() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" component="h1" gutterBottom>
         Sky Savings Rate
       </Typography>
 
-      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+      <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         The Sky Savings Rate is an automated token-accumulation mechanism for eligible users of the Sky Protocol. It takes into account the
         effect of accumulated USDS compounded in real time.
       </Typography>
@@ -73,15 +73,15 @@ export default function SavingsTab() {
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Savings'}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange}>
-              <Tab label="Supply" />
-              <Tab label="Withdraw" />
+            <Tabs value={operationType} onChange={handleOperationChange} aria-label="Savings operations">
+              <Tab label="Supply" {...a11yTabProps('savings', 0)} />
+              <Tab label="Withdraw" {...a11yTabProps('savings', 1)} />
             </Tabs>
 
-            <TabPanel value={operationType} index={0}>
+            <TabPanel value={operationType} index={0} idPrefix="savings">
               <Deposit userBalance={userBalance ? formatUSDS(formatEther(userBalance)) : '0'} />
             </TabPanel>
-            <TabPanel value={operationType} index={1}>
+            <TabPanel value={operationType} index={1} idPrefix="savings">
               <Withdraw savingsBalance={savingBalance ? formatUSDS(formatEther(savingBalance)) : '0'} />
             </TabPanel>
           </Box>

@@ -1,5 +1,5 @@
 import { FC, useState, useCallback, useEffect } from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography, Button, Alert } from '@mui/material';
 import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import { useReadContract, useAccount } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
@@ -14,6 +14,7 @@ import { PercentButton } from 'components/PercentButton';
 import { useDebounce } from 'hooks/useDebounce';
 import { useWriteTransaction } from 'hooks/useWriteTransaction';
 import { stUsdsContractConfig } from 'config/abi/StUsds';
+import StatusLive from 'components/StatusLive';
 
 interface Props {
   userBalance?: bigint;
@@ -274,7 +275,10 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
           <StyledTextField
             slotProps={{
               input: {
-                lang: 'en'
+                lang: 'en',
+                inputMode: 'decimal',
+                'aria-label': 'Amount of USDS to supply',
+                'aria-describedby': 'expert-stake-balance'
               }
             }}
             fullWidth
@@ -286,7 +290,7 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
           />
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <UsdsLogo width="24" height="24" />
+            <UsdsLogo width="24" height="24" aria-hidden />
             <Typography>USDS</Typography>
           </Box>
         </Box>
@@ -294,7 +298,7 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
         {/* Balance and percentage buttons */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="textPrimary">
+            <Typography variant="body2" color="textPrimary" id="expert-stake-balance">
               {userBalance ? formatUSDS(formatEther(userBalance)) : '0'} USDS
             </Typography>
           </Box>
@@ -308,13 +312,13 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
               100%
             </PercentButton>
           </Box>
@@ -326,11 +330,12 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
         <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={isButtonDisabled()} onClick={handleMainButtonClick}>
           {getButtonText()}
         </Button>
+        <StatusLive message={getButtonText()} />
       </Box>
-      <Typography variant="body1" color="orange" mt={2}>
-        By staking in Expert Mode, you acknowledges and understands that USDS deposited into the stUSDS module is used to fund borrowing
-        against SKY, and that withdrawals will be unavailable while Available Liquidity is 0.
-      </Typography>
+      <Alert severity="warning" sx={{ mt: 2 }}>
+        By staking in Expert Mode, you acknowledge and understand that USDS deposited into the stUSDS module is used to fund borrowing against
+        SKY, and that withdrawals will be unavailable while Available Liquidity is 0.
+      </Alert>
     </StyledCard>
   );
 };

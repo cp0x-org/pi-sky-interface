@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from 'ui-component/TabPanel';
+import TabPanel, { a11yTabProps } from 'ui-component/TabPanel';
 import Info from './components/Info';
 import Stake from './components/Stake';
 import Withdraw from './components/Withdraw';
@@ -75,10 +75,10 @@ export default function ChronicleTab() {
       <Button variant="outlined" onClick={handleBack} sx={{ mb: 2 }}>
         Back to Rewards
       </Button>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" component="h1" gutterBottom>
         Chronicle Points
       </Typography>
-      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+      <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         Chronicle Points allow you to earn rewards by staking your USDS tokens in the Sky Protocol ecosystem. The system tracks your
         contributions and rewards you accordingly.
       </Typography>
@@ -91,15 +91,19 @@ export default function ChronicleTab() {
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Chronicle Points'}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange}>
-              <Tab label="Supply" />
-              {userRewardBalance ? <Tab label="Withdraw/Claim" /> : <Tab label="Withdraw" />}
+            <Tabs value={operationType} onChange={handleOperationChange} aria-label="Chronicle Points operations">
+              <Tab label="Supply" {...a11yTabProps('chronicle', 0)} />
+              {userRewardBalance ? (
+                <Tab label="Withdraw/Claim" {...a11yTabProps('chronicle', 1)} />
+              ) : (
+                <Tab label="Withdraw" {...a11yTabProps('chronicle', 1)} />
+              )}
             </Tabs>
 
-            <TabPanel value={operationType} index={0}>
+            <TabPanel value={operationType} index={0} idPrefix="chronicle">
               <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.ChroniclePoints} />
             </TabPanel>
-            <TabPanel value={operationType} index={1}>
+            <TabPanel value={operationType} index={1} idPrefix="chronicle">
               <Withdraw
                 stakedBalance={stakedBalance ? formatEther(stakedBalance) : '0'}
                 rewardBalance={userRewardBalance}

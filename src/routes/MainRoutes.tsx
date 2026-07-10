@@ -12,6 +12,7 @@ import USDSSkyTab from '../views/home/tabs/rewards/USDSSky';
 import ChronicleTab from '../views/home/tabs/rewards/Chronicle';
 import Error from '../views/pages/maintenance/Error';
 import USDSSpkTab from '../views/home/tabs/rewards/USDSSpk';
+import USDSGroveTab from '../views/home/tabs/rewards/USDSGrove';
 import ExpertTab from '../views/home/tabs/Expert';
 
 // ==============================|| MAIN ROUTING ||============================== //
@@ -35,6 +36,10 @@ const MainRoutes = {
     {
       path: '/rewards/usdsgetspk',
       element: <USDSSpkTab />
+    },
+    {
+      path: '/rewards/usdsgetgrove',
+      element: <USDSGroveTab />
     },
     {
       path: '/rewards/chronicle',

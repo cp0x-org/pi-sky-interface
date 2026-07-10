@@ -16,9 +16,9 @@ import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
-import { usdsSpkRewardContractConfig } from 'config/abi/UsdsSpkReward';
+import { groveRewardsConfig } from 'config/abi/GroveRewards';
 
-export default function USDSSpkTab() {
+export default function USDSGroveTab() {
   const [operationType, setOperationType] = useState(0);
   const navigate = useNavigate();
   const account = useAccount();
@@ -34,8 +34,8 @@ export default function USDSSpkTab() {
   };
 
   const { data: userRewardBalance } = useReadContract({
-    ...usdsSpkRewardContractConfig,
-    address: skyConfig.contracts.UsdsSpkRewards,
+    ...groveRewardsConfig,
+    address: skyConfig.contracts.GroveRewards,
     functionName: 'earned',
     args: address ? [address] : undefined,
     query: {
@@ -44,7 +44,7 @@ export default function USDSSpkTab() {
   });
 
   const { data: userBalance } = useReadContract({
-    ...usdsSpkRewardContractConfig,
+    ...groveRewardsConfig,
     address: skyConfig.contracts.USDS,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
@@ -54,8 +54,8 @@ export default function USDSSpkTab() {
   });
 
   const { data: stakedBalance } = useReadContract({
-    ...usdsSpkRewardContractConfig,
-    address: skyConfig.contracts.UsdsSpkRewards,
+    ...groveRewardsConfig,
+    address: skyConfig.contracts.GroveRewards,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
@@ -64,8 +64,8 @@ export default function USDSSpkTab() {
   });
 
   const { data: totalSupply } = useReadContract({
-    ...usdsSpkRewardContractConfig,
-    address: skyConfig.contracts.UsdsSpkRewards,
+    ...groveRewardsConfig,
+    address: skyConfig.contracts.GroveRewards,
     functionName: 'totalSupply'
   });
 
@@ -75,10 +75,10 @@ export default function USDSSpkTab() {
         Back to Rewards
       </Button>
       <Typography variant="h2" component="h1" gutterBottom>
-        With: USDS Get: SPK
+        With: USDS Get: GROVE
       </Typography>
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Stake your USDS tokens to earn SPK rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
+        Stake your USDS tokens to earn GROVE rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
         rewards proportional to your contribution.
       </Typography>
       {!address && (
@@ -90,24 +90,24 @@ export default function USDSSpkTab() {
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Staking'}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange} aria-label="USDS to SPK operations">
-              <Tab label="Supply" {...a11yTabProps('usdsspk', 0)} />
+            <Tabs value={operationType} onChange={handleOperationChange} aria-label="USDS to GROVE operations">
+              <Tab label="Supply" {...a11yTabProps('usdsgrove', 0)} />
               {userRewardBalance ? (
-                <Tab label="Withdraw/Claim" {...a11yTabProps('usdsspk', 1)} />
+                <Tab label="Withdraw/Claim" {...a11yTabProps('usdsgrove', 1)} />
               ) : (
-                <Tab label="Withdraw" {...a11yTabProps('usdsspk', 1)} />
+                <Tab label="Withdraw" {...a11yTabProps('usdsgrove', 1)} />
               )}
             </Tabs>
 
-            <TabPanel value={operationType} index={0} idPrefix="usdsspk">
-              <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.UsdsSpkRewards} />
+            <TabPanel value={operationType} index={0} idPrefix="usdsgrove">
+              <Stake userBalance={userBalance} rewardAddress={skyConfig.contracts.GroveRewards} />
             </TabPanel>
-            <TabPanel value={operationType} index={1} idPrefix="usdsspk">
+            <TabPanel value={operationType} index={1} idPrefix="usdsgrove">
               <Withdraw
                 stakedBalance={stakedBalance ? Number(formatEther(stakedBalance)).toFixed(4) : '0'}
                 rewardBalance={userRewardBalance}
-                rewardAddress={skyConfig.contracts.UsdsSpkRewards}
-                tokenSymbol={'SPK'}
+                rewardAddress={skyConfig.contracts.GroveRewards}
+                tokenSymbol={'GROVE'}
               />
             </TabPanel>
           </Box>
@@ -115,7 +115,7 @@ export default function USDSSpkTab() {
         <Grid size={{ xs: 12, md: 5 }}>
           <Box sx={{ width: '100%', display: 'flex' }}>
             <Info
-              contractAddress={skyConfig.contracts.UsdsSpkRewards}
+              contractAddress={skyConfig.contracts.GroveRewards}
               balance={stakedBalance ? formatUSDS(formatEther(stakedBalance)) : '0'}
               tvl={totalSupply ? formatUSDS(formatEther(totalSupply)) + ' USDS' : '$0.00'}
             />

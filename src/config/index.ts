@@ -14,8 +14,9 @@ export const appConfig = {
 
 export const apiConfig = {
   // cp0xDelegate: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5', // old
-  cp0xDelegate: '0x2C89024c13A80bC1B662A3dB990524652C15221C', //new
+  cp0xDelegate: '0xb26338C1F190dDF5B7FE61fa6198b06547A5Bc23', //new
   cp0xDelegateOld: '0x7B66F88F25B2A484F4059f96fb824c74BcEf77F5', //old
+  cp0xDelegateOld2: '0x2C89024c13A80bC1B662A3dB990524652C15221C', //new
   cp0x: 'cp0x',
   delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet&delegateType=ALL', // TODO pagination to add shadow delegators
   // delegatesInfoMainnet: 'https://vote.sky.money/api/delegates?network=mainnet',
@@ -23,6 +24,25 @@ export const apiConfig = {
   uniswapV2UsdsSkyPool: '0x2621cc0b3f3c079c1db0e80794aa24976f0b9e3c',
   uniswapV3UsdcSpkPool: '0x76665642F513aAf2A00bE05711A598F44e3970A7'
 } as const;
+
+// cp0x delegate addresses and their display names. Handling of all three must
+// stay identical — resolve names / membership only through the helpers below.
+// Only `cp0xDelegate` (aligned) is pinned to the top of the delegate list.
+export const cp0xDelegates = [
+  { address: apiConfig.cp0xDelegate, name: 'cp0x (aligned)' },
+  { address: apiConfig.cp0xDelegateOld, name: 'cp0x' },
+  { address: apiConfig.cp0xDelegateOld2, name: 'cp0x (old)' }
+] as const;
+
+export function getCp0xDelegateName(address?: string | null): string | null {
+  if (!address) return null;
+  const match = cp0xDelegates.find((d) => d.address.toLowerCase() === address.toLowerCase());
+  return match ? match.name : null;
+}
+
+export function isCp0xDelegate(address?: string | null): boolean {
+  return getCp0xDelegateName(address) !== null;
+}
 
 export const skyConfig = {
   [Mainnet]: {
@@ -39,6 +59,8 @@ export const skyConfig = {
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+      GroveRewards: '0x4E41488C19cD35EB4de3083Fc3e204854c75c86a', // stake USDS to earn GROVE
+      GROVE: '0xB30FE1Cf884B48a22a50D22a9282004F2c5E9406', // GROVE reward token
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
@@ -64,6 +86,8 @@ export const skyConfig = {
       SKYStakingRewards: '0xB44C2Fb4181D7Cb06bdFf34A46FdFe4a259B40Fc',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+      GroveRewards: '0x4E41488C19cD35EB4de3083Fc3e204854c75c86a', // stake USDS to earn GROVE
+      GROVE: '0xB30FE1Cf884B48a22a50D22a9282004F2c5E9406', // GROVE reward token
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
@@ -91,6 +115,8 @@ export const skyConfig = {
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+      GroveRewards: '0x4E41488C19cD35EB4de3083Fc3e204854c75c86a', // stake USDS to earn GROVE
+      GROVE: '0xB30FE1Cf884B48a22a50D22a9282004F2c5E9406', // GROVE reward token
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
@@ -118,6 +144,8 @@ export const skyConfig = {
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+      GroveRewards: '0x4E41488C19cD35EB4de3083Fc3e204854c75c86a', // stake USDS to earn GROVE
+      GROVE: '0xB30FE1Cf884B48a22a50D22a9282004F2c5E9406', // GROVE reward token
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
@@ -145,6 +173,8 @@ export const skyConfig = {
       StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
       ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
       UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+      GroveRewards: '0x4E41488C19cD35EB4de3083Fc3e204854c75c86a', // stake USDS to earn GROVE
+      GROVE: '0xB30FE1Cf884B48a22a50D22a9282004F2c5E9406', // GROVE reward token
       DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
       MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',
       LockStakeEngine: '0xCe01C90dE7FD1bcFa39e237FE6D8D9F569e8A6a3',
@@ -174,6 +204,8 @@ export const SkyContracts = {
   SavingsUSDS: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
   StakingRewards: '0x0650CAF159C5A49f711e8169D4336ECB9b950275',
   UsdsSpkRewards: '0x173e314C7635B45322cd8Cb14f44b312e079F3af',
+  GroveRewards: '0x4E41488C19cD35EB4de3083Fc3e204854c75c86a',
+  GROVE: '0xB30FE1Cf884B48a22a50D22a9282004F2c5E9406',
   ChroniclePoints: '0x10ab606B067C9C461d8893c47C7512472E19e2Ce',
   DAIUSDSConverter: '0x3225737a9Bbb6473CB4a45b7244ACa2BeFdB276A',
   MKRSKYConverter: '0xA1Ea1bA18E88C381C724a75F23a130420C403f9a',

@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import { Card, CardActionArea, Typography, Box } from '@mui/material';
 
-import { getTokens, skyConfig, SkyContracts, Token } from 'config/index';
+import { getTokens, SkyContracts, Token } from 'config/index';
 import { dispatchWarning } from 'utils/snackbar';
 
 interface Props {
@@ -35,32 +35,39 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2}>
-      {tokens.map((token) => (
-        <Card
-          key={token.tokenAddress}
-          sx={{
-            borderRadius: '20px',
-            border: '2px solid',
-            borderColor: selected === token.tokenAddress ? 'primary.main' : 'transparent',
-            backgroundColor: selected === token.tokenAddress ? 'primary.light' : 'background.paper',
-            transition: '0.3s',
-            boxShadow: selected === token.tokenAddress ? 4 : 1,
-            cursor: 'pointer'
-          }}
-          onClick={() => handleSelect(token)}
-        >
-          <CardActionArea sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <token.icon width={72} height={72} />
-            <Box>
-              <Typography variant="h6">{token.label}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Click to select
-              </Typography>
-            </Box>
-          </CardActionArea>
-        </Card>
-      ))}
+    <Box display="flex" flexDirection="column" gap={2} role="radiogroup" aria-label="Reward token">
+      {tokens.map((token) => {
+        const isSelected = selected === token.tokenAddress;
+        return (
+          <Card
+            key={token.tokenAddress}
+            sx={{
+              borderRadius: '20px',
+              border: '2px solid',
+              borderColor: isSelected ? 'primary.main' : 'transparent',
+              backgroundColor: isSelected ? 'primary.light' : 'background.paper',
+              transition: '0.3s',
+              boxShadow: isSelected ? 4 : 1
+            }}
+          >
+            <CardActionArea
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={token.label}
+              onClick={() => handleSelect(token)}
+              sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}
+            >
+              <token.icon width={72} height={72} aria-hidden />
+              <Box>
+                <Typography variant="h6">{token.label}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {isSelected ? 'Selected' : 'Click to select'}
+                </Typography>
+              </Box>
+            </CardActionArea>
+          </Card>
+        );
+      })}
     </Box>
   );
 };

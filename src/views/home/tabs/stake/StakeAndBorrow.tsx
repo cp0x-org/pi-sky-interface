@@ -92,7 +92,11 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
           <StyledTextField
             slotProps={{
               input: {
-                lang: 'en'
+                lang: 'en',
+                inputMode: 'decimal',
+                'aria-label': 'Amount of SKY to stake',
+                'aria-invalid': !!error,
+                'aria-describedby': error ? 'stake-amount-error stake-amount-balance' : 'stake-amount-balance'
               }
             }}
             fullWidth
@@ -120,20 +124,20 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
               alignItems: 'center'
             }}
           >
-            <SkyLogo width="24" height="24" />
+            <SkyLogo width="24" height="24" aria-hidden />
             <Typography>SKY</Typography>
           </Box>
         </Box>
 
         {error && (
-          <Typography color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
+          <Typography id="stake-amount-error" color="error" variant="caption" sx={{ mt: 1, display: 'block' }}>
             {error}
           </Typography>
         )}
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="textPrimary">
+            <Typography variant="body2" color="textPrimary" id="stake-amount-balance">
               {userBalance ? formatUSDS(formatEther(userBalance)) : '0'} SKY
             </Typography>
           </Box>
@@ -146,9 +150,15 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+            <PercentButton onClick={() => handlePercentClick(25)} aria-label="Set amount to 25% of balance">
+              25%
+            </PercentButton>
+            <PercentButton onClick={() => handlePercentClick(50)} aria-label="Set amount to 50% of balance">
+              50%
+            </PercentButton>
+            <PercentButton onClick={() => handlePercentClick(100)} aria-label="Set amount to 100% of balance">
+              100%
+            </PercentButton>
           </Box>
         </Box>
       </Box>

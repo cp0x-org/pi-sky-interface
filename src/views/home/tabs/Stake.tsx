@@ -29,7 +29,7 @@ export default function StakeTab() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" component="h1" gutterBottom>
         Staking Engine
       </Typography>
 
@@ -41,8 +41,7 @@ export default function StakeTab() {
 
       {!showNewPosition ? (
         <>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h4"></Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
             <Button variant="contained" color="primary" onClick={handleOpenNewPosition} disabled={!address}>
               Open New Position
             </Button>
@@ -52,7 +51,7 @@ export default function StakeTab() {
       ) : (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h4">
+            <Typography variant="h4" component="h2">
               {editingPosition ? 'Edit Position #' + Number(Number(editingPosition.indexPosition) + 1) : 'Create New Position'}
             </Typography>
             <Button variant="outlined" color="primary" onClick={handleBackToPositions}>

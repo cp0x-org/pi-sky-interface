@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from 'ui-component/TabPanel';
+import TabPanel, { a11yTabProps } from 'ui-component/TabPanel';
 import Typography from '@mui/material/Typography';
 import UpgradeAssets from './upgrade/UpgradeAssets';
 import RevertAssets from './upgrade/RevertAssets';
@@ -58,10 +58,10 @@ export default function UpgradeTab() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" component="h1" gutterBottom>
         Upgrade
       </Typography>
-      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+      <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         Easily upgrade MKR to SKY, or swap DAI in both directions with USDS.
       </Typography>
       {!address && (
@@ -73,15 +73,15 @@ export default function UpgradeTab() {
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Upgrade'}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange}>
-              <Tab label="Upgrade" />
-              <Tab label="Revert" />
+            <Tabs value={operationType} onChange={handleOperationChange} aria-label="Upgrade operations">
+              <Tab label="Upgrade" {...a11yTabProps('upgrade', 0)} />
+              <Tab label="Revert" {...a11yTabProps('upgrade', 1)} />
             </Tabs>
 
-            <TabPanel value={operationType} index={0}>
+            <TabPanel value={operationType} index={0} idPrefix="upgrade">
               <UpgradeAssets daiUserBalance={daiUserBalance} mkrUserBalance={mkrUserBalance} />
             </TabPanel>
-            <TabPanel value={operationType} index={1}>
+            <TabPanel value={operationType} index={1} idPrefix="upgrade">
               <RevertAssets usdsUserBalance={usdsUserBalance} />
             </TabPanel>
           </Box>

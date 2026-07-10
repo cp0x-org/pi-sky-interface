@@ -2,11 +2,9 @@ import Card from '@mui/material/Card';
 import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
-import { Alert, CircularProgress, Tooltip } from '@mui/material';
+import { Alert, IconButton, Tooltip } from '@mui/material';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { useStakingPositions } from 'hooks/useStakingPositions';
@@ -16,6 +14,9 @@ import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
 import { useSuppliersByUrns } from 'hooks/useSuppliersByUrns';
 import useSkyPrice from 'hooks/useSkyPrice';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import ExternalLink from 'components/ExternalLink';
+import KeyValueRow from 'components/KeyValueRow';
+import LoadingIndicator from 'components/LoadingIndicator';
 
 export default function StakingSummary() {
   const { config: skyConfig } = useConfigChainId();
@@ -53,7 +54,7 @@ export default function StakingSummary() {
           flexDirection: 'column'
         }}
       >
-        <CardHeader title={'Summary'}></CardHeader>
+        <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
         <CardContent
           sx={{
             flex: 1,
@@ -64,10 +65,7 @@ export default function StakingSummary() {
             p: 3
           }}
         >
-          <CircularProgress />
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Loading staking data...
-          </Typography>
+          <LoadingIndicator label="Loading staking data..." />
         </CardContent>
       </Card>
     );
@@ -84,7 +82,7 @@ export default function StakingSummary() {
           flexDirection: 'column'
         }}
       >
-        <CardHeader title={'Summary'}></CardHeader>
+        <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
         <CardContent sx={{ p: 3 }}>
           <Alert severity="error">Error loading staking data: {error}</Alert>
         </CardContent>
@@ -103,7 +101,7 @@ export default function StakingSummary() {
           flexDirection: 'column'
         }}
       >
-        <CardHeader title={'Summary'}></CardHeader>
+        <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
         <CardContent sx={{ p: 3 }}>
           <Alert severity="info">Please connect your wallet to view staking positions</Alert>
         </CardContent>
@@ -121,7 +119,7 @@ export default function StakingSummary() {
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'}></CardHeader>
+      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -139,68 +137,32 @@ export default function StakingSummary() {
             gap: 4
           }}
         >
-          <Box
-            component="a"
+          <ExternalLink
             href={`https://etherscan.io/address/${skyConfig.contracts.LockStakeEngine}`}
-            target="_blank"
-            rel="noreferrer"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              textDecoration: 'none',
-              color: 'inherit',
-              width: '100%',
-              justifyContent: 'flex-start'
-            }}
+            label="View staking contract"
+            sx={{ width: '100%' }}
           >
             View staking contract
-            <IconExternalLink size={14} />
-          </Box>
+          </ExternalLink>
 
           {skyPrice !== null && (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                pb: 1
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography color="text.secondary" variant="body2">
+            <KeyValueRow
+              label={
+                <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
                   Sky Price
-                </Typography>
-                <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
-                  <HelpOutlineIcon sx={{ ml: 0.5, fontSize: '1rem', cursor: 'help' }} />
-                </Tooltip>
-              </Box>
-
-              <Typography variant="h6">~{formatSkyPrice(skyPrice)} USD</Typography>
-            </Box>
-          )}
-
-          {apr !== null && (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                pb: 1
-              }}
+                  <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
+                    <IconButton size="small" aria-label="About Sky Price" sx={{ ml: 0.5, p: 0.25 }}>
+                      <HelpOutlineIcon sx={{ fontSize: '1rem' }} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              }
             >
-              <Typography color="text.secondary" variant="body2">
-                Current APR(SKY)
-              </Typography>
-              <Typography variant="h6">~{apr.toFixed(2)}%</Typography>
-            </Box>
+              ~{formatSkyPrice(skyPrice)} USD
+            </KeyValueRow>
           )}
+
+          {apr !== null && <KeyValueRow label="Current APR(SKY)">~{apr.toFixed(2)}%</KeyValueRow>}
 
           {/*{aprSpk !== null && (*/}
           {/*  <Box*/}
@@ -221,115 +183,17 @@ export default function StakingSummary() {
           {/*  </Box>*/}
           {/*)}*/}
 
-          {totalDelegators !== null && (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                pb: 1
-              }}
-            >
-              <Typography color="text.secondary" variant="body2">
-                Total Unique Suppliers
-              </Typography>
-              <Typography variant="h6">{totalDelegators}</Typography>
-            </Box>
-          )}
+          {totalDelegators !== null && <KeyValueRow label="Total Unique Suppliers">{totalDelegators}</KeyValueRow>}
 
-          {totalPositions !== null && (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                pb: 1
-              }}
-            >
-              <Typography color="text.secondary" variant="body2">
-                Total Staking Positions
-              </Typography>
-              <Typography variant="h6">{totalPositions}</Typography>
-            </Box>
-          )}
+          {totalPositions !== null && <KeyValueRow label="Total Staking Positions">{totalPositions}</KeyValueRow>}
 
-          {totalSky !== null && (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                pb: 1
-              }}
-            >
-              <Typography color="text.secondary" variant="body2">
-                Total SKY Staked
-              </Typography>
-              <Typography variant="h6">{formatShortUSDS(totalSky)}</Typography>
-            </Box>
-          )}
+          {totalSky !== null && <KeyValueRow label="Total SKY Staked">{formatShortUSDS(totalSky)}</KeyValueRow>}
 
-          {tvl !== null && (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                pb: 1
-              }}
-            >
-              <Typography color="text.secondary" variant="body2">
-                TVL
-              </Typography>
-              <Typography variant="h6">{formatShortUSDS(tvl)} USDS</Typography>
-            </Box>
-          )}
+          {tvl !== null && <KeyValueRow label="TVL">{formatShortUSDS(tvl)} USDS</KeyValueRow>}
 
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Your Total Staked Amount
-            </Typography>
-            <Typography variant="h6">{formatUSDS(totalStaked)} SKY</Typography>
-          </Box>
+          <KeyValueRow label="Your Total Staked Amount">{formatUSDS(totalStaked)} SKY</KeyValueRow>
 
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Your Number of Positions
-            </Typography>
-            <Typography variant="h6">{positions?.length || 0}</Typography>
-          </Box>
+          <KeyValueRow label="Your Number of Positions">{positions?.length || 0}</KeyValueRow>
 
           {!positions || positions.length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>

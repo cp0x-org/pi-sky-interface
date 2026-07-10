@@ -3,10 +3,10 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { Chip, Divider, Alert } from '@mui/material';
 import { shortenAddress } from 'utils/formatters';
+import ExternalLink from 'components/ExternalLink';
 import { formatUSDS } from 'utils/sky';
 import { useTheme } from '@mui/material/styles';
 
@@ -47,24 +47,16 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
               mb: 2
             }}
           >
-            <Box
-              component="a"
+            <ExternalLink
               href={`https://etherscan.io/address/${contractAddress}`}
-              target="_blank"
-              rel="noreferrer"
+              label="View staking contract"
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                textDecoration: 'none',
-                color: 'inherit',
                 width: { xs: '100%', sm: 'auto' },
                 justifyContent: { xs: 'center', sm: 'flex-start' }
               }}
             >
               View contract
-              <IconExternalLink size={14} />
-            </Box>
+            </ExternalLink>
 
             <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
               <Typography color="text.secondary" variant="body2">
