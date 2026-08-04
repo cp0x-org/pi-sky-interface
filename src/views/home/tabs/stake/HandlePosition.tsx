@@ -15,7 +15,7 @@ import { Config, readContract } from '@wagmi/core';
 import { formatEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { SkyContracts, SkyIcons } from 'config/index';
+import { apiConfig, isLegacyCp0xDelegate, SkyContracts, SkyIcons } from 'config/index';
 import { useConfig } from 'wagmi';
 import StakingSummary from './StakingSummary';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
@@ -53,11 +53,16 @@ export default function HandlePosition({ editMode = false, positionData = null }
   const { config: skyConfig } = useConfigChainId();
   const config = useConfig();
   const [activeStep, setActiveStep] = useState(0);
+  const [isDelegateSelectionReady, setIsDelegateSelectionReady] = useState(false);
   const theme = useTheme();
+  const originalDelegatorAddress = positionData?.delegateID || '';
+  const mustMigrateLegacyDelegate = isLegacyCp0xDelegate(originalDelegatorAddress);
   const [stakeData, setStakeData] = useState({
     amount: '',
     rewardAddress: skyConfig.contracts.USDS || '',
-    delegatorAddress: positionData?.delegateID || '',
+    // Legacy cp0x positions are migrated independently of the delegates API so
+    // the forced update cannot be bypassed while that API is loading or failing.
+    delegatorAddress: mustMigrateLegacyDelegate ? apiConfig.cp0xDelegate : originalDelegatorAddress,
     originalAmount: positionData?.wad ? formatEther(BigInt(positionData.wad)) : '0'
   });
 
@@ -462,6 +467,9 @@ export default function HandlePosition({ editMode = false, positionData = null }
     if (activeStep === steps.length - 1) {
       handleSubmit();
     } else {
+      if (activeStep === 1) {
+        setIsDelegateSelectionReady(false);
+      }
       setActiveStep((prev) => prev + 1);
 
       // When reaching the final step, check allowance
@@ -472,18 +480,21 @@ export default function HandlePosition({ editMode = false, positionData = null }
   };
 
   const handleBack = () => {
+    if (activeStep === 3) {
+      setIsDelegateSelectionReady(false);
+    }
     setActiveStep((prev) => prev - 1);
   };
 
   const handleSkip = () => {
     // Skip the current step. Skipping the amount step clears the amount (no extra
-    // stake), skipping the delegate step clears the delegator; the reward step just
-    // keeps its current value. This lets the user, in edit mode, change only the
-    // delegate without entering an amount or picking a reward.
+    // stake). In edit mode, skipping the delegate step restores the position's
+    // original delegate so no delegate-change call is generated. The reward step
+    // just keeps its current value.
     setStakeData((prev) => ({
       ...prev,
       ...(activeStep === 0 ? { amount: '' } : {}),
-      ...(activeStep === 2 ? { delegatorAddress: '' } : {})
+      ...(activeStep === 2 ? { delegatorAddress: editMode ? originalDelegatorAddress : '' } : {})
     }));
     setActiveStep((prev) => prev + 1);
   };
@@ -636,7 +647,8 @@ export default function HandlePosition({ editMode = false, positionData = null }
 
     // Third step validation
     if (activeStep === 2) {
-      return !stakeData.delegatorAddress;
+      const keepsLegacyCp0xDelegate = mustMigrateLegacyDelegate && isLegacyCp0xDelegate(stakeData.delegatorAddress);
+      return !stakeData.delegatorAddress || keepsLegacyCp0xDelegate || (!isDelegateSelectionReady && !mustMigrateLegacyDelegate);
     }
 
     if (activeStep === 3) {
@@ -668,7 +680,14 @@ export default function HandlePosition({ editMode = false, positionData = null }
       case 1:
         return <Reward rewardAddress={stakeData.rewardAddress} onChange={(v) => memoizedHandleChange('rewardAddress', v)} />;
       case 2:
-        return <Delegate delegatorAddress={stakeData.delegatorAddress} onChange={(v) => memoizedHandleChange('delegatorAddress', v)} />;
+        return (
+          <Delegate
+            delegatorAddress={stakeData.delegatorAddress}
+            originalDelegatorAddress={originalDelegatorAddress}
+            onChange={(v) => memoizedHandleChange('delegatorAddress', v)}
+            onReadyChange={setIsDelegateSelectionReady}
+          />
+        );
       case 3:
         return (
           <Confirm
@@ -681,7 +700,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
       default:
         return null;
     }
-  }, [activeStep, userBalance, stakeData, memoizedHandleChange, positionData, isApproved, isStaked, editMode]);
+  }, [activeStep, userBalance, stakeData, memoizedHandleChange, positionData, originalDelegatorAddress, isApproved, isStaked, editMode]);
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -753,7 +772,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
                     </Button>
                   ) : (
                     <Stack direction="row" spacing={2}>
-                      {(activeStep === 2 || editMode) && (
+                      {(activeStep === 2 || editMode) && !(activeStep === 2 && mustMigrateLegacyDelegate) && (
                         <Button variant="text" onClick={handleSkip} disabled={!address}>
                           Skip
                         </Button>

@@ -25,9 +25,9 @@ export const apiConfig = {
   uniswapV3UsdcSpkPool: '0x76665642F513aAf2A00bE05711A598F44e3970A7'
 } as const;
 
-// cp0x delegate addresses and their display names. Handling of all three must
-// stay identical — resolve names / membership only through the helpers below.
-// Only `cp0xDelegate` (aligned) is pinned to the top of the delegate list.
+// cp0x delegate addresses and their display names. Keep name resolution
+// centralized here. Only `cp0xDelegate` (aligned) is pinned to the top of the
+// delegate list; the other two addresses are legacy delegates.
 export const cp0xDelegates = [
   { address: apiConfig.cp0xDelegate, name: 'cp0x (aligned)' },
   { address: apiConfig.cp0xDelegateOld, name: 'cp0x' },
@@ -42,6 +42,14 @@ export function getCp0xDelegateName(address?: string | null): string | null {
 
 export function isCp0xDelegate(address?: string | null): boolean {
   return getCp0xDelegateName(address) !== null;
+}
+
+export function isLegacyCp0xDelegate(address?: string | null): boolean {
+  if (!address) return false;
+
+  return [apiConfig.cp0xDelegateOld, apiConfig.cp0xDelegateOld2].some(
+    (legacyAddress) => legacyAddress.toLowerCase() === address.toLowerCase()
+  );
 }
 
 export const skyConfig = {

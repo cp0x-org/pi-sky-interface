@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { Card, CardActionArea, Typography, Box, Alert, Pagination, Stack, TextField, Tooltip, IconButton } from '@mui/material';
-import { apiConfig, appConfig, getCp0xDelegateName } from 'config/index';
-import { formatShortUSDS, formatSkyPrice, formatUSDS } from 'utils/sky';
+import { apiConfig, appConfig, getCp0xDelegateName, isLegacyCp0xDelegate } from 'config/index';
+import { formatShortUSDS } from 'utils/sky';
 import { isAddress } from 'viem';
 import { shortenAddress } from 'utils/formatters';
 import { IconCopy } from '@tabler/icons-react';
@@ -33,10 +33,12 @@ type Delegate = {
 
 interface Props {
   delegatorAddress: string;
+  originalDelegatorAddress?: string;
   onChange: (v: string) => void;
+  onReadyChange?: (ready: boolean) => void;
 }
 
-const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
+const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress = '', onChange, onReadyChange }) => {
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [customAddress, setCustomAddress] = useState<string>('');
@@ -60,6 +62,8 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
   };
 
   useEffect(() => {
+    onReadyChange?.(false);
+
     fetch(apiConfig.delegatesInfoMainnet)
       .then((res) => {
         if (!res.ok) {
@@ -72,7 +76,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
 
         // First sort by skyDelegated amount
         const sortedDelegates = data.delegates
-          // Create new objects with updated names for all cp0x delegates (identical handling)
+          // Create new objects with updated display names for all cp0x delegates
           .map((delegate) => {
             const cp0xName = getCp0xDelegateName(delegate.voteDelegateAddress);
             return cp0xName ? { ...delegate, name: cp0xName } : delegate;
@@ -94,7 +98,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
         setError('Cannot load delegators');
         setLoading(false);
       });
-  }, []);
+  }, [onReadyChange]);
 
   // Apply the initial selection once when delegates are loaded
   useEffect(() => {
@@ -103,31 +107,43 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', onChange }) => {
     }
 
     const cp0xDelegate = delegates.find((d) => d.voteDelegateAddress.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase());
+    const preferredDelegateAddress = cp0xDelegate?.voteDelegateAddress ?? apiConfig.cp0xDelegate;
 
     if (delegatorAddress) {
-      // If we have a delegatorAddress from props, use it
       const delegateFromProps = delegates.find((d) => d.voteDelegateAddress.toLowerCase() === delegatorAddress.toLowerCase());
+      const isOriginalPositionDelegate =
+        !!originalDelegatorAddress && delegatorAddress.toLowerCase() === originalDelegatorAddress.toLowerCase();
+      const shouldReplacePositionDelegate = isOriginalPositionDelegate && !delegateFromProps;
+      const isLegacyCp0xPositionDelegate = isOriginalPositionDelegate && isLegacyCp0xDelegate(delegatorAddress);
 
-      if (delegateFromProps) {
+      if (shouldReplacePositionDelegate || isLegacyCp0xPositionDelegate) {
+        // Unknown position delegates and legacy cp0x delegates are migrated to
+        // the current cp0x delegate. A custom address entered by the user is not
+        // an original position delegate and therefore remains untouched.
+        setSelected(preferredDelegateAddress);
+        setCustomAddress('');
+        onChange(preferredDelegateAddress);
+      } else if (delegateFromProps) {
         setSelected(delegateFromProps.voteDelegateAddress);
       } else if (isAddress(delegatorAddress)) {
-        // If it's a valid custom address but not in our list
+        // Preserve custom addresses entered by the user, including after Back.
         setSelected(delegatorAddress);
         setCustomAddress(delegatorAddress);
-      } else if (cp0xDelegate) {
+      } else {
         // Default to cp0x if the address is not found and not a valid custom address
-        setSelected(cp0xDelegate.voteDelegateAddress);
-        onChange(cp0xDelegate.voteDelegateAddress);
+        setSelected(preferredDelegateAddress);
+        onChange(preferredDelegateAddress);
       }
-    } else if (cp0xDelegate) {
+    } else {
       // If no delegatorAddress is provided, default to cp0x
-      setSelected(cp0xDelegate.voteDelegateAddress);
-      onChange(cp0xDelegate.voteDelegateAddress);
+      setSelected(preferredDelegateAddress);
+      onChange(preferredDelegateAddress);
     }
 
     // Mark that we've applied the default selection
     setDefaultApplied(true);
-  }, [delegates, loading, delegatorAddress, onChange, defaultApplied]);
+    onReadyChange?.(true);
+  }, [delegates, loading, delegatorAddress, originalDelegatorAddress, onChange, onReadyChange, defaultApplied]);
 
   // This effect syncs the selected state when delegatorAddress changes externally
   useEffect(() => {
