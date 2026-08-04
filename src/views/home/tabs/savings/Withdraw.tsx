@@ -211,7 +211,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
         >
           <StyledTextField
             slotProps={{
-              input: {
+              htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
                 'aria-label': 'Amount of USDS to withdraw',

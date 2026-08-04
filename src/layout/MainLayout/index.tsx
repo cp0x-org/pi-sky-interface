@@ -93,15 +93,10 @@ export default function MainLayout() {
             <Box sx={{ width: '100%' }}>
               <Tabs value={currentTabIndex} onChange={handleChange} centered aria-label="Main sections">
                 {tabs.map((tab, index) => (
-                  <Tab
-                    key={tab.path}
-                    label={tab.label}
-                    icon={tab.icon}
-                    aria-current={currentTabIndex === index ? 'page' : undefined}
-                  />
+                  <Tab key={tab.path} label={tab.label} icon={tab.icon} aria-current={currentTabIndex === index ? 'page' : undefined} />
                 ))}
               </Tabs>
-              <Box component="main" id="main-content" sx={{ p: 3 }}>
+              <Box id="main-content" sx={{ p: 3 }}>
                 <Outlet />
               </Box>
             </Box>

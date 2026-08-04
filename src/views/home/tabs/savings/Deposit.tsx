@@ -350,7 +350,7 @@ const Deposit: FC<Props> = ({ userBalance = '0' }) => {
         >
           <StyledTextField
             slotProps={{
-              input: {
+              htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
                 'aria-label': 'Amount of USDS to supply',

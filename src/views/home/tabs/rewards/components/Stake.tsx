@@ -275,7 +275,7 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <StyledTextField
             slotProps={{
-              input: {
+              htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
                 'aria-label': 'Amount of USDS to supply',

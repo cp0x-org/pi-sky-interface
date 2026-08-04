@@ -91,7 +91,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: error ? 'error.main' : 'divider', py: 2, gap: 2 }}>
           <StyledTextField
             slotProps={{
-              input: {
+              htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
                 'aria-label': 'Amount of SKY to stake',

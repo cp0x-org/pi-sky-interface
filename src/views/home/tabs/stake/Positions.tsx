@@ -358,7 +358,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   return (
     <Box sx={{ width: '100%', mt: 4 }}>
       <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2, bgcolor: 'background.paper' }}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" component="h2" gutterBottom>
           Staking Summary
         </Typography>
         <Divider sx={{ mb: 2 }} />
@@ -375,7 +375,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
               <Typography variant="body1">:</Typography>
             </Box>
 
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               ~{formatSkyPrice(skyPrice)} USD
             </Typography>
           </Box>
@@ -384,7 +384,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {apr !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Current APR (SKY):</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               ~{apr.toFixed(2)}%
             </Typography>
           </Box>
@@ -402,7 +402,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total Unique Suppliers:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {totalDelegators}
             </Typography>
           </Box>
@@ -411,7 +411,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total Staking Positions:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {totalPositions}
             </Typography>
           </Box>
@@ -420,7 +420,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {totalSky !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total SKY Staked:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {formatShortUSDS(totalSky)}
             </Typography>
           </Box>
@@ -429,7 +429,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {tvl !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">TVL:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {formatShortUSDS(tvl)} USDS
             </Typography>
           </Box>
@@ -437,20 +437,20 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your Total Staked Amount:</Typography>
-          <Typography variant="h6" color="primary">
+          <Typography variant="h6" component="p" color="primary">
             {formatUSDS(totalStaked)} SKY
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your Number of Positions:</Typography>
-          <Typography variant="h6" color="primary">
+          <Typography variant="h6" component="p" color="primary">
             {positions.length}
           </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your SKY Balance:</Typography>
-          <Typography variant="h6" color="primary">
+          <Typography variant="h6" component="p" color="primary">
             {userBalance ? formatUSDS(formatEther(userBalance)) : '0'}
           </Typography>
         </Box>
@@ -463,7 +463,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       )}
 
       {!address && (
-        <Typography variant="h6" sx={{ mt: 2 }}>
+        <Typography variant="h6" component="p" sx={{ mt: 2 }}>
           Please connect your wallet to view staking positions
         </Typography>
       )}
