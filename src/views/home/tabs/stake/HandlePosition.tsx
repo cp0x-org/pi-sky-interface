@@ -15,11 +15,12 @@ import { Config, readContract } from '@wagmi/core';
 import { formatEther } from 'viem';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { usdsContractConfig } from 'config/abi/Usds';
-import { SkyContracts, SkyIcons } from 'config/index';
+import { apiConfig, isLegacyCp0xDelegate, SkyContracts, SkyIcons } from 'config/index';
 import { useConfig } from 'wagmi';
 import StakingSummary from './StakingSummary';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useTheme } from '@mui/material/styles';
+import StatusLive from 'components/StatusLive';
 
 const steps = ['Stake', 'Reward', 'Delegate', 'Confirm'];
 
@@ -52,11 +53,16 @@ export default function HandlePosition({ editMode = false, positionData = null }
   const { config: skyConfig } = useConfigChainId();
   const config = useConfig();
   const [activeStep, setActiveStep] = useState(0);
+  const [isDelegateSelectionReady, setIsDelegateSelectionReady] = useState(false);
   const theme = useTheme();
+  const originalDelegatorAddress = positionData?.delegateID || '';
+  const mustMigrateLegacyDelegate = isLegacyCp0xDelegate(originalDelegatorAddress);
   const [stakeData, setStakeData] = useState({
     amount: '',
     rewardAddress: skyConfig.contracts.USDS || '',
-    delegatorAddress: positionData?.delegateID || '',
+    // Legacy cp0x positions are migrated independently of the delegates API so
+    // the forced update cannot be bypassed while that API is loading or failing.
+    delegatorAddress: mustMigrateLegacyDelegate ? apiConfig.cp0xDelegate : originalDelegatorAddress,
     originalAmount: positionData?.wad ? formatEther(BigInt(positionData.wad)) : '0'
   });
 
@@ -218,6 +224,16 @@ export default function HandlePosition({ editMode = false, positionData = null }
 
   // Check if approval is needed
   useEffect(() => {
+    // In edit mode with no new amount, nothing is locked so no SKY approval is
+    // required — treat as approved so the user can confirm delegate-only changes.
+    if (editMode && !stakeData.amount) {
+      if (!isApproved) {
+        setIsApproved(true);
+        setConfirmButtonText('Confirm Staking');
+      }
+      return;
+    }
+
     if (address && stakeData.amount && allowanceData) {
       try {
         const amountBigInt = parseEther(stakeData.amount);
@@ -232,7 +248,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
         console.error('Error checking allowance:', error);
       }
     }
-  }, [address, stakeData.amount, allowanceData, isApproved]);
+  }, [address, stakeData.amount, allowanceData, isApproved, editMode]);
 
   // Use a ref to track if we've already run the simulation
   const hasRunSimulation = useRef<boolean>(false);
@@ -451,6 +467,9 @@ export default function HandlePosition({ editMode = false, positionData = null }
     if (activeStep === steps.length - 1) {
       handleSubmit();
     } else {
+      if (activeStep === 1) {
+        setIsDelegateSelectionReady(false);
+      }
       setActiveStep((prev) => prev + 1);
 
       // When reaching the final step, check allowance
@@ -461,12 +480,22 @@ export default function HandlePosition({ editMode = false, positionData = null }
   };
 
   const handleBack = () => {
+    if (activeStep === 3) {
+      setIsDelegateSelectionReady(false);
+    }
     setActiveStep((prev) => prev - 1);
   };
 
   const handleSkip = () => {
-    // Clear delegator address and move to next step
-    setStakeData((prev) => ({ ...prev, delegatorAddress: '' }));
+    // Skip the current step. Skipping the amount step clears the amount (no extra
+    // stake). In edit mode, skipping the delegate step restores the position's
+    // original delegate so no delegate-change call is generated. The reward step
+    // just keeps its current value.
+    setStakeData((prev) => ({
+      ...prev,
+      ...(activeStep === 0 ? { amount: '' } : {}),
+      ...(activeStep === 2 ? { delegatorAddress: editMode ? originalDelegatorAddress : '' } : {})
+    }));
     setActiveStep((prev) => prev + 1);
   };
 
@@ -618,7 +647,8 @@ export default function HandlePosition({ editMode = false, positionData = null }
 
     // Third step validation
     if (activeStep === 2) {
-      return !stakeData.delegatorAddress;
+      const keepsLegacyCp0xDelegate = mustMigrateLegacyDelegate && isLegacyCp0xDelegate(stakeData.delegatorAddress);
+      return !stakeData.delegatorAddress || keepsLegacyCp0xDelegate || (!isDelegateSelectionReady && !mustMigrateLegacyDelegate);
     }
 
     if (activeStep === 3) {
@@ -650,7 +680,14 @@ export default function HandlePosition({ editMode = false, positionData = null }
       case 1:
         return <Reward rewardAddress={stakeData.rewardAddress} onChange={(v) => memoizedHandleChange('rewardAddress', v)} />;
       case 2:
-        return <Delegate delegatorAddress={stakeData.delegatorAddress} onChange={(v) => memoizedHandleChange('delegatorAddress', v)} />;
+        return (
+          <Delegate
+            delegatorAddress={stakeData.delegatorAddress}
+            originalDelegatorAddress={originalDelegatorAddress}
+            onChange={(v) => memoizedHandleChange('delegatorAddress', v)}
+            onReadyChange={setIsDelegateSelectionReady}
+          />
+        );
       case 3:
         return (
           <Confirm
@@ -663,11 +700,11 @@ export default function HandlePosition({ editMode = false, positionData = null }
       default:
         return null;
     }
-  }, [activeStep, userBalance, stakeData, memoizedHandleChange, positionData, isApproved, isStaked, editMode]);
+  }, [activeStep, userBalance, stakeData, memoizedHandleChange, positionData, originalDelegatorAddress, isApproved, isStaked, editMode]);
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+      <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         Stake your SKY tokens to earn rewards and participate in the Sky Protocol governance. Follow the steps below to complete your
         staking process.
       </Typography>
@@ -676,13 +713,14 @@ export default function HandlePosition({ editMode = false, positionData = null }
           <CardHeader title={'Staking Process'}></CardHeader>
           <Card sx={{ borderRadius: '20px' }}>
             <Box sx={{ p: 3 }}>
-              <Stepper activeStep={activeStep}>
-                {steps.map((label) => (
+              <Stepper activeStep={activeStep} aria-label="Staking steps">
+                {steps.map((label, index) => (
                   <Step key={label}>
-                    <StepLabel>{label}</StepLabel>
+                    <StepLabel aria-current={activeStep === index ? 'step' : undefined}>{label}</StepLabel>
                   </Step>
                 ))}
               </Stepper>
+              <StatusLive message={`Step ${activeStep + 1} of ${steps.length}: ${steps[activeStep]}`} />
 
               <Box sx={{ mt: 4 }}>{StepComponent}</Box>
 
@@ -728,21 +766,24 @@ export default function HandlePosition({ editMode = false, positionData = null }
                     Back
                   </Button>
 
-                  {activeStep === 2 ? (
+                  {activeStep === steps.length - 1 ? (
+                    <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
+                      {confirmButtonText}
+                    </Button>
+                  ) : (
                     <Stack direction="row" spacing={2}>
-                      <Button variant="outlined" onClick={handleSkip} disabled={!address}>
-                        Skip
-                      </Button>
+                      {(activeStep === 2 || editMode) && !(activeStep === 2 && mustMigrateLegacyDelegate) && (
+                        <Button variant="text" onClick={handleSkip} disabled={!address}>
+                          Skip
+                        </Button>
+                      )}
                       <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
                         Next
                       </Button>
                     </Stack>
-                  ) : (
-                    <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
-                      {activeStep === steps.length - 1 ? confirmButtonText : 'Next'}
-                    </Button>
                   )}
                 </Box>
+                <StatusLive message={activeStep === steps.length - 1 ? confirmButtonText : ''} />
               </Box>
             </Box>
           </Card>

@@ -21,6 +21,7 @@ import { StyledSelect } from 'components/StyledSelect';
 import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useDebounce } from 'hooks/useDebounce';
+import StatusLive from 'components/StatusLive';
 
 interface Props {
   daiUserBalance?: bigint;
@@ -498,20 +499,23 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
           {tokenValue === TOKEN_MKR ? 'Enter the amount of MKR to receive SKY:' : 'Enter the amount of DAI to receive USDS:'}
         </Typography>
         {tokenValue === TOKEN_MKR && isRateLoading && (
-          <Typography variant="body2" sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ mb: 2 }} role="status" aria-live="polite">
             Loading conversion rate...
           </Typography>
         )}
         {tokenValue === TOKEN_MKR && amount && amount !== '0' && !isRateLoading && (
-          <Typography variant="body2" sx={{ mb: 2, color: 'success.main' }}>
+          <Typography variant="body2" sx={{ mb: 2, color: 'success.main' }} role="status" aria-live="polite">
             Expected output: {expectedOutput} SKY
           </Typography>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <StyledTextField
             slotProps={{
-              input: {
-                lang: 'en'
+              htmlInput: {
+                lang: 'en',
+                inputMode: 'decimal',
+                'aria-label': `Amount of ${tokenValue.toUpperCase()} to upgrade`,
+                'aria-describedby': 'upgrade-balance'
               }
             }}
             fullWidth
@@ -533,14 +537,14 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
             <FormControl fullWidth>
               <StyledSelect
                 value={tokenValue}
-                label="Token"
                 onChange={handleTokenChange}
                 disabled={isInputDisabled}
+                inputProps={{ 'aria-label': 'Token to upgrade' }}
                 renderValue={(selected) => {
                   const item = tokenOptions.find((o) => o.value === selected);
                   return (
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Avatar src={item?.img} sx={{ width: 24, height: 24 }} />
+                      <Avatar src={item?.img} alt="" aria-hidden sx={{ width: 24, height: 24 }} />
                       {item?.label}
                     </Box>
                   );
@@ -549,7 +553,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
                 {tokenOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Avatar src={option.img} sx={{ width: 24, height: 24 }} />
+                      <Avatar src={option.img} alt="" aria-hidden sx={{ width: 24, height: 24 }} />
                       {option.label}
                     </Box>
                   </MenuItem>
@@ -560,7 +564,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="textPrimary">
+            <Typography variant="body2" color="textPrimary" id="upgrade-balance">
               {getCurrentBalance()} {tokenValue.toUpperCase()}
             </Typography>
           </Box>
@@ -573,13 +577,13 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
               100%
             </PercentButton>
           </Box>
@@ -589,6 +593,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
         <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={isButtonDisabled()} onClick={handleMainButtonClick}>
           {getButtonText()}
         </Button>
+        <StatusLive message={getButtonText()} />
       </Box>
     </StyledCard>
   );

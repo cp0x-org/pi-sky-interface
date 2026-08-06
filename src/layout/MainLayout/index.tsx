@@ -39,11 +39,11 @@ export default function MainLayout() {
   const drawerOpen = menuMaster?.isDashboardDrawerOpened;
 
   const tabs = [
-    { label: 'Rewards', path: 'rewards', iconPosition: 'top', icon: <RewardSvg width="24" height="24" /> },
-    { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" /> },
-    { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" /> },
-    { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" /> },
-    { label: 'Expert', path: 'expert', iconPosition: 'top', icon: <ExpertSvg width="24" height="24" /> }
+    { label: 'Rewards', path: 'rewards', iconPosition: 'top', icon: <RewardSvg width="24" height="24" aria-hidden /> },
+    { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" aria-hidden /> },
+    { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" aria-hidden /> },
+    { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" aria-hidden /> },
+    { label: 'Expert', path: 'expert', iconPosition: 'top', icon: <ExpertSvg width="24" height="24" aria-hidden /> }
   ];
 
   const navigate = useNavigate();
@@ -91,12 +91,12 @@ export default function MainLayout() {
 
           <MainCard>
             <Box sx={{ width: '100%' }}>
-              <Tabs value={currentTabIndex} onChange={handleChange} centered>
-                {tabs.map((tab) => (
-                  <Tab key={tab.path} label={tab.label} icon={tab.icon} />
+              <Tabs value={currentTabIndex} onChange={handleChange} centered aria-label="Main sections">
+                {tabs.map((tab, index) => (
+                  <Tab key={tab.path} label={tab.label} icon={tab.icon} aria-current={currentTabIndex === index ? 'page' : undefined} />
                 ))}
               </Tabs>
-              <Box sx={{ p: 3 }}>
+              <Box id="main-content" sx={{ p: 3 }}>
                 <Outlet />
               </Box>
             </Box>

@@ -1,14 +1,15 @@
 import { FC, useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
-import { apiConfig, getTokens } from 'config/index';
+import { getTokens, getCp0xDelegateName, isCp0xDelegate } from 'config/index';
 import { useDelegateData } from 'hooks/useDelegateData';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { IconExternalLink } from '@tabler/icons-react';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { ReactComponent as SkyLogo } from 'assets/images/sky/ethereum/sky.svg';
-import { Chip, Divider, Alert, CircularProgress, Paper, Button, Tooltip } from '@mui/material';
+import { Chip, Divider, Alert, IconButton, Paper, Button, Tooltip } from '@mui/material';
+import ExternalLink from 'components/ExternalLink';
+import LoadingIndicator from 'components/LoadingIndicator';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { encodeFunctionData, formatEther } from 'viem';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
@@ -26,21 +27,6 @@ import { dispatchError, dispatchSuccess, dispatchWarning } from 'utils/snackbar'
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
-
-function cp0xDelegateName(address: string) {
-  if (address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase()) {
-    return 'cp0x (aligned)';
-  } else if (address.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()) {
-    return 'cp0x';
-  }
-  return null;
-}
-
-function isCp0xDelegate(address: string) {
-  return (
-    address.toLowerCase() === apiConfig.cp0xDelegate.toLowerCase() || address.toLowerCase() === apiConfig.cp0xDelegateOld.toLowerCase()
-  );
-}
 
 interface PositionsProps {
   stakeData?: {
@@ -353,11 +339,8 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
   if (isLoading) {
     return (
-      <Box sx={{ width: '100%', my: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Loading staking and delegate data...
-        </Typography>
+      <Box sx={{ width: '100%', my: 4 }}>
+        <LoadingIndicator label="Loading staking and delegate data..." />
       </Box>
     );
   }
@@ -375,7 +358,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   return (
     <Box sx={{ width: '100%', mt: 4 }}>
       <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2, bgcolor: 'background.paper' }}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" component="h2" gutterBottom>
           Staking Summary
         </Typography>
         <Divider sx={{ mb: 2 }} />
@@ -385,12 +368,14 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body1">Sky Price</Typography>
               <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
-                <HelpOutlineIcon sx={{ ml: 0.5, fontSize: '1rem', cursor: 'help' }} />
+                <IconButton size="small" aria-label="About Sky Price" sx={{ ml: 0.5, p: 0.25 }}>
+                  <HelpOutlineIcon sx={{ fontSize: '1rem' }} />
+                </IconButton>
               </Tooltip>
               <Typography variant="body1">:</Typography>
             </Box>
 
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               ~{formatSkyPrice(skyPrice)} USD
             </Typography>
           </Box>
@@ -399,7 +384,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {apr !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Current APR (SKY):</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               ~{apr.toFixed(2)}%
             </Typography>
           </Box>
@@ -417,7 +402,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total Unique Suppliers:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {totalDelegators}
             </Typography>
           </Box>
@@ -426,7 +411,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total Staking Positions:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {totalPositions}
             </Typography>
           </Box>
@@ -435,7 +420,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {totalSky !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">Total SKY Staked:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {formatShortUSDS(totalSky)}
             </Typography>
           </Box>
@@ -444,7 +429,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         {tvl !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
             <Typography variant="body1">TVL:</Typography>
-            <Typography variant="h6" color="primary">
+            <Typography variant="h6" component="p" color="primary">
               {formatShortUSDS(tvl)} USDS
             </Typography>
           </Box>
@@ -452,20 +437,20 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your Total Staked Amount:</Typography>
-          <Typography variant="h6" color="primary">
+          <Typography variant="h6" component="p" color="primary">
             {formatUSDS(totalStaked)} SKY
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your Number of Positions:</Typography>
-          <Typography variant="h6" color="primary">
+          <Typography variant="h6" component="p" color="primary">
             {positions.length}
           </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
           <Typography variant="body1">Your SKY Balance:</Typography>
-          <Typography variant="h6" color="primary">
+          <Typography variant="h6" component="p" color="primary">
             {userBalance ? formatUSDS(formatEther(userBalance)) : '0'}
           </Typography>
         </Box>
@@ -478,17 +463,14 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
       )}
 
       {!address && (
-        <Typography variant="h6" sx={{ mt: 2 }}>
+        <Typography variant="h6" component="p" sx={{ mt: 2 }}>
           Please connect your wallet to view staking positions
         </Typography>
       )}
 
       {isLoading && (
-        <Box sx={{ width: '100%', my: 4, textAlign: 'center' }}>
-          <CircularProgress />
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Loading staking positions...
-          </Typography>
+        <Box sx={{ width: '100%', my: 4 }}>
+          <LoadingIndicator label="Loading staking positions..." />
         </Box>
       )}
 
@@ -516,7 +498,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                       <Typography color="text.secondary">Locked Amount:</Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
+                        <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} aria-hidden />
                         <Typography>{formatUSDS(formatEther(BigInt(delegateStakeAmount)))} SKY</Typography>
                       </Box>
                     </Box>
@@ -540,20 +522,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                         >
                           {shortenAddress(delegateAddress as `0x${string}`)}
                         </Typography>
-                        <Box
-                          component="a"
+                        <ExternalLink
                           href={`https://etherscan.io/address/${delegateAddress}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            ml: 1,
-                            color: 'primary.main'
-                          }}
-                        >
-                          <IconExternalLink size={16} />
-                        </Box>
+                          iconOnly
+                          iconSize={16}
+                          label={`View delegate address ${shortenAddress(delegateAddress as `0x${string}`)} on Etherscan`}
+                          sx={{ ml: 1, color: 'primary.main' }}
+                        />
                       </Box>
                     </Box>
                     <Divider sx={{ my: 2 }} />
@@ -603,7 +578,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                         <Typography color="text.secondary">Locked Amount:</Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} />
+                          <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} aria-hidden />
                           <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
                         </Box>
                       </Box>
@@ -613,7 +588,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                         <Typography>
                           {position.delegateID
                             ? isCp0xDelegate(position.delegateID)
-                              ? cp0xDelegateName(position.delegateID)
+                              ? getCp0xDelegateName(position.delegateID)
                               : delegates.find((d) => d.voteDelegateAddress === position.delegateID)?.name ||
                                 `${position.delegateID.slice(0, 6)}...${position.delegateID.slice(-4)}`
                             : '-'}
@@ -634,20 +609,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             {shortenAddress(position.delegateID)}
                           </Typography>
                           {position.delegateID && (
-                            <Box
-                              component="a"
+                            <ExternalLink
                               href={`https://etherscan.io/address/${position.delegateID}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                ml: 1,
-                                color: 'primary.main'
-                              }}
-                            >
-                              <IconExternalLink size={16} />
-                            </Box>
+                              iconOnly
+                              iconSize={16}
+                              label={`View delegate address ${shortenAddress(position.delegateID)} on Etherscan`}
+                              sx={{ ml: 1, color: 'primary.main' }}
+                            />
                           )}
                         </Box>
                       </Box>
@@ -665,20 +633,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             >
                               {shortenAddress(position.transactions.lockHash)}
                             </Typography>
-                            <Box
-                              component="a"
+                            <ExternalLink
                               href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                ml: 1,
-                                color: 'primary.main'
-                              }}
-                            >
-                              <IconExternalLink size={16} />
-                            </Box>
+                              iconOnly
+                              iconSize={16}
+                              label={`View transaction ${shortenAddress(position.transactions.lockHash)} on Etherscan`}
+                              sx={{ ml: 1, color: 'primary.main' }}
+                            />
                           </Box>
                         </Box>
                       )}
@@ -689,7 +650,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                           <StyledSelect
                             value={positionRewards[position.indexPosition]}
                             disabled={changingReward}
-                            label="Token"
+                            inputProps={{ 'aria-label': `Reward token for position #${Number(position.indexPosition) + 1}` }}
                             onChange={(event) => handleRewardChange(position, event)}
                             renderValue={(selected) => {
                               const item = tokens.find((o) => {
@@ -700,7 +661,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                               }
                               return (
                                 <Box display="flex" alignItems="center" gap={1}>
-                                  <item.icon width={24} height={24} />
+                                  <item.icon width={24} height={24} aria-hidden />
                                   {item?.label}
                                 </Box>
                               );
@@ -709,8 +670,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             {tokens.map((token) => (
                               <MenuItem key={token.tokenAddress} value={token.tokenAddress}>
                                 <Box display="flex" alignItems="center" gap={1}>
-                                  <token.icon width={24} height={24} />
-                                  {/*<Avatar src={token.icon.img} sx={{ width: 24, height: 24 }} />*/}
+                                  <token.icon width={24} height={24} aria-hidden />
                                   {token.label}
                                 </Box>
                               </MenuItem>
@@ -718,7 +678,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                           </StyledSelect>
                           {positionRewards[position.indexPosition] == SkyContracts.USDSStakingRewards && (
                             <Tooltip title="USDS was deprecated, please choose another reward." arrow>
-                              <InfoOutlinedIcon fontSize="small" sx={{ color: 'orangered', cursor: 'pointer' }} />
+                              <IconButton size="small" aria-label="USDS reward deprecated" sx={{ color: 'orangered' }}>
+                                <InfoOutlinedIcon fontSize="small" />
+                              </IconButton>
                             </Tooltip>
                           )}
                         </Box>

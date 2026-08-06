@@ -1,6 +1,5 @@
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { useTotalUpgraded } from 'hooks/useTotalUpgraded';
 import { formatTokenAmount } from 'utils/formatters';
@@ -8,6 +7,7 @@ import { useReadContract } from 'wagmi';
 import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
+import KeyValueRow from 'components/KeyValueRow';
 
 export default function Info() {
   const { mkrTotal, daiTotal } = useTotalUpgraded();
@@ -30,7 +30,7 @@ export default function Info() {
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'}></CardHeader>
+      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -48,60 +48,13 @@ export default function Info() {
             gap: 4
           }}
         >
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              MKR Total Upgraded
-            </Typography>
-            <Typography variant="h6">{formatTokenAmount(mkrTotal, 4) || 'MKR'}</Typography>
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              SKY Total Upgraded:
-            </Typography>
-            <Typography variant="h6">
-              {!isRateLoading && mkrTotal !== undefined && mkrToSkyRate !== undefined ? (
-                <>{formatTokenAmount((BigInt(mkrTotal) * BigInt(mkrToSkyRate)).toString(), 2)}</>
-              ) : (
-                'SKY'
-              )}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              DAI Total Upgraded:
-            </Typography>
-            <Typography variant="h6">{formatTokenAmount(daiTotal, 2) || '0 DAI'}</Typography>
-          </Box>
+          <KeyValueRow label="MKR Total Upgraded">{formatTokenAmount(mkrTotal, 4) || 'MKR'}</KeyValueRow>
+          <KeyValueRow label="SKY Total Upgraded">
+            {!isRateLoading && mkrTotal !== undefined && mkrToSkyRate !== undefined
+              ? formatTokenAmount((BigInt(mkrTotal) * BigInt(mkrToSkyRate)).toString(), 2)
+              : 'SKY'}
+          </KeyValueRow>
+          <KeyValueRow label="DAI Total Upgraded">{formatTokenAmount(daiTotal, 2) || '0 DAI'}</KeyValueRow>
         </Box>
       </CardContent>
     </Card>

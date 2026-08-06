@@ -1,17 +1,12 @@
 import { FC } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import { IconInfoCircle, IconChevronDown, IconExternalLink } from '@tabler/icons-react';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import { ReactComponent as UsdsLogo } from 'assets/images/sky/usds.svg';
 import CardHeader from '@mui/material/CardHeader';
 import { formatUSDS } from 'utils/sky';
 import { formatEther } from 'viem';
+import ExternalLink from 'components/ExternalLink';
+import KeyValueRow from 'components/KeyValueRow';
 
 interface InfoProps {
   rate?: number;
@@ -22,7 +17,7 @@ interface InfoProps {
   contractAddress?: string;
 }
 
-const Info: FC<InfoProps> = ({ rate = 0, usdsBalance = '0', stUsdsBalance = '0', tvl = 0n, cap = 0n, contractAddress = '' }) => {
+const Info: FC<InfoProps> = ({ usdsBalance = '0', stUsdsBalance = '0', tvl = 0n, cap = 0n, contractAddress = '' }) => {
   return (
     <Card
       sx={{
@@ -33,7 +28,7 @@ const Info: FC<InfoProps> = ({ rate = 0, usdsBalance = '0', stUsdsBalance = '0',
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'}></CardHeader>
+      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -51,105 +46,15 @@ const Info: FC<InfoProps> = ({ rate = 0, usdsBalance = '0', stUsdsBalance = '0',
             gap: 4
           }}
         >
-          <Box
-            component="a"
-            href={`https://etherscan.io/address/${contractAddress}`}
-            target="_blank"
-            rel="noreferrer"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              textDecoration: 'none',
-              color: 'inherit',
-              width: '100%',
-              justifyContent: 'flex-start'
-            }}
-          >
+          <ExternalLink href={`https://etherscan.io/address/${contractAddress}`} label="View contract" sx={{ width: '100%' }}>
             View contract
-            <IconExternalLink size={14} />
-          </Box>
+          </ExternalLink>
 
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Your balance (USDS)
-            </Typography>
-            <Typography variant="h6">{usdsBalance}</Typography>
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Your balance (stUSDS)
-            </Typography>
-            <Typography variant="h6">{stUsdsBalance}</Typography>
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Capacity (USDS)
-            </Typography>
-            <Typography variant="h6">{formatUSDS(formatEther(cap))}</Typography>
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              TVL (USDS)
-            </Typography>
-            <Typography variant="h6">{formatUSDS(formatEther(tvl))}</Typography>
-          </Box>
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              pb: 1
-            }}
-          >
-            <Typography color="text.secondary" variant="body2">
-              Remaining Capacity (USDS)
-            </Typography>
-            <Typography variant="h6">{formatUSDS(formatEther(cap - tvl))}</Typography>
-          </Box>
+          <KeyValueRow label="Your balance (USDS)">{usdsBalance}</KeyValueRow>
+          <KeyValueRow label="Your balance (stUSDS)">{stUsdsBalance}</KeyValueRow>
+          <KeyValueRow label="Capacity (USDS)">{formatUSDS(formatEther(cap))}</KeyValueRow>
+          <KeyValueRow label="TVL (USDS)">{formatUSDS(formatEther(tvl))}</KeyValueRow>
+          <KeyValueRow label="Remaining Capacity (USDS)">{formatUSDS(formatEther(cap - tvl))}</KeyValueRow>
         </Box>
       </CardContent>
     </Card>

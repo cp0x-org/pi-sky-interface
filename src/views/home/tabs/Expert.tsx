@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
-import TabPanel from 'ui-component/TabPanel';
+import TabPanel, { a11yTabProps } from 'ui-component/TabPanel';
 import Info from './expert/components/Info';
 import Stake from './expert/components/Stake';
 import Withdraw from './expert/components/Withdraw';
@@ -73,10 +73,10 @@ export default function ExpertTab() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" component="h1" gutterBottom>
         stUSDS
       </Typography>
-      <Typography variant="h4" gutterBottom sx={{ mb: 2 }} color="text.secondary">
+      <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
         Access a variable reward rate on USDS by participating in SKY-backed borrowing
       </Typography>
       {!address && (
@@ -88,14 +88,14 @@ export default function ExpertTab() {
         <Grid size={{ xs: 12, md: 7 }}>
           <CardHeader title={'Use Staking'}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange}>
-              <Tab label="Supply" />
-              <Tab label="Withdraw" />
+            <Tabs value={operationType} onChange={handleOperationChange} aria-label="stUSDS operations">
+              <Tab label="Supply" {...a11yTabProps('expert', 0)} />
+              <Tab label="Withdraw" {...a11yTabProps('expert', 1)} />
             </Tabs>
-            <TabPanel value={operationType} index={0}>
+            <TabPanel value={operationType} index={0} idPrefix="expert">
               <Stake userBalance={userUsdsBalance} rewardAddress={skyConfig.contracts.STUSDS} />
             </TabPanel>
-            <TabPanel value={operationType} index={1}>
+            <TabPanel value={operationType} index={1} idPrefix="expert">
               <Withdraw
                 maxWithdrawBalance={userMaxWithdrawBalance ? Number(formatEther(userMaxWithdrawBalance)).toFixed(4) : '0'}
                 maxWithdrawBalanceRaw={userMaxWithdrawBalance ? BigInt(userMaxWithdrawBalance) : 0n}

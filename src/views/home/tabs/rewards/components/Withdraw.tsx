@@ -10,6 +10,7 @@ import { formatTokenAmount } from 'utils/formatters';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { PercentButton } from 'components/PercentButton';
 import { formatUSDS } from 'utils/sky';
+import StatusLive from 'components/StatusLive';
 
 interface Props {
   stakedBalance?: string;
@@ -249,8 +250,11 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
             <StyledTextField
               slotProps={{
-                input: {
-                  lang: 'en'
+                htmlInput: {
+                  lang: 'en',
+                  inputMode: 'decimal',
+                  'aria-label': 'Amount of USDS to withdraw',
+                  'aria-describedby': 'rewards-withdraw-balance'
                 }
               }}
               fullWidth
@@ -262,7 +266,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
             />
 
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <UsdsLogo width="24" height="24" />
+              <UsdsLogo width="24" height="24" aria-hidden />
               <Typography>USDS</Typography>
             </Box>
           </Box>
@@ -270,7 +274,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           {/* Balance and percentage buttons */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" color="textPrimary">
+              <Typography variant="body2" color="textPrimary" id="rewards-withdraw-balance">
                 {formatUSDS(stakedBalance)} USDS
               </Typography>
             </Box>
@@ -283,9 +287,15 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
                 gap: 1
               }}
             >
-              <PercentButton onClick={() => handlePercentClick(25)}>25%</PercentButton>
-              <PercentButton onClick={() => handlePercentClick(50)}>50%</PercentButton>
-              <PercentButton onClick={() => handlePercentClick(100)}>100%</PercentButton>
+              <PercentButton onClick={() => handlePercentClick(25)} aria-label="Set amount to 25% of balance">
+                25%
+              </PercentButton>
+              <PercentButton onClick={() => handlePercentClick(50)} aria-label="Set amount to 50% of balance">
+                50%
+              </PercentButton>
+              <PercentButton onClick={() => handlePercentClick(100)} aria-label="Set amount to 100% of balance">
+                100%
+              </PercentButton>
             </Box>
           </Box>
         </Box>
@@ -302,6 +312,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
           >
             {getWithdrawButtonText()}
           </Button>
+          <StatusLive message={getWithdrawButtonText()} />
         </Box>
       </StyledCard>
 

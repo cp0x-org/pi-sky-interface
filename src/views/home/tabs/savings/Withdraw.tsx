@@ -9,6 +9,7 @@ import { StyledCard } from 'components/StyledCard';
 import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
+import StatusLive from 'components/StatusLive';
 
 interface Props {
   savingsBalance?: string;
@@ -210,8 +211,11 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
         >
           <StyledTextField
             slotProps={{
-              input: {
-                lang: 'en'
+              htmlInput: {
+                lang: 'en',
+                inputMode: 'decimal',
+                'aria-label': 'Amount of USDS to withdraw',
+                'aria-describedby': 'savings-withdraw-balance'
               }
             }}
             fullWidth
@@ -229,13 +233,13 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
               alignItems: 'center'
             }}
           >
-            <UsdsLogo width="24" height="24" />
+            <UsdsLogo width="24" height="24" aria-hidden />
             <Typography>USDS</Typography>
           </Box>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="textPrimary">
+            <Typography variant="body2" color="textPrimary" id="savings-withdraw-balance">
               {savingsBalance} USDS
             </Typography>
           </Box>
@@ -248,13 +252,13 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled}>
+            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
               100%
             </PercentButton>
           </Box>
@@ -264,6 +268,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
         <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={isButtonDisabled()} onClick={handleMainButtonClick}>
           {getButtonText()}
         </Button>
+        <StatusLive message={getButtonText()} />
       </Box>
     </StyledCard>
   );

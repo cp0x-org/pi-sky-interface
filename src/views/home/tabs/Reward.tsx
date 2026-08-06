@@ -3,19 +3,20 @@ import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { Alert } from '@mui/material';
 import { useAccount } from 'wagmi';
 
 export default function RewardTab() {
-  const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
 
-  const RewardCard = styled(Paper)(({ theme }) => ({
+  const RewardCard = styled(Paper)<{ component?: React.ElementType; to?: string }>(({ theme }) => ({
     ...theme.typography.body2,
+    display: 'block',
     padding: theme.spacing(1),
     color: theme.palette.text.primary,
+    textDecoration: 'none',
     cursor: 'pointer',
     transition: 'transform 0.2s, box-shadow 0.2s',
     '&:hover': {
@@ -27,21 +28,9 @@ export default function RewardTab() {
     })
   }));
 
-  const handleNavigateToUSDSSky = () => {
-    navigate('/rewards/usdsgetsky');
-  };
-
-  const handleNavigateToChronicle = () => {
-    navigate('/rewards/chronicle');
-  };
-
-  const handleNavigateToUSDSSpk = () => {
-    navigate('/rewards/usdsgetspk');
-  };
-
   return (
     <Box sx={{ width: '100%' }} alignContent={'center'} margin={'auto'}>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" component="h1" gutterBottom>
         Sky Token Rewards
       </Typography>
       {!address && (
@@ -51,31 +40,49 @@ export default function RewardTab() {
       )}
       <Grid container rowSpacing={2} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <RewardCard onClick={handleNavigateToUSDSSky}>
+          <RewardCard component={RouterLink} to="/rewards/usdsgetsky">
             <Box sx={{ p: 2 }}>
-              <Typography variant="h4">With: USDS Get: SKY</Typography>
+              <Typography variant="h4" component="h2">
+                With: USDS Get: SKY
+              </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Click to learn more about USDS and SKY rewards
+                Learn more about USDS and SKY rewards
               </Typography>
             </Box>
           </RewardCard>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <RewardCard onClick={handleNavigateToChronicle}>
+          <RewardCard component={RouterLink} to="/rewards/chronicle">
             <Box sx={{ p: 2 }}>
-              <Typography variant="h4">Chronicle Points</Typography>
+              <Typography variant="h4" component="h2">
+                Chronicle Points
+              </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Click to learn more about Chronicle Points
+                Learn more about Chronicle Points
               </Typography>
             </Box>
           </RewardCard>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <RewardCard onClick={handleNavigateToUSDSSpk}>
+          <RewardCard component={RouterLink} to="/rewards/usdsgetspk">
             <Box sx={{ p: 2 }}>
-              <Typography variant="h4">With: USDS Get: SPK</Typography>
+              <Typography variant="h4" component="h2">
+                With: USDS Get: SPK
+              </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Click to learn more about USDS and SPK rewards
+                Learn more about USDS and SPK rewards
+              </Typography>
+            </Box>
+          </RewardCard>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <RewardCard component={RouterLink} to="/rewards/usdsgetgrove">
+            <Box sx={{ p: 2 }}>
+              <Typography variant="h4" component="h2">
+                With: USDS Get: GROVE
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Learn more about GROVE rewards
               </Typography>
             </Box>
           </RewardCard>
