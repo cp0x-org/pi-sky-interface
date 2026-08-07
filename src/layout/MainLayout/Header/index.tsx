@@ -7,6 +7,7 @@ import Box from '@mui/material/Box';
 import LogoSection from '../LogoSection';
 import ConnectButtonCustom from 'components/ConnectButtonCustom';
 import HeaderMenu from './HeaderMenu';
+import LocalizationSection from './LocalizationSection';
 
 // ==============================|| MAIN NAVBAR / HEADER ||============================== //
 
@@ -31,6 +32,9 @@ export default function Header() {
       <Box sx={{ display: { lg: 'block' } }}>
         <ConnectButtonCustom chainStatus="icon" showBalance={false} />
       </Box>
+
+      {/* language switcher */}
+      <LocalizationSection />
     </>
   );
 }

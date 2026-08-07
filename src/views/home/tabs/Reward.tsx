@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import { Link as RouterLink } from 'react-router-dom';
 import { Alert } from '@mui/material';
 import { useAccount } from 'wagmi';
+import { FormattedMessage } from 'react-intl';
 
 export default function RewardTab() {
   const account = useAccount();
@@ -31,11 +32,11 @@ export default function RewardTab() {
   return (
     <Box sx={{ width: '100%' }} alignContent={'center'} margin={'auto'}>
       <Typography variant="h2" component="h1" gutterBottom>
-        Sky Token Rewards
+        <FormattedMessage id="rewards.title" />
       </Typography>
       {!address && (
         <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
-          Please connect your wallet to continue.
+          <FormattedMessage id="common.connectWallet" />
         </Alert>
       )}
       <Grid container rowSpacing={2} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
@@ -43,10 +44,10 @@ export default function RewardTab() {
           <RewardCard component={RouterLink} to="/rewards/usdsgetsky">
             <Box sx={{ p: 2 }}>
               <Typography variant="h4" component="h2">
-                With: USDS Get: SKY
+                <FormattedMessage id="rewards.usdsSky.title" />
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Learn more about USDS and SKY rewards
+                <FormattedMessage id="rewards.usdsSky.cardDescription" />
               </Typography>
             </Box>
           </RewardCard>
@@ -55,10 +56,10 @@ export default function RewardTab() {
           <RewardCard component={RouterLink} to="/rewards/chronicle">
             <Box sx={{ p: 2 }}>
               <Typography variant="h4" component="h2">
-                Chronicle Points
+                <FormattedMessage id="rewards.chronicle.title" />
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Learn more about Chronicle Points
+                <FormattedMessage id="rewards.chronicle.cardDescription" />
               </Typography>
             </Box>
           </RewardCard>
@@ -67,10 +68,10 @@ export default function RewardTab() {
           <RewardCard component={RouterLink} to="/rewards/usdsgetspk">
             <Box sx={{ p: 2 }}>
               <Typography variant="h4" component="h2">
-                With: USDS Get: SPK
+                <FormattedMessage id="rewards.usdsSpk.title" />
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Learn more about USDS and SPK rewards
+                <FormattedMessage id="rewards.usdsSpk.cardDescription" />
               </Typography>
             </Box>
           </RewardCard>
@@ -79,10 +80,10 @@ export default function RewardTab() {
           <RewardCard component={RouterLink} to="/rewards/usdsgetgrove">
             <Box sx={{ p: 2 }}>
               <Typography variant="h4" component="h2">
-                With: USDS Get: GROVE
+                <FormattedMessage id="rewards.usdsGrove.title" />
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                Learn more about GROVE rewards
+                <FormattedMessage id="rewards.usdsGrove.cardDescription" />
               </Typography>
             </Box>
           </RewardCard>

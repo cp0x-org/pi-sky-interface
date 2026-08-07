@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import HandlePosition from './stake/HandlePosition';
 import Positions from './stake/Positions';
 import { StakingPosition } from 'types/staking';
+import { FormattedMessage } from 'react-intl';
 
 export default function StakeTab() {
   const { address } = useAccount();
@@ -30,12 +31,12 @@ export default function StakeTab() {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h2" component="h1" gutterBottom>
-        Staking Engine
+        <FormattedMessage id="stake.title" />
       </Typography>
 
       {!address && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please connect your wallet to continue with staking.
+          <FormattedMessage id="stake.connectWallet" />
         </Alert>
       )}
 
@@ -43,7 +44,7 @@ export default function StakeTab() {
         <>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
             <Button variant="contained" color="primary" onClick={handleOpenNewPosition} disabled={!address}>
-              Open New Position
+              <FormattedMessage id="stake.openNewPosition" />
             </Button>
           </Box>
           <Positions onEditPosition={handleEditPosition} />
@@ -52,10 +53,14 @@ export default function StakeTab() {
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h4" component="h2">
-              {editingPosition ? 'Edit Position #' + Number(Number(editingPosition.indexPosition) + 1) : 'Create New Position'}
+              {editingPosition ? (
+                <FormattedMessage id="stake.editPositionNumber" values={{ number: Number(editingPosition.indexPosition) + 1 }} />
+              ) : (
+                <FormattedMessage id="stake.createNewPosition" />
+              )}
             </Typography>
             <Button variant="outlined" color="primary" onClick={handleBackToPositions}>
-              Back to Positions
+              <FormattedMessage id="stake.backToPositions" />
             </Button>
           </Box>
           <HandlePosition editMode={!!editingPosition} positionData={editingPosition} />

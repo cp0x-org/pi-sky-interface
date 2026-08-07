@@ -16,9 +16,11 @@ import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function SavingsTab() {
   const [operationType, setOperationType] = useState(0);
+  const intl = useIntl();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   // const chainId = useChainId();
@@ -57,25 +59,28 @@ export default function SavingsTab() {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h2" component="h1" gutterBottom>
-        Sky Savings Rate
+        <FormattedMessage id="savings.title" />
       </Typography>
 
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        The Sky Savings Rate is an automated token-accumulation mechanism for eligible users of the Sky Protocol. It takes into account the
-        effect of accumulated USDS compounded in real time.
+        <FormattedMessage id="savings.description" />
       </Typography>
       {!address && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please connect your wallet to continue.
+          <FormattedMessage id="common.connectWallet" />
         </Alert>
       )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <CardHeader title={'Use Savings'}></CardHeader>
+          <CardHeader title={intl.formatMessage({ id: 'savings.useCard' })}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange} aria-label="Savings operations">
-              <Tab label="Supply" {...a11yTabProps('savings', 0)} />
-              <Tab label="Withdraw" {...a11yTabProps('savings', 1)} />
+            <Tabs
+              value={operationType}
+              onChange={handleOperationChange}
+              aria-label={intl.formatMessage({ id: 'savings.operationsAriaLabel' })}
+            >
+              <Tab label={intl.formatMessage({ id: 'common.supply' })} {...a11yTabProps('savings', 0)} />
+              <Tab label={intl.formatMessage({ id: 'common.withdraw' })} {...a11yTabProps('savings', 1)} />
             </Tabs>
 
             <TabPanel value={operationType} index={0} idPrefix="savings">

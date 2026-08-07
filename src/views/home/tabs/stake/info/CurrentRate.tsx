@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { useAccount, useReadContract } from 'wagmi';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import { lockStakeContractConfig } from 'config/abi/LockStackeEngine';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 // Define the ABI for the jug contract
 const jugAbi = [
@@ -22,6 +23,7 @@ const jugAbi = [
 const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
 
 const CurrentRate: React.FC = () => {
+  const intl = useIntl();
   const { config: skyConfig } = useConfigChainId();
   const { isConnected } = useAccount();
 
@@ -96,32 +98,34 @@ const CurrentRate: React.FC = () => {
       return { srr: srrPercent, loading: false, error: null };
     } catch (e: any) {
       console.error('Error calculating stability rate:', e);
-      return { srr: null, loading: false, error: e.message || 'Failed to calculate rate' };
+      return { srr: null, loading: false, error: e.message || intl.formatMessage({ id: 'stake.failedCalculateRate' }) };
     }
-  }, [isJugLoading, isIlkLoading, isDutyLoading, jugError, ilkError, dutyError, ilkData]);
+  }, [isJugLoading, isIlkLoading, isDutyLoading, jugError, ilkError, dutyError, ilkData, intl]);
 
   return (
     <Paper elevation={3} sx={{ p: 3, borderRadius: 2, bgcolor: 'background.paper', width: 'fit-content' }}>
       <Typography variant="h6" gutterBottom>
-        Stability Rate (SRR)
+        <FormattedMessage id="stake.stabilityRate" />
       </Typography>
 
       {loading && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CircularProgress size={20} />
-          <Typography variant="body2">Loading rate data...</Typography>
+          <Typography variant="body2">
+            <FormattedMessage id="stake.loadingRateData" />
+          </Typography>
         </Box>
       )}
 
       {error && !loading && (
         <Typography color="error" variant="body2">
-          Error: {error}
+          <FormattedMessage id="stake.rateError" values={{ error }} />
         </Typography>
       )}
 
       {srr !== null && !loading && (
         <Typography color="success.main" variant="h5" fontWeight="bold">
-          {srr.toFixed(2)}% / year
+          <FormattedMessage id="stake.ratePerYear" values={{ rate: srr.toFixed(2) }} />
         </Typography>
       )}
     </Paper>

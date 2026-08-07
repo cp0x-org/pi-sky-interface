@@ -10,10 +10,6 @@ import { I18n } from 'types/config';
 // load locales files
 function loadLocaleData(i18n: I18n) {
   switch (i18n) {
-    case 'fr':
-      return import('utils/locales/fr.json');
-    case 'ro':
-      return import('utils/locales/ro.json');
     case 'zh':
       return import('utils/locales/zh.json');
     default:
@@ -35,6 +31,12 @@ export default function Locales({ children }: LocalsProps) {
     loadLocaleData(i18n).then((d: { default: Record<string, string> | Record<string, MessageFormatElement[]> | undefined }) => {
       setMessages(d.default);
     });
+  }, [i18n]);
+
+  // keep the document language in sync so screen readers and browsers
+  // announce the content with the correct pronunciation
+  useEffect(() => {
+    document.documentElement.lang = i18n;
   }, [i18n]);
 
   return (

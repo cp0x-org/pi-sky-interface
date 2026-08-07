@@ -17,9 +17,11 @@ import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
 import { usdsSpkRewardContractConfig } from 'config/abi/UsdsSpkReward';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function USDSSpkTab() {
   const [operationType, setOperationType] = useState(0);
+  const intl = useIntl();
   const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
@@ -72,30 +74,33 @@ export default function USDSSpkTab() {
   return (
     <Box sx={{ width: '100%' }}>
       <Button variant="outlined" onClick={handleBack} sx={{ mb: 2 }}>
-        Back to Rewards
+        <FormattedMessage id="rewards.backToRewards" />
       </Button>
       <Typography variant="h2" component="h1" gutterBottom>
-        With: USDS Get: SPK
+        <FormattedMessage id="rewards.usdsSpk.title" />
       </Typography>
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Stake your USDS tokens to earn SPK rewards. This staking option allows you to participate in the Sky Protocol ecosystem and earn
-        rewards proportional to your contribution.
+        <FormattedMessage id="rewards.usdsSpk.description" />
       </Typography>
       {!address && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please connect your wallet to continue.
+          <FormattedMessage id="common.connectWallet" />
         </Alert>
       )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <CardHeader title={'Use Staking'}></CardHeader>
+          <CardHeader title={intl.formatMessage({ id: 'common.useStaking' })}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange} aria-label="USDS to SPK operations">
-              <Tab label="Supply" {...a11yTabProps('usdsspk', 0)} />
+            <Tabs
+              value={operationType}
+              onChange={handleOperationChange}
+              aria-label={intl.formatMessage({ id: 'rewards.usdsSpk.operationsAriaLabel' })}
+            >
+              <Tab label={intl.formatMessage({ id: 'common.supply' })} {...a11yTabProps('usdsspk', 0)} />
               {userRewardBalance ? (
-                <Tab label="Withdraw/Claim" {...a11yTabProps('usdsspk', 1)} />
+                <Tab label={intl.formatMessage({ id: 'common.withdrawClaim' })} {...a11yTabProps('usdsspk', 1)} />
               ) : (
-                <Tab label="Withdraw" {...a11yTabProps('usdsspk', 1)} />
+                <Tab label={intl.formatMessage({ id: 'common.withdraw' })} {...a11yTabProps('usdsspk', 1)} />
               )}
             </Tabs>
 

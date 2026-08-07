@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
+// third party
+import { useIntl } from 'react-intl';
+
 // material-ui
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -32,6 +35,7 @@ import MainCard from '../../ui-component/cards/MainCard';
 
 export default function MainLayout() {
   const theme = useTheme();
+  const intl = useIntl();
   const downMD = useMediaQuery(theme.breakpoints.down('md'));
 
   const { borderRadius, container, miniDrawer, menuOrientation } = useConfig();
@@ -39,11 +43,36 @@ export default function MainLayout() {
   const drawerOpen = menuMaster?.isDashboardDrawerOpened;
 
   const tabs = [
-    { label: 'Rewards', path: 'rewards', iconPosition: 'top', icon: <RewardSvg width="24" height="24" aria-hidden /> },
-    { label: 'Savings', path: 'savings', iconPosition: 'top', icon: <SavingsSvg width="24" height="24" aria-hidden /> },
-    { label: 'Upgrade', path: 'upgrade', iconPosition: 'top', icon: <UpgradeSvg width="24" height="24" aria-hidden /> },
-    { label: 'Stake', path: 'stake', iconPosition: 'top', icon: <StakeSvg width="24" height="24" aria-hidden /> },
-    { label: 'Expert', path: 'expert', iconPosition: 'top', icon: <ExpertSvg width="24" height="24" aria-hidden /> }
+    {
+      label: intl.formatMessage({ id: 'nav.rewards' }),
+      path: 'rewards',
+      iconPosition: 'top',
+      icon: <RewardSvg width="24" height="24" aria-hidden />
+    },
+    {
+      label: intl.formatMessage({ id: 'nav.savings' }),
+      path: 'savings',
+      iconPosition: 'top',
+      icon: <SavingsSvg width="24" height="24" aria-hidden />
+    },
+    {
+      label: intl.formatMessage({ id: 'nav.upgrade' }),
+      path: 'upgrade',
+      iconPosition: 'top',
+      icon: <UpgradeSvg width="24" height="24" aria-hidden />
+    },
+    {
+      label: intl.formatMessage({ id: 'nav.stake' }),
+      path: 'stake',
+      iconPosition: 'top',
+      icon: <StakeSvg width="24" height="24" aria-hidden />
+    },
+    {
+      label: intl.formatMessage({ id: 'nav.expert' }),
+      path: 'expert',
+      iconPosition: 'top',
+      icon: <ExpertSvg width="24" height="24" aria-hidden />
+    }
   ];
 
   const navigate = useNavigate();
@@ -91,7 +120,7 @@ export default function MainLayout() {
 
           <MainCard>
             <Box sx={{ width: '100%' }}>
-              <Tabs value={currentTabIndex} onChange={handleChange} centered aria-label="Main sections">
+              <Tabs value={currentTabIndex} onChange={handleChange} centered aria-label={intl.formatMessage({ id: 'nav.mainSections' })}>
                 {tabs.map((tab, index) => (
                   <Tab key={tab.path} label={tab.label} icon={tab.icon} aria-current={currentTabIndex === index ? 'page' : undefined} />
                 ))}

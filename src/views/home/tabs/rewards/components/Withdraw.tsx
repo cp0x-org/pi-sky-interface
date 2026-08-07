@@ -11,6 +11,7 @@ import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { PercentButton } from 'components/PercentButton';
 import { formatUSDS } from 'utils/sky';
 import StatusLive from 'components/StatusLive';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   stakedBalance?: string;
@@ -100,8 +101,9 @@ const useContractTransaction = (rewardAddress: string) => {
 };
 
 const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAddress = '', tokenSymbol = '' }) => {
+  const intl = useIntl();
   const [amount, setAmount] = useState<string>('');
-  const [buttonText, setButtonText] = useState<string>('Enter Amount');
+  const [buttonText, setButtonText] = useState<string>(intl.formatMessage({ id: 'btn.enterAmount' }));
 
   // Use shared transaction hooks
   const withdrawTx = useContractTransaction(rewardAddress);
@@ -111,17 +113,17 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
   const withdrawConfig: TransactionConfig = {
     functionName: 'withdraw',
     args: [],
-    successMessage: 'USDS withdrawn successfully!',
-    errorSubmitMessage: 'USDS withdraw transaction failed to submit',
-    errorConfirmMessage: 'USDS withdraw transaction failed to confirm'
+    successMessage: intl.formatMessage({ id: 'tx.usdsWithdrawn' }),
+    errorSubmitMessage: intl.formatMessage({ id: 'tx.usdsWithdrawSubmitFailed' }),
+    errorConfirmMessage: intl.formatMessage({ id: 'tx.usdsWithdrawConfirmFailed' })
   };
 
   const claimConfig: TransactionConfig = {
     functionName: 'getReward',
     args: [],
-    successMessage: ' claimed successfully!',
-    errorSubmitMessage: 'Failed to submit claim transaction',
-    errorConfirmMessage: 'Failed to confirm ' + tokenSymbol + ' claim transaction'
+    successMessage: intl.formatMessage({ id: 'tx.rewardClaimed' }, { symbol: tokenSymbol }),
+    errorSubmitMessage: intl.formatMessage({ id: 'tx.claimSubmitFailed' }),
+    errorConfirmMessage: intl.formatMessage({ id: 'tx.claimConfirmFailed' }, { symbol: tokenSymbol })
   };
 
   // Dispatch transaction messages when transaction state changes
@@ -143,7 +145,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
 
       setAmount(formatEther(valueBigInt));
 
-      setButtonText('Withdraw');
+      setButtonText(intl.formatMessage({ id: 'btn.withdraw' }));
     } catch (e) {
       console.error('Invalid staked balance', e);
     }
@@ -152,7 +154,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
   // Handle amount input change
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(e.target.value);
-    setButtonText(e.target.value ? 'Withdraw' : 'Enter Amount');
+    setButtonText(intl.formatMessage({ id: e.target.value ? 'btn.withdraw' : 'btn.enterAmount' }));
   };
 
   // Handle withdraw button click
@@ -167,7 +169,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
       });
     } catch (error) {
       console.error('Error preparing withdrawal:', error);
-      dispatchError('Failed to process withdrawal amount');
+      dispatchError(intl.formatMessage({ id: 'tx.failedProcessWithdrawAmount' }));
     }
   };
 
@@ -179,11 +181,11 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
   // Compute withdraw button text based on state
   const getWithdrawButtonText = () => {
     if (withdrawTx.txHash && !withdrawTx.isTxConfirmed) {
-      return 'Processing withdrawal...';
+      return intl.formatMessage({ id: 'btn.processingWithdrawal' });
     }
 
     if (withdrawTx.txState === 'success') {
-      return 'Withdrawn';
+      return intl.formatMessage({ id: 'btn.withdrawn' });
     }
 
     return buttonText;
@@ -243,7 +245,7 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
       <StyledCard>
         <Box p={0}>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            How much USDS would you like to withdraw?
+            <FormattedMessage id="form.howMuchUsdsWithdraw" />
           </Typography>
 
           {/* Amount input field */}
@@ -253,13 +255,13 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
                 htmlInput: {
                   lang: 'en',
                   inputMode: 'decimal',
-                  'aria-label': 'Amount of USDS to withdraw',
+                  'aria-label': intl.formatMessage({ id: 'a11y.amountUsdsWithdraw' }),
                   'aria-describedby': 'rewards-withdraw-balance'
                 }
               }}
               fullWidth
               type="number"
-              placeholder="Enter amount"
+              placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
               value={amount}
               onChange={handleAmountChange}
               disabled={withdrawTx.txState === 'processing' || withdrawTx.isCompleted}
@@ -287,13 +289,22 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
                 gap: 1
               }}
             >
-              <PercentButton onClick={() => handlePercentClick(25)} aria-label="Set amount to 25% of balance">
+              <PercentButton
+                onClick={() => handlePercentClick(25)}
+                aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+              >
                 25%
               </PercentButton>
-              <PercentButton onClick={() => handlePercentClick(50)} aria-label="Set amount to 50% of balance">
+              <PercentButton
+                onClick={() => handlePercentClick(50)}
+                aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+              >
                 50%
               </PercentButton>
-              <PercentButton onClick={() => handlePercentClick(100)} aria-label="Set amount to 100% of balance">
+              <PercentButton
+                onClick={() => handlePercentClick(100)}
+                aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+              >
                 100%
               </PercentButton>
             </Box>
@@ -320,8 +331,11 @@ const Withdraw: FC<Props> = ({ stakedBalance = '0', rewardBalance = 0n, rewardAd
       {rewardBalance != 0n && (
         <Button variant="outlined" color="secondary" fullWidth sx={{ mt: 2 }} disabled={isClaimButtonDisabled()} onClick={handleClaimClick}>
           {claimTx.txHash && !claimTx.isTxConfirmed
-            ? 'Claiming ' + tokenSymbol + '...'
-            : `Claim ${formatTokenAmount(rewardBalance.toString(), 4)} ${tokenSymbol}`}
+            ? intl.formatMessage({ id: 'btn.claimingToken' }, { symbol: tokenSymbol })
+            : intl.formatMessage(
+                { id: 'btn.claimAmount' },
+                { amount: formatTokenAmount(rewardBalance.toString(), 4), symbol: tokenSymbol }
+              )}
         </Button>
       )}
     </>

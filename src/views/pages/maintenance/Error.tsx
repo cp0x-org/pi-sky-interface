@@ -1,6 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 
+// third party
+import { FormattedMessage, useIntl } from 'react-intl';
+
 // material-ui
 import { useTheme } from '@mui/material/styles';
 import Button from '@mui/material/Button';
@@ -30,26 +33,34 @@ import { ReactComponent as ImagePurple } from 'assets/images/maintenance/img-err
 
 export default function Error() {
   const theme = useTheme();
+  const intl = useIntl();
   const location = useLocation();
   const imageSX = { position: 'absolute', top: 0, left: 0, width: '100%' };
 
   // Set document title to include 404 status
   useEffect(() => {
-    document.title = '404 - Page Not Found';
-  }, []);
+    document.title = intl.formatMessage({ id: 'error404.documentTitle' });
+  }, [intl]);
 
   return (
     <Stack sx={{ gap: gridSpacing, alignItems: 'center', justifyContent: 'center' }}>
       {/*<Box sx={{ maxWidth: { xs: 350, sm: 580, md: 720 }, margin: '0 auto', position: 'relative' }}></Box>*/}
       <Stack spacing={gridSpacing} sx={{ justifyContent: 'center', alignItems: 'center', p: 1.5, maxWidth: 450 }}>
-        <Chip label="404 Error" color="error" icon={<ErrorOutlineIcon />} sx={{ borderRadius: '16px', fontSize: '1rem', height: '32px' }} />
-        <Typography variant="h1">Page Not Found</Typography>
+        <Chip
+          label={intl.formatMessage({ id: 'error404.chip' })}
+          color="error"
+          icon={<ErrorOutlineIcon />}
+          sx={{ borderRadius: '16px', fontSize: '1rem', height: '32px' }}
+        />
+        <Typography variant="h1">
+          <FormattedMessage id="error404.title" />
+        </Typography>
         <Typography variant="body1" align="center">
-          The page <strong>{location.pathname}</strong> you are looking for doesn't exist or might have been moved.
+          <FormattedMessage id="error404.description" values={{ path: <strong>{location.pathname}</strong> }} />
         </Typography>
         <AnimateButton>
           <Button variant="contained" size="large" component={Link} to={DASHBOARD_PATH}>
-            <HomeTwoToneIcon sx={{ fontSize: '1.3rem', mr: 0.75 }} /> Return Home
+            <HomeTwoToneIcon sx={{ fontSize: '1.3rem', mr: 0.75 }} /> <FormattedMessage id="error404.returnHome" />
           </Button>
         </AnimateButton>
       </Stack>

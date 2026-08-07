@@ -3,6 +3,7 @@ import { Card, CardActionArea, Typography, Box } from '@mui/material';
 
 import { getTokens, SkyContracts, Token } from 'config/index';
 import { dispatchWarning } from 'utils/snackbar';
+import { useIntl } from 'react-intl';
 
 interface Props {
   rewardAddress: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
+  const intl = useIntl();
   const [selected, setSelected] = useState<string | null>(null);
   const tokens = getTokens();
 
@@ -27,7 +29,7 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
     const newSelected = token.tokenAddress === selected ? null : token.tokenAddress;
 
     if (newSelected == SkyContracts.USDSStakingRewards) {
-      dispatchWarning('USDS rewards were deprecated. Please choose other options.');
+      dispatchWarning(intl.formatMessage({ id: 'stake.usdsRewardsDeprecated' }));
       return;
     }
     setSelected(newSelected);
@@ -35,7 +37,13 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} role="radiogroup" aria-label="Reward token">
+    <Box
+      display="flex"
+      flexDirection="column"
+      gap={2}
+      role="radiogroup"
+      aria-label={intl.formatMessage({ id: 'stake.rewardTokenAriaLabel' })}
+    >
       {tokens.map((token) => {
         const isSelected = selected === token.tokenAddress;
         return (
@@ -61,7 +69,7 @@ const Reward: FC<Props> = ({ rewardAddress = '', onChange }) => {
               <Box>
                 <Typography variant="h6">{token.label}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {isSelected ? 'Selected' : 'Click to select'}
+                  {intl.formatMessage({ id: isSelected ? 'stake.selected' : 'stake.clickToSelect' })}
                 </Typography>
               </Box>
             </CardActionArea>

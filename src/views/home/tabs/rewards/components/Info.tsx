@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import CardHeader from '@mui/material/CardHeader';
 import ExternalLink from 'components/ExternalLink';
 import KeyValueRow from 'components/KeyValueRow';
+import { useIntl } from 'react-intl';
 
 interface InfoProps {
   rate?: number;
@@ -14,6 +15,8 @@ interface InfoProps {
 }
 
 const Info: FC<InfoProps> = ({ balance = '0', tvl = '0', contractAddress = '' }) => {
+  const intl = useIntl();
+
   return (
     <Card
       sx={{
@@ -24,7 +27,10 @@ const Info: FC<InfoProps> = ({ balance = '0', tvl = '0', contractAddress = '' })
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+      <CardHeader
+        title={intl.formatMessage({ id: 'common.summary' })}
+        titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+      ></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -42,12 +48,16 @@ const Info: FC<InfoProps> = ({ balance = '0', tvl = '0', contractAddress = '' })
             gap: 4
           }}
         >
-          <ExternalLink href={`https://etherscan.io/address/${contractAddress}`} label="View contract" sx={{ width: '100%' }}>
-            View contract
+          <ExternalLink
+            href={`https://etherscan.io/address/${contractAddress}`}
+            label={intl.formatMessage({ id: 'common.viewContract' })}
+            sx={{ width: '100%' }}
+          >
+            {intl.formatMessage({ id: 'common.viewContract' })}
           </ExternalLink>
 
-          <KeyValueRow label="Your Staking balance">{balance} USDS</KeyValueRow>
-          <KeyValueRow label="TVL">{tvl}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'rewards.info.stakingBalance' })}>{balance} USDS</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'common.tvl' })}>{tvl}</KeyValueRow>
         </Box>
       </CardContent>
     </Card>

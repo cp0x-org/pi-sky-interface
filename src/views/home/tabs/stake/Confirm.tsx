@@ -9,6 +9,7 @@ import { shortenAddress } from 'utils/formatters';
 import ExternalLink from 'components/ExternalLink';
 import { formatUSDS } from 'utils/sky';
 import { useTheme } from '@mui/material/styles';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface ConfirmProps {
   stakeData: {
@@ -29,6 +30,7 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
   const { config: skyConfig } = useConfigChainId();
   const contractAddress = skyConfig.contracts.LockStakeEngine;
   const theme = useTheme();
+  const intl = useIntl();
   return (
     <>
       <Card sx={{ borderRadius: '20px', my: 2 }}>
@@ -49,18 +51,18 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
           >
             <ExternalLink
               href={`https://etherscan.io/address/${contractAddress}`}
-              label="View staking contract"
+              label={intl.formatMessage({ id: 'stake.viewStakingContract' })}
               sx={{
                 width: { xs: '100%', sm: 'auto' },
                 justifyContent: { xs: 'center', sm: 'flex-start' }
               }}
             >
-              View contract
+              {intl.formatMessage({ id: 'common.viewContract' })}
             </ExternalLink>
 
             <Box sx={{ textAlign: { xs: 'center', sm: 'right' } }}>
               <Typography color="text.secondary" variant="body2">
-                Stake Engine
+                <FormattedMessage id="stake.stakeEngine" />
               </Typography>
               <Typography variant="body2" sx={{ fontSize: '0.75rem', opacity: 0.6 }}>
                 {shortenAddress(contractAddress)}
@@ -71,11 +73,13 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
           <Divider sx={{ my: 2 }} />
 
           <Typography variant="h6" gutterBottom>
-            Staking Position Summary
+            <FormattedMessage id="stake.positionSummary" />
           </Typography>
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography color="text.secondary">Amount to Stake:</Typography>
+            <Typography color="text.secondary">
+              <FormattedMessage id="stake.amountToStake" />
+            </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
               <Typography>{formatUSDS(stakeData.amount)} SKY</Typography>
             </Box>
@@ -83,7 +87,9 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
 
           {originalAmount && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Typography color="text.secondary">New Total Amount:</Typography>
+              <Typography color="text.secondary">
+                <FormattedMessage id="stake.newTotalAmountLabel" />
+              </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                 {formatUSDS(Number(stakeData.amount) + Number(originalAmount))} SKY
               </Box>
@@ -91,7 +97,9 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
           )}
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography color="text.secondary">Reward Address:</Typography>
+            <Typography color="text.secondary">
+              <FormattedMessage id="stake.rewardAddress" />
+            </Typography>
             <Typography
               variant="body2"
               sx={{
@@ -106,7 +114,9 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
 
           {stakeData.delegatorAddress && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-              <Typography color="text.secondary">Delegate Address:</Typography>
+              <Typography color="text.secondary">
+                <FormattedMessage id="stake.delegateAddress" />
+              </Typography>
               <Typography
                 variant="body2"
                 sx={{
@@ -123,20 +133,22 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
           <Divider sx={{ my: 2 }} />
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography color="text.secondary">Transaction Status:</Typography>
+            <Typography color="text.secondary">
+              <FormattedMessage id="stake.transactionStatus" />
+            </Typography>
             <Box>
               <Box sx={{ mb: 2 }}>
                 {isApproved ? (
-                  <Chip label="Tokens Approved" color="success" size="small" sx={{ mr: 1 }} />
+                  <Chip label={intl.formatMessage({ id: 'stake.tokensApproved' })} color="success" size="small" sx={{ mr: 1 }} />
                 ) : (
-                  <Chip label="Approval Required" color="warning" size="small" sx={{ mr: 1 }} />
+                  <Chip label={intl.formatMessage({ id: 'stake.approvalRequired' })} color="warning" size="small" sx={{ mr: 1 }} />
                 )}
               </Box>
               <Box>
                 {isStaked ? (
-                  <Chip label="Staking Complete" color="success" size="small" />
+                  <Chip label={intl.formatMessage({ id: 'stake.stakingComplete' })} color="success" size="small" />
                 ) : (
-                  <Chip label="Pending Confirmation" color="default" size="small" />
+                  <Chip label={intl.formatMessage({ id: 'stake.pendingConfirmation' })} color="default" size="small" />
                 )}
               </Box>
             </Box>
@@ -146,19 +158,25 @@ const Confirm: FC<ConfirmProps> = ({ stakeData, isApproved, isStaked, originalAm
 
       {!isApproved && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          First, you need to approve SKY tokens to be used by the staking contract.
+          <FormattedMessage id="stake.approveFirst" />
         </Alert>
       )}
 
       {isApproved && !isStaked && stakeData.amount != '' && stakeData.amount != '0' && (
-        <Alert severity="info">Now you can confirm your staking position.</Alert>
+        <Alert severity="info">
+          <FormattedMessage id="stake.canConfirmPosition" />
+        </Alert>
       )}
 
-      {isApproved && !isStaked && (stakeData.amount == '' || stakeData.amount == '0') && <Alert severity="info">No amount changes.</Alert>}
+      {isApproved && !isStaked && (stakeData.amount == '' || stakeData.amount == '0') && (
+        <Alert severity="info">
+          <FormattedMessage id="stake.noAmountChanges" />
+        </Alert>
+      )}
 
       {isStaked && (
         <Alert severity="success" sx={{ color: theme.palette.success.main }}>
-          Congratulations! Your staking position has been successfully created.
+          <FormattedMessage id="stake.positionCreated" />
         </Alert>
       )}
     </>

@@ -18,9 +18,11 @@ import { formatUSDS } from 'utils/sky';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function ChronicleTab() {
   const [operationType, setOperationType] = useState(0);
+  const intl = useIntl();
   const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
@@ -73,30 +75,33 @@ export default function ChronicleTab() {
   return (
     <Box sx={{ width: '100%' }}>
       <Button variant="outlined" onClick={handleBack} sx={{ mb: 2 }}>
-        Back to Rewards
+        <FormattedMessage id="rewards.backToRewards" />
       </Button>
       <Typography variant="h2" component="h1" gutterBottom>
-        Chronicle Points
+        <FormattedMessage id="rewards.chronicle.title" />
       </Typography>
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Chronicle Points allow you to earn rewards by staking your USDS tokens in the Sky Protocol ecosystem. The system tracks your
-        contributions and rewards you accordingly.
+        <FormattedMessage id="rewards.chronicle.description" />
       </Typography>
       {!address && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please connect your wallet to continue.
+          <FormattedMessage id="common.connectWallet" />
         </Alert>
       )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <CardHeader title={'Use Chronicle Points'}></CardHeader>
+          <CardHeader title={intl.formatMessage({ id: 'rewards.chronicle.useCard' })}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange} aria-label="Chronicle Points operations">
-              <Tab label="Supply" {...a11yTabProps('chronicle', 0)} />
+            <Tabs
+              value={operationType}
+              onChange={handleOperationChange}
+              aria-label={intl.formatMessage({ id: 'rewards.chronicle.operationsAriaLabel' })}
+            >
+              <Tab label={intl.formatMessage({ id: 'common.supply' })} {...a11yTabProps('chronicle', 0)} />
               {userRewardBalance ? (
-                <Tab label="Withdraw/Claim" {...a11yTabProps('chronicle', 1)} />
+                <Tab label={intl.formatMessage({ id: 'common.withdrawClaim' })} {...a11yTabProps('chronicle', 1)} />
               ) : (
-                <Tab label="Withdraw" {...a11yTabProps('chronicle', 1)} />
+                <Tab label={intl.formatMessage({ id: 'common.withdraw' })} {...a11yTabProps('chronicle', 1)} />
               )}
             </Tabs>
 
