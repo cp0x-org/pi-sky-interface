@@ -10,6 +10,7 @@ import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import StatusLive from 'components/StatusLive';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   savingsBalance?: string;
@@ -68,6 +69,7 @@ const useTransaction = () => {
 };
 
 const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
+  const intl = useIntl();
   const [amount, setAmount] = useState<string>('');
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
@@ -104,14 +106,14 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
     // Update withdraw status when confirmed
     if (withdrawTx.txState === 'confirmed' && !isWithdrawed) {
       setIsWithdrawed(true);
-      dispatchSuccess('USDS withdrawn successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.usdsWithdrawn' }));
     }
 
     // Handle errors
     if (withdrawTx.txState === 'error') {
-      dispatchError('USDS Withdraw failed');
+      dispatchError(intl.formatMessage({ id: 'tx.usdsWithdrawFailed' }));
     }
-  }, [withdrawTx, isWithdrawed])();
+  }, [withdrawTx, isWithdrawed, intl])();
 
   // Handle amount change
   const handleAmountChange = useCallback(
@@ -132,7 +134,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
   const handleMainButtonClick = useCallback(async () => {
     if (!amount) {
       console.log('Withdraw amount is empty');
-      dispatchError('Please Set Amount');
+      dispatchError(intl.formatMessage({ id: 'tx.pleaseSetAmount' }));
       return;
     }
 
@@ -156,28 +158,28 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
       }
     } catch (error) {
       console.error('Transaction failed:', error);
-      dispatchError('Transaction failed');
+      dispatchError(intl.formatMessage({ id: 'tx.transactionFailed' }));
     }
-  }, [amount, isWithdrawed, withdrawTx, skyConfig.contracts.SavingsUSDS, address]);
+  }, [amount, isWithdrawed, withdrawTx, skyConfig.contracts.SavingsUSDS, address, intl]);
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
     if (!amount) {
-      return 'Enter Amount';
+      return intl.formatMessage({ id: 'btn.enterAmount' });
     }
 
     if (!isWithdrawed) {
       if (withdrawTx.txHash && !withdrawTx.isTxConfirmed) {
-        return 'Withdrawing USDS...';
+        return intl.formatMessage({ id: 'btn.withdrawingUsds' });
       }
       if (withdrawTx.txState === 'error') {
-        return 'Withdrawal Failed - Try again';
+        return intl.formatMessage({ id: 'btn.withdrawalFailedTryAgain' });
       }
-      return 'Withdraw';
+      return intl.formatMessage({ id: 'btn.withdraw' });
     }
 
-    return 'Success!';
-  }, [amount, isWithdrawed, withdrawTx.txHash, withdrawTx.isTxConfirmed, withdrawTx.txState]);
+    return intl.formatMessage({ id: 'btn.success' });
+  }, [amount, isWithdrawed, withdrawTx.txHash, withdrawTx.isTxConfirmed, withdrawTx.txState, intl]);
 
   // Determine if button should be disabled
   const isButtonDisabled = useCallback(() => {
@@ -197,7 +199,7 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to withdraw?
+          <FormattedMessage id="form.howMuchUsdsWithdraw" />
         </Typography>
         <Box
           sx={{
@@ -214,13 +216,13 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
               htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
-                'aria-label': 'Amount of USDS to withdraw',
+                'aria-label': intl.formatMessage({ id: 'a11y.amountUsdsWithdraw' }),
                 'aria-describedby': 'savings-withdraw-balance'
               }
             }}
             fullWidth
             type="number"
-            placeholder="Enter amount"
+            placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
             value={amount}
             disabled={isInputDisabled}
             onChange={handleAmountChange}
@@ -252,13 +254,25 @@ const Withdraw: FC<Props> = ({ savingsBalance = '0' }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(25)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+            >
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(50)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+            >
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(100)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+            >
               100%
             </PercentButton>
           </Box>

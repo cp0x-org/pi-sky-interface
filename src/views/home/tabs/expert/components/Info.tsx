@@ -7,6 +7,7 @@ import { formatUSDS } from 'utils/sky';
 import { formatEther } from 'viem';
 import ExternalLink from 'components/ExternalLink';
 import KeyValueRow from 'components/KeyValueRow';
+import { useIntl } from 'react-intl';
 
 interface InfoProps {
   rate?: number;
@@ -18,6 +19,8 @@ interface InfoProps {
 }
 
 const Info: FC<InfoProps> = ({ usdsBalance = '0', stUsdsBalance = '0', tvl = 0n, cap = 0n, contractAddress = '' }) => {
+  const intl = useIntl();
+
   return (
     <Card
       sx={{
@@ -28,7 +31,10 @@ const Info: FC<InfoProps> = ({ usdsBalance = '0', stUsdsBalance = '0', tvl = 0n,
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+      <CardHeader
+        title={intl.formatMessage({ id: 'common.summary' })}
+        titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+      ></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -46,15 +52,21 @@ const Info: FC<InfoProps> = ({ usdsBalance = '0', stUsdsBalance = '0', tvl = 0n,
             gap: 4
           }}
         >
-          <ExternalLink href={`https://etherscan.io/address/${contractAddress}`} label="View contract" sx={{ width: '100%' }}>
-            View contract
+          <ExternalLink
+            href={`https://etherscan.io/address/${contractAddress}`}
+            label={intl.formatMessage({ id: 'common.viewContract' })}
+            sx={{ width: '100%' }}
+          >
+            {intl.formatMessage({ id: 'common.viewContract' })}
           </ExternalLink>
 
-          <KeyValueRow label="Your balance (USDS)">{usdsBalance}</KeyValueRow>
-          <KeyValueRow label="Your balance (stUSDS)">{stUsdsBalance}</KeyValueRow>
-          <KeyValueRow label="Capacity (USDS)">{formatUSDS(formatEther(cap))}</KeyValueRow>
-          <KeyValueRow label="TVL (USDS)">{formatUSDS(formatEther(tvl))}</KeyValueRow>
-          <KeyValueRow label="Remaining Capacity (USDS)">{formatUSDS(formatEther(cap - tvl))}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'expert.info.yourBalanceUsds' })}>{usdsBalance}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'expert.info.yourBalanceStUsds' })}>{stUsdsBalance}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'expert.info.capacity' })}>{formatUSDS(formatEther(cap))}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'expert.info.tvl' })}>{formatUSDS(formatEther(tvl))}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'expert.info.remainingCapacity' })}>
+            {formatUSDS(formatEther(cap - tvl))}
+          </KeyValueRow>
         </Box>
       </CardContent>
     </Card>

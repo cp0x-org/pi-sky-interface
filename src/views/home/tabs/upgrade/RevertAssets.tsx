@@ -13,6 +13,7 @@ import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useDebounce } from 'hooks/useDebounce';
 import StatusLive from 'components/StatusLive';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   usdsUserBalance?: bigint;
@@ -71,6 +72,7 @@ const useTransaction = () => {
 };
 
 const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
+  const intl = useIntl();
   const [amount, setAmount] = useState<string>('');
   // Create a debounced version of amount that updates 500ms after amount changes
   const debouncedAmount = useDebounce(amount, 500);
@@ -165,25 +167,25 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
       if (refetchAllowance) {
         refetchAllowance();
       }
-      dispatchSuccess('USDS Approved Successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.usdsApproved' }));
     }
 
     // Update revert status when confirmed
     if (revertTx.txState === 'confirmed' && !isReverted) {
       setIsReverted(true);
-      dispatchSuccess('USDS reverted to DAI successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.usdsReverted' }));
     }
 
     // Handle errors
     if (approveTx.txState === 'error') {
-      dispatchError('USDS Approve Failed!');
+      dispatchError(intl.formatMessage({ id: 'tx.usdsApproveFailed' }));
       setIsApproved(false);
     }
 
     if (revertTx.txState === 'error') {
-      dispatchError('USDS revert failed!');
+      dispatchError(intl.formatMessage({ id: 'tx.usdsRevertFailed' }));
     }
-  }, [approveTx, revertTx, isApproved, isReverted, refetchAllowance])();
+  }, [approveTx, revertTx, isApproved, isReverted, refetchAllowance, intl])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
@@ -273,9 +275,9 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     } catch (error) {
       console.error('Transaction failed:', error);
       if (!isApproved) {
-        dispatchError('Failed to approve USDS');
+        dispatchError(intl.formatMessage({ id: 'tx.failedApproveUsds' }));
       } else {
-        dispatchError('Failed to revert USDS to DAI');
+        dispatchError(intl.formatMessage({ id: 'tx.failedRevertUsds' }));
       }
     }
   }, [
@@ -287,41 +289,42 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     address,
     skyConfig.contracts.USDS,
     skyConfig.contracts.DAIUSDSConverter,
-    resetTransactionStates
+    resetTransactionStates,
+    intl
   ]);
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
     // Show checking status when amount is being debounced
     if (allowanceChecking) {
-      return 'Checking allowance...';
+      return intl.formatMessage({ id: 'btn.checkingAllowance' });
     }
 
     if (!amount) {
-      return 'Enter Amount';
+      return intl.formatMessage({ id: 'btn.enterAmount' });
     }
 
     if (!isApproved) {
       if (approveTx.txHash && !approveTx.isTxConfirmed) {
-        return 'Approving USDS...';
+        return intl.formatMessage({ id: 'btn.approvingUsds' });
       }
       if (approveTx.txState === 'error') {
-        return 'Approval Failed - Try again';
+        return intl.formatMessage({ id: 'btn.approvalFailedTryAgain' });
       }
-      return 'Approve USDS';
+      return intl.formatMessage({ id: 'btn.approveUsds' });
     }
 
     if (!isReverted) {
       if (revertTx.txHash && !revertTx.isTxConfirmed) {
-        return 'Reverting USDS to DAI...';
+        return intl.formatMessage({ id: 'btn.revertingUsds' });
       }
       if (revertTx.txState === 'error') {
-        return 'Revert Failed - Try again';
+        return intl.formatMessage({ id: 'btn.revertFailedTryAgain' });
       }
-      return 'Revert USDS to DAI';
+      return intl.formatMessage({ id: 'btn.revertUsdsToDai' });
     }
 
-    return 'Success!';
+    return intl.formatMessage({ id: 'btn.success' });
   }, [
     amount,
     isApproved,
@@ -332,7 +335,8 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     approveTx.txState,
     revertTx.txHash,
     revertTx.isTxConfirmed,
-    revertTx.txState
+    revertTx.txState,
+    intl
   ]);
 
   // Determine if button should be disabled
@@ -357,7 +361,7 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to revert to DAI?
+          <FormattedMessage id="form.howMuchUsdsRevert" />
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <StyledTextField
@@ -365,13 +369,13 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
               htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
-                'aria-label': 'Amount of USDS to revert to DAI',
+                'aria-label': intl.formatMessage({ id: 'a11y.amountUsdsRevert' }),
                 'aria-describedby': 'revert-balance'
               }
             }}
             fullWidth
             type="number"
-            placeholder="Enter amount"
+            placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
             value={amount}
             disabled={isInputDisabled}
             onChange={handleAmountChange}
@@ -403,13 +407,25 @@ const RevertAssets: FC<Props> = ({ usdsUserBalance }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(25)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+            >
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(50)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+            >
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(100)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+            >
               100%
             </PercentButton>
           </Box>

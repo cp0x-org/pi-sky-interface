@@ -17,8 +17,10 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import ExternalLink from 'components/ExternalLink';
 import KeyValueRow from 'components/KeyValueRow';
 import LoadingIndicator from 'components/LoadingIndicator';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function StakingSummary() {
+  const intl = useIntl();
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError } = useStakingPositions();
@@ -54,7 +56,10 @@ export default function StakingSummary() {
           flexDirection: 'column'
         }}
       >
-        <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+        <CardHeader
+          title={intl.formatMessage({ id: 'common.summary' })}
+          titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+        ></CardHeader>
         <CardContent
           sx={{
             flex: 1,
@@ -65,7 +70,7 @@ export default function StakingSummary() {
             p: 3
           }}
         >
-          <LoadingIndicator label="Loading staking data..." />
+          <LoadingIndicator label={intl.formatMessage({ id: 'stake.loadingStakingData' })} />
         </CardContent>
       </Card>
     );
@@ -82,9 +87,14 @@ export default function StakingSummary() {
           flexDirection: 'column'
         }}
       >
-        <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+        <CardHeader
+          title={intl.formatMessage({ id: 'common.summary' })}
+          titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+        ></CardHeader>
         <CardContent sx={{ p: 3 }}>
-          <Alert severity="error">Error loading staking data: {error}</Alert>
+          <Alert severity="error">
+            <FormattedMessage id="stake.errorLoadingStakingData" values={{ error }} />
+          </Alert>
         </CardContent>
       </Card>
     );
@@ -101,9 +111,14 @@ export default function StakingSummary() {
           flexDirection: 'column'
         }}
       >
-        <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+        <CardHeader
+          title={intl.formatMessage({ id: 'common.summary' })}
+          titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+        ></CardHeader>
         <CardContent sx={{ p: 3 }}>
-          <Alert severity="info">Please connect your wallet to view staking positions</Alert>
+          <Alert severity="info">
+            <FormattedMessage id="stake.connectWalletPositions" />
+          </Alert>
         </CardContent>
       </Card>
     );
@@ -119,7 +134,10 @@ export default function StakingSummary() {
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+      <CardHeader
+        title={intl.formatMessage({ id: 'common.summary' })}
+        titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+      ></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -139,19 +157,19 @@ export default function StakingSummary() {
         >
           <ExternalLink
             href={`https://etherscan.io/address/${skyConfig.contracts.LockStakeEngine}`}
-            label="View staking contract"
+            label={intl.formatMessage({ id: 'stake.viewStakingContract' })}
             sx={{ width: '100%' }}
           >
-            View staking contract
+            {intl.formatMessage({ id: 'stake.viewStakingContract' })}
           </ExternalLink>
 
           {skyPrice !== null && (
             <KeyValueRow
               label={
                 <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
-                  Sky Price
-                  <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
-                    <IconButton size="small" aria-label="About Sky Price" sx={{ ml: 0.5, p: 0.25 }}>
+                  <FormattedMessage id="stake.skyPrice" />
+                  <Tooltip title={intl.formatMessage({ id: 'stake.skyPriceTooltip' })} arrow>
+                    <IconButton size="small" aria-label={intl.formatMessage({ id: 'stake.aboutSkyPrice' })} sx={{ ml: 0.5, p: 0.25 }}>
                       <HelpOutlineIcon sx={{ fontSize: '1rem' }} />
                     </IconButton>
                   </Tooltip>
@@ -162,7 +180,7 @@ export default function StakingSummary() {
             </KeyValueRow>
           )}
 
-          {apr !== null && <KeyValueRow label="Current APR(SKY)">~{apr.toFixed(2)}%</KeyValueRow>}
+          {apr !== null && <KeyValueRow label={intl.formatMessage({ id: 'stake.currentAprSky' })}>~{apr.toFixed(2)}%</KeyValueRow>}
 
           {/*{aprSpk !== null && (*/}
           {/*  <Box*/}
@@ -183,21 +201,27 @@ export default function StakingSummary() {
           {/*  </Box>*/}
           {/*)}*/}
 
-          {totalDelegators !== null && <KeyValueRow label="Total Unique Suppliers">{totalDelegators}</KeyValueRow>}
+          {totalDelegators !== null && (
+            <KeyValueRow label={intl.formatMessage({ id: 'stake.totalUniqueSuppliers' })}>{totalDelegators}</KeyValueRow>
+          )}
 
-          {totalPositions !== null && <KeyValueRow label="Total Staking Positions">{totalPositions}</KeyValueRow>}
+          {totalPositions !== null && (
+            <KeyValueRow label={intl.formatMessage({ id: 'stake.totalStakingPositions' })}>{totalPositions}</KeyValueRow>
+          )}
 
-          {totalSky !== null && <KeyValueRow label="Total SKY Staked">{formatShortUSDS(totalSky)}</KeyValueRow>}
+          {totalSky !== null && (
+            <KeyValueRow label={intl.formatMessage({ id: 'stake.totalSkyStaked' })}>{formatShortUSDS(totalSky)}</KeyValueRow>
+          )}
 
-          {tvl !== null && <KeyValueRow label="TVL">{formatShortUSDS(tvl)} USDS</KeyValueRow>}
+          {tvl !== null && <KeyValueRow label={intl.formatMessage({ id: 'common.tvl' })}>{formatShortUSDS(tvl)} USDS</KeyValueRow>}
 
-          <KeyValueRow label="Your Total Staked Amount">{formatUSDS(totalStaked)} SKY</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'stake.yourTotalStaked' })}>{formatUSDS(totalStaked)} SKY</KeyValueRow>
 
-          <KeyValueRow label="Your Number of Positions">{positions?.length || 0}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'stake.yourNumberOfPositions' })}>{positions?.length || 0}</KeyValueRow>
 
           {!positions || positions.length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>
-              No active staking positions found
+              <FormattedMessage id="stake.noActivePositions" />
             </Alert>
           ) : null}
         </Box>

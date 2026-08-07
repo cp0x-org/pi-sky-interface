@@ -27,6 +27,7 @@ import { dispatchError, dispatchSuccess, dispatchWarning } from 'utils/snackbar'
 import { useDelegateStake } from 'hooks/useDelegateStake';
 import { VoteDelegate } from 'config/abi/VoteDelegate';
 import { usdsContractConfig } from 'config/abi/Usds';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface PositionsProps {
   stakeData?: {
@@ -57,6 +58,7 @@ const PositionCard = styled(Card)(({ theme }) => ({
 }));
 
 const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
+  const intl = useIntl();
   const { config: skyConfig } = useConfigChainId();
   const { address } = useAccount();
   const { positions, isLoading: positionsLoading, error: positionsError, refetch: refetchPositions } = useStakingPositions();
@@ -121,7 +123,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     }
 
     if (newTokenAddress == skyConfig.contracts.USDSStakingRewards) {
-      dispatchWarning('USDS rewards were deprecated. Please choose other options.');
+      dispatchWarning(intl.formatMessage({ id: 'stake.usdsRewardsDeprecated' }));
       return;
     }
 
@@ -167,13 +169,13 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
       let message = '';
       if (operationType === 'claim') {
-        message = 'Reward claim successfully!';
+        message = intl.formatMessage({ id: 'tx.rewardClaimSuccess' });
         refetchPositions();
       } else if (operationType === 'withdraw') {
-        message = 'Withdraw successfully!';
+        message = intl.formatMessage({ id: 'tx.withdrawSuccess' });
       } else {
         setChangingReward(false);
-        message = 'Reward was changed successfully!';
+        message = intl.formatMessage({ id: 'tx.rewardChanged' });
       }
 
       dispatchSuccess(message);
@@ -195,11 +197,11 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     if (((isError && contractError) || (isTxConfirmError && txConfirmError)) && operationType) {
       let operationName = '';
       if (operationType === 'claim') {
-        operationName = 'Claim';
+        operationName = intl.formatMessage({ id: 'stake.operation.claim' });
       } else if (operationType === 'withdraw') {
-        operationName = 'Withdraw';
+        operationName = intl.formatMessage({ id: 'stake.operation.withdraw' });
       } else {
-        operationName = 'Select Reward';
+        operationName = intl.formatMessage({ id: 'stake.operation.selectReward' });
         setChangingReward(false);
 
         positions.map((pos) => {
@@ -209,9 +211,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         });
       }
 
-      const errorMsg = txConfirmError?.message || 'Unknown error';
+      const errorMsg = txConfirmError?.message || intl.formatMessage({ id: 'common.unknownError' });
 
-      dispatchError(`${operationName} error: ${errorMsg}`);
+      dispatchError(intl.formatMessage({ id: 'tx.operationError' }, { operation: operationName, error: errorMsg }));
 
       // Reset operation states
       if (operationType === 'claim') {
@@ -234,7 +236,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const handleWithdraw = (position: StakingPosition) => {
     if (!address || !position.indexPosition || !position.wad) {
       console.error('Missing required data for withdrawal');
-      dispatchError('Missing required data for withdrawal');
+      dispatchError(intl.formatMessage({ id: 'tx.missingWithdrawData' }));
       return;
     }
 
@@ -264,7 +266,12 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing withdraw transaction:', error);
       setWithdrawing((prev) => ({ ...prev, [position.indexPosition]: false }));
-      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      dispatchError(
+        intl.formatMessage(
+          { id: 'tx.genericError' },
+          { error: error instanceof Error ? error.message : intl.formatMessage({ id: 'common.unknownError' }) }
+        )
+      );
       setOperationType(null);
     }
   };
@@ -272,7 +279,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const handleSelfWithdraw = (amount: string) => {
     if (!address || !amount) {
       console.error('Missing required data for withdrawal');
-      dispatchError('Missing required data for withdrawal');
+      dispatchError(intl.formatMessage({ id: 'tx.missingWithdrawData' }));
       return;
     }
 
@@ -296,7 +303,12 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing withdraw transaction:', error);
       setWithdrawing((prev) => ({ ...prev, ['delegate']: false }));
-      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      dispatchError(
+        intl.formatMessage(
+          { id: 'tx.genericError' },
+          { error: error instanceof Error ? error.message : intl.formatMessage({ id: 'common.unknownError' }) }
+        )
+      );
       setOperationType(null);
     }
   };
@@ -304,7 +316,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   const handleClaim = (position: StakingPosition, rewardAddress: string) => {
     if (!address || !position.indexPosition) {
       console.error('Missing required data for claiming rewards');
-      dispatchError('Missing required data for claiming rewards');
+      dispatchError(intl.formatMessage({ id: 'tx.missingClaimData' }));
       return;
     }
 
@@ -330,7 +342,12 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     } catch (error) {
       console.error('Error preparing claim transaction:', error);
       setClaiming((prev) => ({ ...prev, [position.indexPosition]: false }));
-      dispatchError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      dispatchError(
+        intl.formatMessage(
+          { id: 'tx.genericError' },
+          { error: error instanceof Error ? error.message : intl.formatMessage({ id: 'common.unknownError' }) }
+        )
+      );
       setOperationType(null);
     }
   };
@@ -340,7 +357,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
   if (isLoading) {
     return (
       <Box sx={{ width: '100%', my: 4 }}>
-        <LoadingIndicator label="Loading staking and delegate data..." />
+        <LoadingIndicator label={intl.formatMessage({ id: 'stake.loadingStakingAndDelegates' })} />
       </Box>
     );
   }
@@ -359,16 +376,18 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
     <Box sx={{ width: '100%', mt: 4 }}>
       <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2, bgcolor: 'background.paper' }}>
         <Typography variant="h6" component="h2" gutterBottom>
-          Staking Summary
+          <FormattedMessage id="stake.stakingSummary" />
         </Typography>
         <Divider sx={{ mb: 2 }} />
 
         {skyPrice !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body1">Sky Price</Typography>
-              <Tooltip title="The current market price of SKY token based on Uniswap V2 pool data" arrow>
-                <IconButton size="small" aria-label="About Sky Price" sx={{ ml: 0.5, p: 0.25 }}>
+              <Typography variant="body1">
+                <FormattedMessage id="stake.skyPrice" />
+              </Typography>
+              <Tooltip title={intl.formatMessage({ id: 'stake.skyPriceTooltip' })} arrow>
+                <IconButton size="small" aria-label={intl.formatMessage({ id: 'stake.aboutSkyPrice' })} sx={{ ml: 0.5, p: 0.25 }}>
                   <HelpOutlineIcon sx={{ fontSize: '1rem' }} />
                 </IconButton>
               </Tooltip>
@@ -383,7 +402,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {apr !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Current APR (SKY):</Typography>
+            <Typography variant="body1">
+              <FormattedMessage id="stake.currentAprSkyColon" />
+            </Typography>
             <Typography variant="h6" component="p" color="primary">
               ~{apr.toFixed(2)}%
             </Typography>
@@ -401,7 +422,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Total Unique Suppliers:</Typography>
+            <Typography variant="body1">
+              <FormattedMessage id="stake.totalUniqueSuppliersColon" />
+            </Typography>
             <Typography variant="h6" component="p" color="primary">
               {totalDelegators}
             </Typography>
@@ -410,7 +433,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {totalDelegators !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Total Staking Positions:</Typography>
+            <Typography variant="body1">
+              <FormattedMessage id="stake.totalStakingPositionsColon" />
+            </Typography>
             <Typography variant="h6" component="p" color="primary">
               {totalPositions}
             </Typography>
@@ -419,7 +444,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {totalSky !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">Total SKY Staked:</Typography>
+            <Typography variant="body1">
+              <FormattedMessage id="stake.totalSkyStakedColon" />
+            </Typography>
             <Typography variant="h6" component="p" color="primary">
               {formatShortUSDS(totalSky)}
             </Typography>
@@ -428,7 +455,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
         {tvl !== null && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-            <Typography variant="body1">TVL:</Typography>
+            <Typography variant="body1">
+              <FormattedMessage id="stake.tvlColon" />
+            </Typography>
             <Typography variant="h6" component="p" color="primary">
               {formatShortUSDS(tvl)} USDS
             </Typography>
@@ -436,20 +465,26 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
         )}
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-          <Typography variant="body1">Your Total Staked Amount:</Typography>
+          <Typography variant="body1">
+            <FormattedMessage id="stake.yourTotalStakedColon" />
+          </Typography>
           <Typography variant="h6" component="p" color="primary">
             {formatUSDS(totalStaked)} SKY
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-          <Typography variant="body1">Your Number of Positions:</Typography>
+          <Typography variant="body1">
+            <FormattedMessage id="stake.yourNumberOfPositionsColon" />
+          </Typography>
           <Typography variant="h6" component="p" color="primary">
             {positions.length}
           </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-          <Typography variant="body1">Your SKY Balance:</Typography>
+          <Typography variant="body1">
+            <FormattedMessage id="stake.yourSkyBalanceColon" />
+          </Typography>
           <Typography variant="h6" component="p" color="primary">
             {userBalance ? formatUSDS(formatEther(userBalance)) : '0'}
           </Typography>
@@ -458,19 +493,19 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
 
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
-          Error loading staking position data: {String(error)}
+          <FormattedMessage id="stake.errorLoadingPositionData" values={{ error: String(error) }} />
         </Alert>
       )}
 
       {!address && (
         <Typography variant="h6" component="p" sx={{ mt: 2 }}>
-          Please connect your wallet to view staking positions
+          <FormattedMessage id="stake.connectWalletPositions" />
         </Typography>
       )}
 
       {isLoading && (
         <Box sx={{ width: '100%', my: 4 }}>
-          <LoadingIndicator label="Loading staking positions..." />
+          <LoadingIndicator label={intl.formatMessage({ id: 'stake.loadingPositions' })} />
         </Box>
       )}
 
@@ -479,7 +514,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           {isDelegate && (
             <Box>
               <Typography variant="h5" gutterBottom>
-                Self Delegate Position:
+                <FormattedMessage id="stake.selfDelegatePosition" />
               </Typography>
             </Box>
           )}
@@ -490,13 +525,17 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                 <PositionCard>
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h6">Delegate Position</Typography>
-                      <Chip label="Active" color="success" size="small" />
+                      <Typography variant="h6">
+                        <FormattedMessage id="stake.delegatePosition" />
+                      </Typography>
+                      <Chip label={intl.formatMessage({ id: 'stake.active' })} color="success" size="small" />
                     </Box>
 
                     <Divider sx={{ my: 2 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Locked Amount:</Typography>
+                      <Typography color="text.secondary">
+                        <FormattedMessage id="stake.lockedAmount" />
+                      </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} aria-hidden />
                         <Typography>{formatUSDS(formatEther(BigInt(delegateStakeAmount)))} SKY</Typography>
@@ -504,13 +543,19 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Delegate:</Typography>
+                      <Typography color="text.secondary">
+                        <FormattedMessage id="stake.delegate" />
+                      </Typography>
 
-                      <Typography>Your Delegate</Typography>
+                      <Typography>
+                        <FormattedMessage id="stake.yourDelegate" />
+                      </Typography>
                     </Box>
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography color="text.secondary">Delegate Address:</Typography>
+                      <Typography color="text.secondary">
+                        <FormattedMessage id="stake.delegateAddress" />
+                      </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography
                           variant="body2"
@@ -526,7 +571,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                           href={`https://etherscan.io/address/${delegateAddress}`}
                           iconOnly
                           iconSize={16}
-                          label={`View delegate address ${shortenAddress(delegateAddress as `0x${string}`)} on Etherscan`}
+                          label={intl.formatMessage(
+                            { id: 'stake.viewDelegateOnEtherscan' },
+                            { address: shortenAddress(delegateAddress as `0x${string}`) }
+                          )}
                           sx={{ ml: 1, color: 'primary.main' }}
                         />
                       </Box>
@@ -542,10 +590,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                         disabled={ethers.getBigInt(delegateStakeAmount.toString()) <= 0n}
                       >
                         {withdrawing['delegate'] && !txHash
-                          ? 'Preparing transaction...'
+                          ? intl.formatMessage({ id: 'btn.preparingTransactionShort' })
                           : withdrawing['delegate'] && txHash && !isTxConfirmed
-                            ? 'Confirming transaction...'
-                            : 'Withdraw Position'}
+                            ? intl.formatMessage({ id: 'btn.confirmingTransaction' })
+                            : intl.formatMessage({ id: 'btn.withdrawPosition' })}
                       </Button>
                     </Box>
                   </CardContent>
@@ -557,7 +605,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
           {positions.length > 0 && (
             <Box>
               <Typography variant="h5" gutterBottom>
-                Your User Staking Positions:
+                <FormattedMessage id="stake.yourStakingPositions" />
               </Typography>
             </Box>
           )}
@@ -570,13 +618,17 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                   <PositionCard>
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">Position #{Number(position.indexPosition) + 1}</Typography>
-                        <Chip label="Active" color="success" size="small" />
+                        <Typography variant="h6">
+                          <FormattedMessage id="stake.positionNumber" values={{ number: Number(position.indexPosition) + 1 }} />
+                        </Typography>
+                        <Chip label={intl.formatMessage({ id: 'stake.active' })} color="success" size="small" />
                       </Box>
 
                       <Divider sx={{ my: 2 }} />
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography color="text.secondary">Locked Amount:</Typography>
+                        <Typography color="text.secondary">
+                          <FormattedMessage id="stake.lockedAmount" />
+                        </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <SkyLogo width="16" height="16" style={{ marginRight: '8px' }} aria-hidden />
                           <Typography>{formatUSDS(formatEther(BigInt(position.wad)))} SKY</Typography>
@@ -584,7 +636,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                       </Box>
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography color="text.secondary">Delegate:</Typography>
+                        <Typography color="text.secondary">
+                          <FormattedMessage id="stake.delegate" />
+                        </Typography>
                         <Typography>
                           {position.delegateID
                             ? isCp0xDelegate(position.delegateID)
@@ -596,7 +650,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                       </Box>
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography color="text.secondary">Delegate Address:</Typography>
+                        <Typography color="text.secondary">
+                          <FormattedMessage id="stake.delegateAddress" />
+                        </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <Typography
                             variant="body2"
@@ -621,7 +677,9 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                       </Box>
                       {position.transactions && position.transactions.lockHash && (
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                          <Typography color="text.secondary">Transaction:</Typography>
+                          <Typography color="text.secondary">
+                            <FormattedMessage id="stake.transaction" />
+                          </Typography>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Typography
                               variant="body2"
@@ -637,7 +695,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                               href={`https://etherscan.io/tx/${position.transactions.lockHash}`}
                               iconOnly
                               iconSize={16}
-                              label={`View transaction ${shortenAddress(position.transactions.lockHash)} on Etherscan`}
+                              label={intl.formatMessage(
+                                { id: 'stake.viewTransactionOnEtherscan' },
+                                { hash: shortenAddress(position.transactions.lockHash) }
+                              )}
                               sx={{ ml: 1, color: 'primary.main' }}
                             />
                           </Box>
@@ -645,12 +706,19 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                       )}
 
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography color="text.secondary">Reward:</Typography>
+                        <Typography color="text.secondary">
+                          <FormattedMessage id="stake.reward" />
+                        </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <StyledSelect
                             value={positionRewards[position.indexPosition]}
                             disabled={changingReward}
-                            inputProps={{ 'aria-label': `Reward token for position #${Number(position.indexPosition) + 1}` }}
+                            inputProps={{
+                              'aria-label': intl.formatMessage(
+                                { id: 'stake.rewardTokenForPosition' },
+                                { number: Number(position.indexPosition) + 1 }
+                              )
+                            }}
                             onChange={(event) => handleRewardChange(position, event)}
                             renderValue={(selected) => {
                               const item = tokens.find((o) => {
@@ -677,8 +745,12 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             ))}
                           </StyledSelect>
                           {positionRewards[position.indexPosition] == SkyContracts.USDSStakingRewards && (
-                            <Tooltip title="USDS was deprecated, please choose another reward." arrow>
-                              <IconButton size="small" aria-label="USDS reward deprecated" sx={{ color: 'orangered' }}>
+                            <Tooltip title={intl.formatMessage({ id: 'stake.usdsDeprecatedTooltip' })} arrow>
+                              <IconButton
+                                size="small"
+                                aria-label={intl.formatMessage({ id: 'stake.usdsDeprecatedLabel' })}
+                                sx={{ color: 'orangered' }}
+                              >
                                 <InfoOutlinedIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
@@ -697,7 +769,7 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                             onClick={() => onEditPosition(position)}
                             disabled={withdrawing[position.indexPosition] || claiming[position.indexPosition] || isPending}
                           >
-                            Edit Position
+                            <FormattedMessage id="stake.editPosition" />
                           </Button>
                         )}
                         {Object.entries(position.rewards).map(([rewardId, reward]) => {
@@ -718,10 +790,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                               disabled={disabled}
                             >
                               {isClaiming && !txHash
-                                ? 'Preparing transaction...'
+                                ? intl.formatMessage({ id: 'btn.preparingTransactionShort' })
                                 : isClaiming && txHash && !isTxConfirmed
-                                  ? 'Confirming transaction...'
-                                  : `Claim ${formatted} ${reward.symbol}`}
+                                  ? intl.formatMessage({ id: 'btn.confirmingTransaction' })
+                                  : intl.formatMessage({ id: 'btn.claimAmount' }, { amount: formatted, symbol: reward.symbol })}
                             </Button>
                           );
                         })}
@@ -739,10 +811,10 @@ const Positions: FC<PositionsProps> = ({ onEditPosition }) => {
                           }
                         >
                           {withdrawing[position.indexPosition] && !txHash
-                            ? 'Preparing transaction...'
+                            ? intl.formatMessage({ id: 'btn.preparingTransactionShort' })
                             : withdrawing[position.indexPosition] && txHash && !isTxConfirmed
-                              ? 'Confirming transaction...'
-                              : 'Withdraw Position'}
+                              ? intl.formatMessage({ id: 'btn.confirmingTransaction' })
+                              : intl.formatMessage({ id: 'btn.withdrawPosition' })}
                         </Button>
                       </Box>
                     </CardContent>

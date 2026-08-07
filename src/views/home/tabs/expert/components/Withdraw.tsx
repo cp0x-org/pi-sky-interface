@@ -9,6 +9,7 @@ import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { PercentButton } from 'components/PercentButton';
 import { stUsdsContractConfig } from 'config/abi/StUsds';
 import StatusLive from 'components/StatusLive';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   maxWithdrawBalance?: string;
@@ -98,8 +99,9 @@ const useContractTransaction = (rewardAddress: string) => {
 };
 
 const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw = 0n, rewardAddress = '' }) => {
+  const intl = useIntl();
   const [amount, setAmount] = useState('');
-  const [buttonText, setButtonText] = useState('Enter Amount');
+  const [buttonText, setButtonText] = useState(intl.formatMessage({ id: 'btn.enterAmount' }));
   const { address } = useAccount();
 
   const withdrawTx = useContractTransaction(rewardAddress);
@@ -108,9 +110,9 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
   const withdrawConfig: TransactionConfig = {
     functionName: 'withdraw',
     args: [0n, '0x', '0x'],
-    successMessage: 'USDS withdrawn successfully!',
-    errorSubmitMessage: 'USDS withdraw transaction failed to submit',
-    errorConfirmMessage: 'USDS withdraw transaction failed to confirm'
+    successMessage: intl.formatMessage({ id: 'tx.usdsWithdrawn' }),
+    errorSubmitMessage: intl.formatMessage({ id: 'tx.usdsWithdrawSubmitFailed' }),
+    errorConfirmMessage: intl.formatMessage({ id: 'tx.usdsWithdrawConfirmFailed' })
   };
 
   useEffect(() => {
@@ -123,12 +125,12 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
 
     const value = (balance * percent) / 100;
     setAmount(value.toString());
-    setButtonText('Withdraw');
+    setButtonText(intl.formatMessage({ id: 'btn.withdraw' }));
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(e.target.value);
-    setButtonText(e.target.value ? 'Withdraw' : 'Enter Amount');
+    setButtonText(intl.formatMessage({ id: e.target.value ? 'btn.withdraw' : 'btn.enterAmount' }));
   };
 
   const handleWithdrawClick = () => {
@@ -142,13 +144,13 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
       });
     } catch (error) {
       console.error('Error preparing withdrawal:', error);
-      dispatchError('Failed to process withdrawal amount');
+      dispatchError(intl.formatMessage({ id: 'tx.failedProcessWithdrawAmount' }));
     }
   };
 
   const getWithdrawButtonText = () => {
-    if (withdrawTx.txHash && !withdrawTx.isTxConfirmed) return 'Processing withdrawal...';
-    if (withdrawTx.txState === 'success') return 'Withdrawn';
+    if (withdrawTx.txHash && !withdrawTx.isTxConfirmed) return intl.formatMessage({ id: 'btn.processingWithdrawal' });
+    if (withdrawTx.txState === 'success') return intl.formatMessage({ id: 'btn.withdrawn' });
     return buttonText;
   };
 
@@ -164,7 +166,7 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to withdraw?
+          <FormattedMessage id="form.howMuchUsdsWithdraw" />
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
           <StyledTextField
@@ -172,13 +174,13 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
               htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
-                'aria-label': 'Amount of USDS to withdraw',
+                'aria-label': intl.formatMessage({ id: 'a11y.amountUsdsWithdraw' }),
                 'aria-describedby': 'expert-withdraw-balance'
               }
             }}
             fullWidth
             type="number"
-            placeholder="Enter amount"
+            placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
             value={amount}
             onChange={handleAmountChange}
             disabled={withdrawTx.txState === 'processing' || withdrawTx.isCompleted}
@@ -191,7 +193,7 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
 
         {parseFloat(maxWithdrawBalance || '0') === 0 && (
           <Alert severity="warning" sx={{ mt: 2 }}>
-            Available liquidity exhausted. Withdrawals are temporarily unavailable.
+            <FormattedMessage id="expert.liquidityExhausted" />
           </Alert>
         )}
 
@@ -200,13 +202,22 @@ const Withdraw: FC<Props> = ({ maxWithdrawBalance = '0', maxWithdrawBalanceRaw =
             {maxWithdrawBalance} USDS
           </Typography>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-            <PercentButton onClick={() => handlePercentClick(25)} aria-label="Set amount to 25% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(25)}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+            >
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} aria-label="Set amount to 50% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(50)}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+            >
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} aria-label="Set amount to 100% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(100)}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+            >
               100%
             </PercentButton>
           </Box>

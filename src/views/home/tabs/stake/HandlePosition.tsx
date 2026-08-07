@@ -21,8 +21,9 @@ import StakingSummary from './StakingSummary';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useTheme } from '@mui/material/styles';
 import StatusLive from 'components/StatusLive';
+import { FormattedMessage, useIntl } from 'react-intl';
 
-const steps = ['Stake', 'Reward', 'Delegate', 'Confirm'];
+const stepIds = ['stake.step.stake', 'stake.step.reward', 'stake.step.delegate', 'stake.step.confirm'];
 
 type SkyConfig = {
   readonly contracts: SkyContracts;
@@ -50,8 +51,10 @@ interface HandlePositionProps {
 
 export default function HandlePosition({ editMode = false, positionData = null }: HandlePositionProps) {
   const { address } = useAccount();
+  const intl = useIntl();
   const { config: skyConfig } = useConfigChainId();
   const config = useConfig();
+  const steps = stepIds.map((id) => intl.formatMessage({ id }));
   const [activeStep, setActiveStep] = useState(0);
   const [isDelegateSelectionReady, setIsDelegateSelectionReady] = useState(false);
   const theme = useTheme();
@@ -72,7 +75,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
   // Approval state
   const [isApproved, setIsApproved] = useState(false);
   const [isStaked, setIsStaked] = useState(false);
-  const [confirmButtonText, setConfirmButtonText] = useState('Approve SKY');
+  const [confirmButtonText, setConfirmButtonText] = useState(intl.formatMessage({ id: 'btn.approveSky' }));
   const [simulationInProgress, setSimulationInProgress] = useState(false);
   const [nextUrnIdx, setNextUrnIdx] = useState<bigint>(0n);
 
@@ -229,7 +232,7 @@ export default function HandlePosition({ editMode = false, positionData = null }
     if (editMode && !stakeData.amount) {
       if (!isApproved) {
         setIsApproved(true);
-        setConfirmButtonText('Confirm Staking');
+        setConfirmButtonText(intl.formatMessage({ id: 'btn.confirmStaking' }));
       }
       return;
     }
@@ -242,13 +245,13 @@ export default function HandlePosition({ editMode = false, positionData = null }
         // Only update state if it's different to avoid unnecessary re-renders
         if (shouldBeApproved !== isApproved) {
           setIsApproved(shouldBeApproved);
-          setConfirmButtonText(shouldBeApproved ? 'Confirm Staking' : 'Approve SKY');
+          setConfirmButtonText(intl.formatMessage({ id: shouldBeApproved ? 'btn.confirmStaking' : 'btn.approveSky' }));
         }
       } catch (error) {
         console.error('Error checking allowance:', error);
       }
     }
-  }, [address, stakeData.amount, allowanceData, isApproved, editMode]);
+  }, [address, stakeData.amount, allowanceData, isApproved, editMode, intl]);
 
   // Use a ref to track if we've already run the simulation
   const hasRunSimulation = useRef<boolean>(false);
@@ -333,28 +336,28 @@ export default function HandlePosition({ editMode = false, positionData = null }
     if (isConfirmTxConfirmed) {
       console.log('Staking confirmed successfully!');
       setIsStaked(true);
-      dispatchSuccess('Staking confirmed successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.stakingConfirmed' }));
     } else if (isApprovalTxConfirmed) {
       console.log('Approval successfully confirmed!');
       setIsApproved(true);
 
-      dispatchSuccess('SKY approved successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.skyApproved' }));
       refetchAllowance();
     }
-  }, [isConfirmTxConfirmed, isStaked, isApprovalTxConfirmed, refetchAllowance]);
+  }, [isConfirmTxConfirmed, isStaked, isApprovalTxConfirmed, refetchAllowance, intl]);
 
   // Combined error handling effect
   useEffect(() => {
     // Handle confirmation error
     if ((confirmError && !confirmTxHash) || (isConfirmTxError && confirmTxError)) {
       console.error('Staking failed:', confirmError || confirmTxError);
-      dispatchError('Staking confirmation failed!');
+      dispatchError(intl.formatMessage({ id: 'tx.stakingConfirmFailed' }));
     }
 
     // Handle approval error
     if ((isApproveError && !approvalTxHash) || (isApprovalTxError && approvalTxError)) {
       console.error('Approval failed:', approveError || approvalTxError);
-      dispatchError('SKY approve failed!');
+      dispatchError(intl.formatMessage({ id: 'tx.skyApproveFailed' }));
     }
   }, [
     confirmError,
@@ -365,7 +368,8 @@ export default function HandlePosition({ editMode = false, positionData = null }
     approveError,
     isApprovalTxError,
     approvalTxError,
-    approvalTxHash
+    approvalTxHash,
+    intl
   ]);
 
   // We've removed the duplicate approval error handler
@@ -373,29 +377,29 @@ export default function HandlePosition({ editMode = false, positionData = null }
   // Compute button text based on transaction status - using useMemo instead of useEffect
   const newButtonText = useMemo(() => {
     if (simulationInProgress) {
-      return 'Simulating...';
+      return intl.formatMessage({ id: 'btn.simulating' });
     } else if (!isApproved) {
       if (approvalTxHash && !isApprovalTxConfirmed) {
-        return 'Approving SKY...';
+        return intl.formatMessage({ id: 'btn.approvingSky' });
       } else if (isApprovePending) {
-        return 'Preparing Approval...';
+        return intl.formatMessage({ id: 'btn.preparingApproval' });
       } else {
-        return 'Approve SKY';
+        return intl.formatMessage({ id: 'btn.approveSky' });
       }
     } else if (isApproved && !isStaked) {
       if (confirmTxHash && !isConfirmTxConfirmed) {
-        return 'Confirming Stake...';
+        return intl.formatMessage({ id: 'btn.confirmingStake' });
       } else if (isConfirmPending) {
-        return 'Preparing Transaction...';
+        return intl.formatMessage({ id: 'btn.preparingTransaction' });
       } else {
-        return 'Confirm Staking';
+        return intl.formatMessage({ id: 'btn.confirmStaking' });
       }
     } else if (isStaked) {
-      return 'Staked';
+      return intl.formatMessage({ id: 'btn.staked' });
     }
 
     // Default fallback
-    return 'Approve SKY';
+    return intl.formatMessage({ id: 'btn.approveSky' });
   }, [
     isApproved,
     simulationInProgress,
@@ -405,7 +409,8 @@ export default function HandlePosition({ editMode = false, positionData = null }
     isApprovePending,
     confirmTxHash,
     isConfirmTxConfirmed,
-    isConfirmPending
+    isConfirmPending,
+    intl
   ]);
 
   // Update button text when computed value changes
@@ -610,7 +615,12 @@ export default function HandlePosition({ editMode = false, positionData = null }
       setIsApproved(false);
       setIsStaked(false);
       setSimulationInProgress(false);
-      dispatchError('Transaction preparation failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      dispatchError(
+        intl.formatMessage(
+          { id: 'tx.transactionPreparationFailed' },
+          { error: error instanceof Error ? error.message : intl.formatMessage({ id: 'common.unknownError' }) }
+        )
+      );
     }
   }
 
@@ -705,65 +715,75 @@ export default function HandlePosition({ editMode = false, positionData = null }
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Stake your SKY tokens to earn rewards and participate in the Sky Protocol governance. Follow the steps below to complete your
-        staking process.
+        <FormattedMessage id="stake.processDescription" />
       </Typography>
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <CardHeader title={'Staking Process'}></CardHeader>
+          <CardHeader title={intl.formatMessage({ id: 'stake.stakingProcess' })}></CardHeader>
           <Card sx={{ borderRadius: '20px' }}>
             <Box sx={{ p: 3 }}>
-              <Stepper activeStep={activeStep} aria-label="Staking steps">
+              <Stepper activeStep={activeStep} aria-label={intl.formatMessage({ id: 'stake.stepsAriaLabel' })}>
                 {steps.map((label, index) => (
                   <Step key={label}>
                     <StepLabel aria-current={activeStep === index ? 'step' : undefined}>{label}</StepLabel>
                   </Step>
                 ))}
               </Stepper>
-              <StatusLive message={`Step ${activeStep + 1} of ${steps.length}: ${steps[activeStep]}`} />
+              <StatusLive
+                message={intl.formatMessage(
+                  { id: 'stake.stepStatus' },
+                  { current: activeStep + 1, total: steps.length, label: steps[activeStep] }
+                )}
+              />
 
               <Box sx={{ mt: 4 }}>{StepComponent}</Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {activeStep === steps.length - 1 && isSimulateApproveError && !isApproved && (
                   <Alert severity="warning" sx={{ mt: 2 }}>
-                    Approval simulation failed: {simulateApproveError?.message || 'Unknown error'}
+                    <FormattedMessage
+                      id="stake.approvalSimulationFailed"
+                      values={{ error: simulateApproveError?.message || intl.formatMessage({ id: 'common.unknownError' }) }}
+                    />
                   </Alert>
                 )}
 
                 {activeStep === steps.length - 1 && isSimulateConfirmError && isApproved && !isStaked && (
                   <Alert severity="warning" sx={{ mt: 2 }}>
-                    Confirmation simulation failed: {simulateConfirmError?.message || 'Unknown error'}
+                    <FormattedMessage
+                      id="stake.confirmationSimulationFailed"
+                      values={{ error: simulateConfirmError?.message || intl.formatMessage({ id: 'common.unknownError' }) }}
+                    />
                   </Alert>
                 )}
 
                 {activeStep === steps.length - 1 && approvalTxHash && !isApprovalTxConfirmed && !isApproved && (
                   <Alert severity="info" sx={{ mt: 2 }}>
-                    Approval transaction sent, waiting for confirmation...
+                    <FormattedMessage id="stake.approvalTxSent" />
                   </Alert>
                 )}
 
                 {activeStep === steps.length - 1 && confirmTxHash && !isConfirmTxConfirmed && !isStaked && (
                   <Alert severity="info" sx={{ mt: 2 }}>
-                    Staking transaction sent, waiting for confirmation...
+                    <FormattedMessage id="stake.stakingTxSent" />
                   </Alert>
                 )}
 
                 {activeStep === steps.length - 1 && isApproved && !isStaked && !confirmTxHash && (
                   <Alert severity="success" sx={{ mt: 2, color: theme.palette.success.main }}>
-                    Approval confirmed successfully! Ready to stake.
+                    <FormattedMessage id="stake.approvalConfirmed" />
                   </Alert>
                 )}
 
                 {activeStep === steps.length - 1 && isStaked && (
                   <Alert severity="success" sx={{ mt: 2, color: theme.palette.success.main }}>
-                    Staking confirmed successfully!
+                    <FormattedMessage id="tx.stakingConfirmed" />
                   </Alert>
                 )}
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                   <Button disabled={activeStep === 0} onClick={handleBack}>
-                    Back
+                    <FormattedMessage id="btn.back" />
                   </Button>
 
                   {activeStep === steps.length - 1 ? (
@@ -774,11 +794,11 @@ export default function HandlePosition({ editMode = false, positionData = null }
                     <Stack direction="row" spacing={2}>
                       {(activeStep === 2 || editMode) && !(activeStep === 2 && mustMigrateLegacyDelegate) && (
                         <Button variant="text" onClick={handleSkip} disabled={!address}>
-                          Skip
+                          <FormattedMessage id="btn.skip" />
                         </Button>
                       )}
                       <Button variant="contained" onClick={handleNext} disabled={isNextButtonDisabled()}>
-                        Next
+                        <FormattedMessage id="btn.next" />
                       </Button>
                     </Stack>
                   )}

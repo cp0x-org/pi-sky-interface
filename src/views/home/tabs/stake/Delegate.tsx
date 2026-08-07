@@ -6,6 +6,7 @@ import { isAddress } from 'viem';
 import { shortenAddress } from 'utils/formatters';
 import { IconCopy } from '@tabler/icons-react';
 import LoadingIndicator from 'components/LoadingIndicator';
+import { useIntl } from 'react-intl';
 
 type DelegatesResponse = {
   delegates: Delegate[];
@@ -39,6 +40,7 @@ interface Props {
 }
 
 const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress = '', onChange, onReadyChange }) => {
+  const intl = useIntl();
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [customAddress, setCustomAddress] = useState<string>('');
@@ -95,10 +97,10 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
       })
       .catch((err) => {
         console.error(err);
-        setError('Cannot load delegators');
+        setError(intl.formatMessage({ id: 'stake.cannotLoadDelegates' }));
         setLoading(false);
       });
-  }, [onReadyChange]);
+  }, [onReadyChange, intl]);
 
   // Apply the initial selection once when delegates are loaded
   useEffect(() => {
@@ -190,7 +192,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
     }
 
     if (!isAddress(address)) {
-      setAddressError('Invalid Ethereum address');
+      setAddressError(intl.formatMessage({ id: 'stake.invalidAddress' }));
       // Don't update selected or call onChange for invalid addresses
     } else {
       setAddressError('');
@@ -214,14 +216,14 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
   const currentDelegates = delegates.slice(indexOfFirstDelegate, indexOfLastDelegate);
   const totalPages = Math.ceil(delegates.length / delegatesPerPage);
 
-  if (loading) return <LoadingIndicator label="Loading delegates..." />;
+  if (loading) return <LoadingIndicator label={intl.formatMessage({ id: 'stake.loadingDelegates' })} />;
   if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <TextField
         fullWidth
-        label="Custom Delegate Address"
+        label={intl.formatMessage({ id: 'stake.customDelegateAddress' })}
         value={customAddress}
         onChange={handleCustomAddressChange}
         error={!!addressError}
@@ -229,7 +231,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
         placeholder="0x..."
       />
 
-      <Box display="flex" flexDirection="column" gap={2} role="radiogroup" aria-label="Delegate">
+      <Box display="flex" flexDirection="column" gap={2} role="radiogroup" aria-label={intl.formatMessage({ id: 'stake.step.delegate' })}>
         {currentDelegates.map((delegate) => {
           const isSelected = selected === delegate.voteDelegateAddress;
           return (
@@ -261,10 +263,17 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
                             ({shortenAddress(delegate.voteDelegateAddress)})
                           </Typography>
                         </Typography>
-                        <Tooltip title={copiedAddress === delegate.voteDelegateAddress ? 'Copied!' : 'Copy address'}>
+                        <Tooltip
+                          title={intl.formatMessage({
+                            id: copiedAddress === delegate.voteDelegateAddress ? 'common.copied' : 'common.copyAddress'
+                          })}
+                        >
                           <IconButton
                             size="small"
-                            aria-label={`Copy delegate address ${shortenAddress(delegate.voteDelegateAddress)}`}
+                            aria-label={intl.formatMessage(
+                              { id: 'stake.copyDelegateAddress' },
+                              { address: shortenAddress(delegate.voteDelegateAddress) }
+                            )}
                             sx={{ ml: 0.5 }}
                             color={copiedAddress === delegate.voteDelegateAddress ? 'success' : 'default'}
                             onClick={(e) => copyToClipboard(e, delegate.voteDelegateAddress)}
@@ -276,10 +285,17 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
                     ) : (
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="h6">{shortenAddress(delegate.voteDelegateAddress)}</Typography>
-                        <Tooltip title={copiedAddress === delegate.voteDelegateAddress ? 'Copied!' : 'Copy address'}>
+                        <Tooltip
+                          title={intl.formatMessage({
+                            id: copiedAddress === delegate.voteDelegateAddress ? 'common.copied' : 'common.copyAddress'
+                          })}
+                        >
                           <IconButton
                             size="small"
-                            aria-label={`Copy delegate address ${shortenAddress(delegate.voteDelegateAddress)}`}
+                            aria-label={intl.formatMessage(
+                              { id: 'stake.copyDelegateAddress' },
+                              { address: shortenAddress(delegate.voteDelegateAddress) }
+                            )}
                             sx={{ ml: 0.5 }}
                             onClick={(e) => copyToClipboard(e, delegate.voteDelegateAddress)}
                             color={copiedAddress === delegate.voteDelegateAddress ? 'success' : 'default'}
@@ -306,7 +322,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
         <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="body2" sx={{ mr: 1 }}>
-              Show:
+              {intl.formatMessage({ id: 'common.show' })}
             </Typography>
             <TextField
               select
@@ -316,7 +332,7 @@ const Delegate: FC<Props> = ({ delegatorAddress = '', originalDelegatorAddress =
               sx={{ width: '80px' }}
               SelectProps={{
                 native: true,
-                inputProps: { 'aria-label': 'Delegates per page' }
+                inputProps: { 'aria-label': intl.formatMessage({ id: 'stake.delegatesPerPage' }) }
               }}
             >
               {[5, 10, 15, 20, 25].map((option) => (

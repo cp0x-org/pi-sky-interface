@@ -6,6 +6,7 @@ import { formatUSDS } from 'utils/sky';
 import { StyledCard } from 'components/StyledCard';
 import { StyledTextField } from 'components/StyledTextField';
 import { PercentButton } from 'components/PercentButton';
+import { useIntl } from 'react-intl';
 
 interface Props {
   userBalance?: bigint;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onChange, originalAmount, editMode = false }) => {
+  const intl = useIntl();
   const [error, setError] = useState<string | null>(null);
   const maxAmount = userBalance ? formatEther(userBalance) : '0';
 
@@ -34,11 +36,11 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
   // Validate amount whenever it changes
   useEffect(() => {
     if (stakedAmount && isAmountTooLarge(stakedAmount, maxAmount)) {
-      setError(`Amount exceeds your balance. Maximum: ${formatUSDS(parseFloat(maxAmount))} SKY`);
+      setError(intl.formatMessage({ id: 'stake.amountExceedsBalance' }, { max: formatUSDS(parseFloat(maxAmount)) }));
     } else {
       setError(null);
     }
-  }, [stakedAmount, maxAmount, isAmountTooLarge]);
+  }, [stakedAmount, maxAmount, isAmountTooLarge, intl]);
 
   const handlePercentClick = (percent: number) => {
     if (!userBalance) return;
@@ -60,8 +62,8 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
           {editMode && originalAmount
-            ? `How much SKY would you like to have in this position? (Current: ${originalAmount} SKY)`
-            : 'How much SKY would you like to stake?'}
+            ? intl.formatMessage({ id: 'stake.howMuchSkyInPosition' }, { current: originalAmount })
+            : intl.formatMessage({ id: 'stake.howMuchSkyStake' })}
         </Typography>
 
         {editMode && originalAmount && (
@@ -78,7 +80,7 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2">New total amount:</Typography>
+                  <Typography variant="body2">{intl.formatMessage({ id: 'stake.newTotalAmount' })}</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                     {stakedAmount ? formatUSDS(stakedAmount) : '0'} + {formatUSDS(originalAmount)} ={' '}
                     {formatUSDS(Number(stakedAmount) + Number(originalAmount))} SKY
@@ -94,14 +96,14 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
               htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
-                'aria-label': 'Amount of SKY to stake',
+                'aria-label': intl.formatMessage({ id: 'a11y.amountSkyStake' }),
                 'aria-invalid': !!error,
                 'aria-describedby': error ? 'stake-amount-error stake-amount-balance' : 'stake-amount-balance'
               }
             }}
             fullWidth
             type="number"
-            placeholder="Enter amount"
+            placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
             value={stakedAmount}
             onChange={(e) => handleAmountChange(e.target.value)}
             error={!!error}
@@ -150,13 +152,22 @@ const StakeAndBorrow: FC<Props> = ({ userBalance = 0n, stakedAmount = '0', onCha
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} aria-label="Set amount to 25% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(25)}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+            >
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} aria-label="Set amount to 50% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(50)}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+            >
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} aria-label="Set amount to 100% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(100)}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+            >
               100%
             </PercentButton>
           </Box>

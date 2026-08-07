@@ -17,9 +17,11 @@ import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
 import { stUsdsContractConfig } from 'config/abi/StUsds';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function ExpertTab() {
   const [operationType, setOperationType] = useState(0);
+  const intl = useIntl();
   const navigate = useNavigate();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
@@ -77,20 +79,24 @@ export default function ExpertTab() {
         stUSDS
       </Typography>
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Access a variable reward rate on USDS by participating in SKY-backed borrowing
+        <FormattedMessage id="expert.description" />
       </Typography>
       {!address && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please connect your wallet to continue.
+          <FormattedMessage id="common.connectWallet" />
         </Alert>
       )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <CardHeader title={'Use Staking'}></CardHeader>
+          <CardHeader title={intl.formatMessage({ id: 'common.useStaking' })}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange} aria-label="stUSDS operations">
-              <Tab label="Supply" {...a11yTabProps('expert', 0)} />
-              <Tab label="Withdraw" {...a11yTabProps('expert', 1)} />
+            <Tabs
+              value={operationType}
+              onChange={handleOperationChange}
+              aria-label={intl.formatMessage({ id: 'expert.operationsAriaLabel' })}
+            >
+              <Tab label={intl.formatMessage({ id: 'common.supply' })} {...a11yTabProps('expert', 0)} />
+              <Tab label={intl.formatMessage({ id: 'common.withdraw' })} {...a11yTabProps('expert', 1)} />
             </Tabs>
             <TabPanel value={operationType} index={0} idPrefix="expert">
               <Stake userBalance={userUsdsBalance} rewardAddress={skyConfig.contracts.STUSDS} />

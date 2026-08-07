@@ -4,6 +4,9 @@ import { Link as RouterLink } from 'react-router-dom';
 // material-ui
 import { Box, Button, Stack, Theme, useMediaQuery, useTheme } from '@mui/material';
 
+// third party
+import { FormattedMessage } from 'react-intl';
+
 // Menu button styling as an object for reuse
 const menuButtonStyle = (theme: Theme) => ({
   color: theme.palette.text.primary,
@@ -29,16 +32,16 @@ const MenuItems = () => {
       <Stack direction="row" spacing={1}>
         {/* Internal link using RouterLink */}
         <Button component={RouterLink} to="/" sx={menuButtonStyle(theme)}>
-          Home
+          <FormattedMessage id="menu.home" />
         </Button>
 
         {/* External links using anchor tags */}
         <Button href="https://pi.cp0x.com" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
-          Permissionless Interfaces
+          <FormattedMessage id="menu.permissionlessInterfaces" />
         </Button>
 
         <Button href="https://cp0x.com" target="_blank" rel="noopener noreferrer" sx={menuButtonStyle(theme)}>
-          cp0x Referrals
+          <FormattedMessage id="menu.cp0xReferrals" />
         </Button>
       </Stack>
     </Box>

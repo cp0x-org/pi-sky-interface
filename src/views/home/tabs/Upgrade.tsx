@@ -15,9 +15,11 @@ import { mkrContractConfig } from 'config/abi/Mkr';
 import Info from './upgrade/Info';
 import CardHeader from '@mui/material/CardHeader';
 import { Alert } from '@mui/material';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 export default function UpgradeTab() {
   const [operationType, setOperationType] = useState(0);
+  const intl = useIntl();
   const account = useAccount();
   const address = account.address as `0x${string}` | undefined;
   const { config: skyConfig } = useConfigChainId();
@@ -59,23 +61,27 @@ export default function UpgradeTab() {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h2" component="h1" gutterBottom>
-        Upgrade
+        <FormattedMessage id="upgrade.title" />
       </Typography>
       <Typography variant="h4" component="p" gutterBottom sx={{ mb: 2 }} color="text.secondary">
-        Easily upgrade MKR to SKY, or swap DAI in both directions with USDS.
+        <FormattedMessage id="upgrade.description" />
       </Typography>
       {!address && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please connect your wallet to continue.
+          <FormattedMessage id="common.connectWallet" />
         </Alert>
       )}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <CardHeader title={'Use Upgrade'}></CardHeader>
+          <CardHeader title={intl.formatMessage({ id: 'upgrade.useCard' })}></CardHeader>
           <Box sx={{ width: '100%', borderRadius: '20px' }}>
-            <Tabs value={operationType} onChange={handleOperationChange} aria-label="Upgrade operations">
-              <Tab label="Upgrade" {...a11yTabProps('upgrade', 0)} />
-              <Tab label="Revert" {...a11yTabProps('upgrade', 1)} />
+            <Tabs
+              value={operationType}
+              onChange={handleOperationChange}
+              aria-label={intl.formatMessage({ id: 'upgrade.operationsAriaLabel' })}
+            >
+              <Tab label={intl.formatMessage({ id: 'upgrade.tab.upgrade' })} {...a11yTabProps('upgrade', 0)} />
+              <Tab label={intl.formatMessage({ id: 'upgrade.tab.revert' })} {...a11yTabProps('upgrade', 1)} />
             </Tabs>
 
             <TabPanel value={operationType} index={0} idPrefix="upgrade">

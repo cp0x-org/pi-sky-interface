@@ -14,6 +14,7 @@ import { PercentButton } from 'components/PercentButton';
 import { useDebounce } from 'hooks/useDebounce';
 import { useWriteTransaction } from 'hooks/useWriteTransaction';
 import StatusLive from 'components/StatusLive';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   userBalance?: bigint;
@@ -21,6 +22,7 @@ interface Props {
 }
 
 const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
+  const intl = useIntl();
   const [amount, setAmount] = useState<string>('');
   // Create a debounced version of amount that updates 500ms after amount changes
   const debouncedAmount = useDebounce(amount, 500);
@@ -108,24 +110,24 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
       if (refetchAllowance) {
         refetchAllowance();
       }
-      dispatchSuccess('USDS Approved Successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.usdsApproved' }));
     }
 
     // Update deposit status when confirmed
     if (stakeTx.txState === 'confirmed' && !isDeposited) {
       setIsDeposited(true);
-      dispatchSuccess('USDS staked successfully!');
+      dispatchSuccess(intl.formatMessage({ id: 'tx.usdsStaked' }));
     }
 
     // Handle errors
     if (approveTx.txState === 'error') {
-      dispatchError('USDS Approve Failed!');
+      dispatchError(intl.formatMessage({ id: 'tx.usdsApproveFailed' }));
     }
 
     if (stakeTx.txState === 'error') {
-      dispatchError('Deposit failed');
+      dispatchError(intl.formatMessage({ id: 'tx.depositFailed' }));
     }
-  }, [approveTx, stakeTx, isApproved, isDeposited])();
+  }, [approveTx, stakeTx, isApproved, isDeposited, intl])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
@@ -194,45 +196,45 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     } catch (error) {
       console.error('Transaction failed:', error);
       if (!isApproved) {
-        dispatchError('Failed to approve USDS');
+        dispatchError(intl.formatMessage({ id: 'tx.failedApproveUsds' }));
       } else {
-        dispatchError('Failed to stake USDS');
+        dispatchError(intl.formatMessage({ id: 'tx.failedStakeUsds' }));
       }
     }
-  }, [amount, isApproved, isDeposited, approveTx, stakeTx, rewardAddress, skyConfig.contracts.USDS, resetTransactionStates]);
+  }, [amount, isApproved, isDeposited, approveTx, stakeTx, rewardAddress, skyConfig.contracts.USDS, resetTransactionStates, intl]);
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
     // Show checking status when amount is being debounced
     if (allowanceChecking) {
-      return 'Checking allowance...';
+      return intl.formatMessage({ id: 'btn.checkingAllowance' });
     }
 
     if (!amount) {
-      return 'Enter Amount';
+      return intl.formatMessage({ id: 'btn.enterAmount' });
     }
 
     if (!isApproved) {
       if (approveTx.txHash && !approveTx.isTxConfirmed) {
-        return 'Approving USDS...';
+        return intl.formatMessage({ id: 'btn.approvingUsds' });
       }
       if (approveTx.txState === 'error') {
-        return 'Approval Failed - Try again';
+        return intl.formatMessage({ id: 'btn.approvalFailedTryAgain' });
       }
-      return 'Approve USDS';
+      return intl.formatMessage({ id: 'btn.approveUsds' });
     }
 
     if (!isDeposited) {
       if (stakeTx.txHash && !stakeTx.isTxConfirmed) {
-        return 'Staking USDS...';
+        return intl.formatMessage({ id: 'btn.stakingUsds' });
       }
       if (stakeTx.txState === 'error') {
-        return 'Staking Failed - Try again';
+        return intl.formatMessage({ id: 'btn.stakingFailedTryAgain' });
       }
-      return 'Stake USDS';
+      return intl.formatMessage({ id: 'btn.stakeUsds' });
     }
 
-    return 'Success!';
+    return intl.formatMessage({ id: 'btn.success' });
   }, [
     amount,
     isApproved,
@@ -243,7 +245,8 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     approveTx.txState,
     stakeTx.txHash,
     stakeTx.isTxConfirmed,
-    stakeTx.txState
+    stakeTx.txState,
+    intl
   ]);
 
   // Determine if button should be disabled
@@ -268,7 +271,7 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          How much USDS would you like to supply?
+          <FormattedMessage id="form.howMuchUsdsSupply" />
         </Typography>
 
         {/* Amount input field */}
@@ -278,13 +281,13 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
               htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
-                'aria-label': 'Amount of USDS to supply',
+                'aria-label': intl.formatMessage({ id: 'a11y.amountUsdsSupply' }),
                 'aria-describedby': 'rewards-stake-balance'
               }
             }}
             fullWidth
             type="number"
-            placeholder="Enter amount"
+            placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
             value={amount}
             disabled={isInputDisabled}
             onChange={handleAmountChange}
@@ -313,13 +316,25 @@ const Stake: FC<Props> = ({ userBalance = 0n, rewardAddress = '' }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(25)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+            >
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(50)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+            >
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(100)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+            >
               100%
             </PercentButton>
           </Box>

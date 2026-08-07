@@ -8,8 +8,10 @@ import { mkrSkyConverterConfig } from 'config/abi/MkrSkyConverter';
 import { useConfigChainId } from 'hooks/useConfigChainId';
 import CardHeader from '@mui/material/CardHeader';
 import KeyValueRow from 'components/KeyValueRow';
+import { useIntl } from 'react-intl';
 
 export default function Info() {
+  const intl = useIntl();
   const { mkrTotal, daiTotal } = useTotalUpgraded();
 
   const { config: skyConfig } = useConfigChainId();
@@ -30,7 +32,10 @@ export default function Info() {
         flexDirection: 'column'
       }}
     >
-      <CardHeader title={'Summary'} titleTypographyProps={{ variant: 'h5', component: 'h2' }}></CardHeader>
+      <CardHeader
+        title={intl.formatMessage({ id: 'common.summary' })}
+        titleTypographyProps={{ variant: 'h5', component: 'h2' }}
+      ></CardHeader>
       <CardContent
         sx={{
           flex: 1,
@@ -48,13 +53,17 @@ export default function Info() {
             gap: 4
           }}
         >
-          <KeyValueRow label="MKR Total Upgraded">{formatTokenAmount(mkrTotal, 4) || 'MKR'}</KeyValueRow>
-          <KeyValueRow label="SKY Total Upgraded">
+          <KeyValueRow label={intl.formatMessage({ id: 'upgrade.info.mkrTotalUpgraded' })}>
+            {formatTokenAmount(mkrTotal, 4) || 'MKR'}
+          </KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'upgrade.info.skyTotalUpgraded' })}>
             {!isRateLoading && mkrTotal !== undefined && mkrToSkyRate !== undefined
               ? formatTokenAmount((BigInt(mkrTotal) * BigInt(mkrToSkyRate)).toString(), 2)
               : 'SKY'}
           </KeyValueRow>
-          <KeyValueRow label="DAI Total Upgraded">{formatTokenAmount(daiTotal, 2) || '0 DAI'}</KeyValueRow>
+          <KeyValueRow label={intl.formatMessage({ id: 'upgrade.info.daiTotalUpgraded' })}>
+            {formatTokenAmount(daiTotal, 2) || '0 DAI'}
+          </KeyValueRow>
         </Box>
       </CardContent>
     </Card>

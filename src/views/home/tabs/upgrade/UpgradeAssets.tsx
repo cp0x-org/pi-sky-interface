@@ -22,6 +22,7 @@ import { PercentButton } from 'components/PercentButton';
 import { dispatchError, dispatchSuccess } from 'utils/snackbar';
 import { useDebounce } from 'hooks/useDebounce';
 import StatusLive from 'components/StatusLive';
+import { useIntl } from 'react-intl';
 
 interface Props {
   daiUserBalance?: bigint;
@@ -95,6 +96,7 @@ const useTransaction = () => {
 };
 
 const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
+  const intl = useIntl();
   const [amount, setAmount] = useState<string>('');
   const [expectedOutput, setExpectedOutput] = useState<string>('0');
   // Create a debounced version of amount that updates 500ms after amount changes
@@ -239,24 +241,24 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
       } else if (tokenValue === TOKEN_MKR && refetchMkrAllowance) {
         refetchMkrAllowance();
       }
-      dispatchSuccess(`${tokenValue.toUpperCase()} Approved Successfully!`);
+      dispatchSuccess(intl.formatMessage({ id: 'tx.tokenApproved' }, { token: tokenValue.toUpperCase() }));
     }
 
     // Update upgrade status when confirmed
     if (upgradeTx.txState === 'confirmed' && !isUpgraded) {
       setIsUpgraded(true);
-      dispatchSuccess(`${tokenValue.toUpperCase()} Upgraded Successfully!`);
+      dispatchSuccess(intl.formatMessage({ id: 'tx.tokenUpgraded' }, { token: tokenValue.toUpperCase() }));
     }
 
     // Handle errors
     if (approveTx.txState === 'error') {
-      dispatchError(`${tokenValue.toUpperCase()} Approve Failed!`);
+      dispatchError(intl.formatMessage({ id: 'tx.tokenApproveFailed' }, { token: tokenValue.toUpperCase() }));
     }
 
     if (upgradeTx.txState === 'error') {
-      dispatchError(`${tokenValue.toUpperCase()} Upgrade failed!`);
+      dispatchError(intl.formatMessage({ id: 'tx.tokenUpgradeFailed' }, { token: tokenValue.toUpperCase() }));
     }
-  }, [approveTx, upgradeTx, isApproved, isUpgraded, tokenValue, refetchDaiAllowance, refetchMkrAllowance])();
+  }, [approveTx, upgradeTx, isApproved, isUpgraded, tokenValue, refetchDaiAllowance, refetchMkrAllowance, intl])();
 
   // Reset transaction states
   const resetTransactionStates = useCallback(() => {
@@ -421,45 +423,45 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     } catch (error) {
       console.error('Transaction failed:', error);
       if (!isApproved) {
-        dispatchError(`Failed to approve ${tokenValue.toUpperCase()}`);
+        dispatchError(intl.formatMessage({ id: 'tx.failedApproveToken' }, { token: tokenValue.toUpperCase() }));
       } else {
-        dispatchError(`Failed to upgrade ${tokenValue.toUpperCase()}`);
+        dispatchError(intl.formatMessage({ id: 'tx.failedUpgradeToken' }, { token: tokenValue.toUpperCase() }));
       }
     }
-  }, [amount, isApproved, isUpgraded, tokenValue, approveTx, upgradeTx, address, skyConfig.contracts, resetTransactionStates]);
+  }, [amount, isApproved, isUpgraded, tokenValue, approveTx, upgradeTx, address, skyConfig.contracts, resetTransactionStates, intl]);
 
   // Compute button text based on transaction states
   const getButtonText = useCallback(() => {
     // Show checking status when amount is being debounced
     if (allowanceChecking) {
-      return 'Checking allowance...';
+      return intl.formatMessage({ id: 'btn.checkingAllowance' });
     }
 
     if (!amount) {
-      return 'Enter Amount';
+      return intl.formatMessage({ id: 'btn.enterAmount' });
     }
 
     if (!isApproved) {
       if (approveTx.txHash && !approveTx.isTxConfirmed) {
-        return `Approving ${tokenValue.toUpperCase()}...`;
+        return intl.formatMessage({ id: 'btn.approvingToken' }, { token: tokenValue.toUpperCase() });
       }
       if (approveTx.txState === 'error') {
-        return 'Approval Failed - Try again';
+        return intl.formatMessage({ id: 'btn.approvalFailedTryAgain' });
       }
-      return `Approve ${tokenValue.toUpperCase()}`;
+      return intl.formatMessage({ id: 'btn.approveToken' }, { token: tokenValue.toUpperCase() });
     }
 
     if (!isUpgraded) {
       if (upgradeTx.txHash && !upgradeTx.isTxConfirmed) {
-        return `Upgrading ${tokenValue.toUpperCase()}...`;
+        return intl.formatMessage({ id: 'btn.upgradingToken' }, { token: tokenValue.toUpperCase() });
       }
       if (upgradeTx.txState === 'error') {
-        return 'Upgrade Failed - Try again';
+        return intl.formatMessage({ id: 'btn.upgradeFailedTryAgain' });
       }
-      return `Upgrade ${tokenValue.toUpperCase()}`;
+      return intl.formatMessage({ id: 'btn.upgradeToken' }, { token: tokenValue.toUpperCase() });
     }
 
-    return 'Success!';
+    return intl.formatMessage({ id: 'btn.success' });
   }, [
     amount,
     isApproved,
@@ -471,7 +473,8 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     approveTx.txState,
     upgradeTx.txHash,
     upgradeTx.isTxConfirmed,
-    upgradeTx.txState
+    upgradeTx.txState,
+    intl
   ]);
 
   // Determine if button should be disabled
@@ -496,16 +499,16 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
     <StyledCard>
       <Box p={0}>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          {tokenValue === TOKEN_MKR ? 'Enter the amount of MKR to receive SKY:' : 'Enter the amount of DAI to receive USDS:'}
+          {intl.formatMessage({ id: tokenValue === TOKEN_MKR ? 'upgrade.enterAmountMkr' : 'upgrade.enterAmountDai' })}
         </Typography>
         {tokenValue === TOKEN_MKR && isRateLoading && (
           <Typography variant="body2" sx={{ mb: 2 }} role="status" aria-live="polite">
-            Loading conversion rate...
+            {intl.formatMessage({ id: 'upgrade.loadingRate' })}
           </Typography>
         )}
         {tokenValue === TOKEN_MKR && amount && amount !== '0' && !isRateLoading && (
           <Typography variant="body2" sx={{ mb: 2, color: 'success.main' }} role="status" aria-live="polite">
-            Expected output: {expectedOutput} SKY
+            {intl.formatMessage({ id: 'upgrade.expectedOutput' }, { amount: expectedOutput })}
           </Typography>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 2, gap: 2 }}>
@@ -514,13 +517,13 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
               htmlInput: {
                 lang: 'en',
                 inputMode: 'decimal',
-                'aria-label': `Amount of ${tokenValue.toUpperCase()} to upgrade`,
+                'aria-label': intl.formatMessage({ id: 'a11y.amountTokenUpgrade' }, { token: tokenValue.toUpperCase() }),
                 'aria-describedby': 'upgrade-balance'
               }
             }}
             fullWidth
             type="number"
-            placeholder="Enter amount"
+            placeholder={intl.formatMessage({ id: 'form.enterAmountPlaceholder' })}
             value={amount}
             onChange={handleAmountChange}
             disabled={isInputDisabled}
@@ -539,7 +542,7 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
                 value={tokenValue}
                 onChange={handleTokenChange}
                 disabled={isInputDisabled}
-                inputProps={{ 'aria-label': 'Token to upgrade' }}
+                inputProps={{ 'aria-label': intl.formatMessage({ id: 'a11y.tokenToUpgrade' }) }}
                 renderValue={(selected) => {
                   const item = tokenOptions.find((o) => o.value === selected);
                   return (
@@ -577,13 +580,25 @@ const UpgradeAssets: FC<Props> = ({ daiUserBalance, mkrUserBalance }) => {
               gap: 1
             }}
           >
-            <PercentButton onClick={() => handlePercentClick(25)} disabled={isInputDisabled} aria-label="Set amount to 25% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(25)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 25 })}
+            >
               25%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(50)} disabled={isInputDisabled} aria-label="Set amount to 50% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(50)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 50 })}
+            >
               50%
             </PercentButton>
-            <PercentButton onClick={() => handlePercentClick(100)} disabled={isInputDisabled} aria-label="Set amount to 100% of balance">
+            <PercentButton
+              onClick={() => handlePercentClick(100)}
+              disabled={isInputDisabled}
+              aria-label={intl.formatMessage({ id: 'a11y.setPercent' }, { percent: 100 })}
+            >
               100%
             </PercentButton>
           </Box>
