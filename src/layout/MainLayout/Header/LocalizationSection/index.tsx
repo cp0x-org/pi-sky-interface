@@ -74,7 +74,7 @@ export default function LocalizationSection() {
 
   return (
     <>
-      <Box sx={{ ml: { xs: 0, sm: 2 } }}>
+      <Box sx={{ mr: { xs: 1, sm: 2 } }}>
         <Avatar
           component="button"
           variant="rounded"
