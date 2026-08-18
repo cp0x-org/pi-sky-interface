@@ -28,13 +28,13 @@ export default function Header() {
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-start' }}>
         <HeaderMenu />
       </Box>
+      {/* language switcher */}
+      <LocalizationSection />
+
       {/* connect wallet */}
       <Box sx={{ display: { lg: 'block' } }}>
         <ConnectButtonCustom chainStatus="icon" showBalance={false} />
       </Box>
-
-      {/* language switcher */}
-      <LocalizationSection />
     </>
   );
 }
